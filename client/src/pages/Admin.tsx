@@ -131,7 +131,7 @@ export default function Admin() {
                     <select
                       value={u.role}
                       onChange={(e) => updateRole.mutate({ id: u.id, role: e.target.value as "user" | "admin" })}
-                      className="apple-input text-xs py-1 px-2 rounded-lg bg-white/[0.05] border-white/[0.1] text-white"
+                      className="apple-input text-xs py-1 px-2 rounded-lg bg-white/[0.05] border-white/[0.1] text-white [&>option]:bg-[#1c1c1e] [&>option]:text-white"
                     >
                       <option value="user">{t("admin.roleUser")}</option>
                       <option value="admin">{t("admin.roleAdmin")}</option>

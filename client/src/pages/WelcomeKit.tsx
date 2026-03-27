@@ -117,7 +117,7 @@ export default function WelcomeKit() {
                 <select
                   value={selectedEmbId}
                   onChange={(e) => setSelectedEmbId(e.target.value ? Number(e.target.value) : "")}
-                  className="apple-input flex-1 px-4 py-2.5 text-sm"
+                  className="apple-input flex-1 px-4 py-2.5 text-sm [&>option]:bg-[#1c1c1e] [&>option]:text-white"
                 >
                   <option value="">Selecione o embaixador...</option>
                   {availableEmb.map((e: any) => (
