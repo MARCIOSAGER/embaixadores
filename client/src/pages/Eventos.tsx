@@ -22,13 +22,13 @@ function tsToInputDT(ts: number | null | undefined): string {
 }
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
-  agendado: { color: "#0A84FF", bg: "rgba(10,132,255,0.14)" },
+  agendado: { color: "#FF6B00", bg: "rgba(255,107,0,0.14)" },
   realizado: { color: "#30D158", bg: "rgba(48,209,88,0.14)" },
   cancelado: { color: "#FF453A", bg: "rgba(255,69,58,0.14)" },
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  encontro: "#5E5CE6", conferencia: "#BF5AF2", retiro: "#32D74B", treinamento: "#FF9F0A", outro: "#64D2FF",
+  encontro: "#E85D00", conferencia: "#BF5AF2", retiro: "#32D74B", treinamento: "#FF9F0A", outro: "#64D2FF",
 };
 
 export default function Eventos() {
@@ -179,7 +179,7 @@ export default function Eventos() {
                   <div><label className="apple-input-label">{t("ev.dataFim")}</label><input type="datetime-local" value={form.dataFim} onChange={e => setForm({ ...form, dataFim: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                 </div>
                 <div><label className="apple-input-label">{t("ev.local")}</label><input value={form.local} onChange={e => setForm({ ...form, local: e.target.value })} className="apple-input" /></div>
-                <div><label className="apple-input-label">{t("tg.linkMeet")}</label><input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input" placeholder="https://meet.google.com/..." /></div>
+                <div><label className="apple-input-label">{t("ev.linkMeet")}</label><input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input" placeholder="https://meet.google.com/..." /></div>
                 <div className="flex items-center gap-3 py-1">
                   <Switch checked={form.recorrente} onCheckedChange={v => setForm({ ...form, recorrente: v })} />
                   <label className="text-[0.8125rem] text-[#d2d2d7]">{t("ev.recorrente")}</label>

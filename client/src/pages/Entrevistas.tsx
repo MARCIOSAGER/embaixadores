@@ -21,9 +21,9 @@ function tsToInputDT(ts: number | null | undefined): string {
 }
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
-  agendada: { color: "#0A84FF", bg: "rgba(10,132,255,0.14)" },
+  agendada: { color: "#FF6B00", bg: "rgba(255,107,0,0.14)" },
   realizada: { color: "#30D158", bg: "rgba(48,209,88,0.14)" },
-  aprovada: { color: "#BF5AF2", bg: "rgba(191,90,242,0.14)" },
+  aprovada: { color: "#FF6B00", bg: "rgba(191,90,242,0.14)" },
   reprovada: { color: "#FF453A", bg: "rgba(255,69,58,0.14)" },
   cancelada: { color: "#FF9F0A", bg: "rgba(255,159,10,0.14)" },
 };
@@ -109,7 +109,7 @@ export default function Entrevistas() {
               return (
                 <div key={ent.id} className="apple-card p-5 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setSelected(ent)}>
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#BF5AF2] to-[#5E5CE6] flex items-center justify-center text-white text-[0.875rem] font-bold shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.875rem] font-bold shrink-0">
                       {ent.nomeCandidato?.charAt(0)?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ export default function Entrevistas() {
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#BF5AF2] to-[#5E5CE6] flex items-center justify-center text-white text-xl font-bold">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-xl font-bold">
                     {selected.nomeCandidato?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex-1">
@@ -170,7 +170,7 @@ export default function Entrevistas() {
 
                 {selected.observacoes && (
                   <div className="apple-card-inset p-4">
-                    <p className="text-[0.625rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.observacoes")}</p>
+                    <p className="text-[0.625rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("ent.observacoes")}</p>
                     <p className="text-[0.8125rem] text-[#d2d2d7] leading-relaxed">{selected.observacoes}</p>
                   </div>
                 )}
@@ -200,7 +200,7 @@ export default function Entrevistas() {
                   <div><label className="apple-input-label">{t("ent.telefoneCandidato")}</label><input value={form.telefoneCandidato} onChange={e => setForm({ ...form, telefoneCandidato: e.target.value })} className="apple-input" /></div>
                 </div>
                 <div><label className="apple-input-label">{t("ent.dataEntrevista")} *</label><input type="datetime-local" value={form.dataEntrevista} onChange={e => setForm({ ...form, dataEntrevista: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
-                <div><label className="apple-input-label">{t("tg.linkMeet")}</label><input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input" placeholder="https://meet.google.com/..." /></div>
+                <div><label className="apple-input-label">{t("ent.linkMeet")}</label><input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input" placeholder="https://meet.google.com/..." /></div>
                 <div>
                   <label className="apple-input-label">{t("ent.status")}</label>
                   <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="apple-input">
@@ -212,7 +212,7 @@ export default function Entrevistas() {
                   </select>
                 </div>
                 <div><label className="apple-input-label">{t("ent.indicadoPor")}</label><input value={form.indicadoPor} onChange={e => setForm({ ...form, indicadoPor: e.target.value })} className="apple-input" /></div>
-                <div><label className="apple-input-label">{t("emb.observacoes")}</label><textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3} className="apple-input resize-none" /></div>
+                <div><label className="apple-input-label">{t("ent.observacoes")}</label><textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3} className="apple-input resize-none" /></div>
               </div>
               <div className="flex gap-2 pt-2">
                 <DialogClose asChild><button className="apple-btn apple-btn-gray flex-1 py-2.5">{t("common.cancelar")}</button></DialogClose>

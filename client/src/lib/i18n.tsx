@@ -87,6 +87,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "emb.ingresso": "Ingresso",
     "emb.aniversario": "Aniversário",
     "emb.renovacao": "Renovação",
+    "emb.nome": "Nome Completo",
+    "emb.nascimento": "Data de Nascimento",
+    "emb.nomeObrigatorio": "Nome é obrigatório",
+    "emb.excluir": "Excluir",
     "emb.total": "Total",
 
     // Common
@@ -124,6 +128,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "tg.cancelada": "Cancelada",
     "tg.semResumo": "Nenhum resumo ou testemunho registrado ainda.",
     "tg.status": "Status",
+    "tg.temaObrigatorio": "Tema é obrigatório",
 
     // Terça de Glória (terca prefix - legacy)
     "terca.title": "Terça de Glória",
@@ -163,6 +168,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "kit.pendente": "Pendente",
     "kit.parcial": "Parcial",
     "kit.completo": "Completo",
+    "kit.buscar": "Buscar kit...",
+    "kit.itensEntregues": "itens entregues",
     "kit.semNome": "Sem nome",
 
     // Eventos
@@ -189,6 +196,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "ev.realizado": "Realizado",
     "ev.cancelado": "Cancelado",
     "ev.ate": "até",
+    "ev.tituloObrigatorio": "Título é obrigatório",
+    "ev.excluir": "Excluir",
     "ev.passado": "Passado",
 
     // Entrevistas
@@ -201,6 +210,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.nomeCandidato": "Nome do Candidato",
     "ent.emailCandidato": "Email",
     "ent.telCandidato": "Telefone",
+    "ent.telefoneCandidato": "Telefone",
+    "ent.dataEntrevista": "Data da Entrevista",
+    "ent.status": "Status",
+    "ent.nomeObrigatorio": "Nome é obrigatório",
     "ent.dataHora": "Data e Hora",
     "ent.indicadoPor": "Indicado por",
     "ent.linkMeet": "Link Google Meet",
@@ -300,6 +313,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "emb.ingresso": "Ingreso",
     "emb.aniversario": "Cumpleaños",
     "emb.renovacao": "Renovación",
+    "emb.nome": "Nombre Completo",
+    "emb.nascimento": "Fecha de Nacimiento",
+    "emb.nomeObrigatorio": "Nombre es obligatorio",
+    "emb.excluir": "Eliminar",
     "emb.total": "Total",
 
     // Common
@@ -337,6 +354,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "tg.cancelada": "Cancelada",
     "tg.semResumo": "Ningún resumen o testimonio registrado aún.",
     "tg.status": "Estado",
+    "tg.temaObrigatorio": "Tema es obligatorio",
 
     // Terça de Glória (terca prefix - legacy)
     "terca.title": "Martes de Gloria",
@@ -376,6 +394,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "kit.pendente": "Pendiente",
     "kit.parcial": "Parcial",
     "kit.completo": "Completo",
+    "kit.buscar": "Buscar kit...",
+    "kit.itensEntregues": "ítems entregados",
     "kit.semNome": "Sin nombre",
 
     // Eventos
@@ -402,6 +422,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "ev.realizado": "Realizado",
     "ev.cancelado": "Cancelado",
     "ev.ate": "hasta",
+    "ev.tituloObrigatorio": "Título es obligatorio",
+    "ev.excluir": "Eliminar",
     "ev.passado": "Pasado",
 
     // Entrevistas
@@ -414,6 +436,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.nomeCandidato": "Nombre del Candidato",
     "ent.emailCandidato": "Correo Electrónico",
     "ent.telCandidato": "Teléfono",
+    "ent.telefoneCandidato": "Teléfono",
+    "ent.dataEntrevista": "Fecha de Entrevista",
+    "ent.status": "Estado",
+    "ent.nomeObrigatorio": "Nombre es obligatorio",
     "ent.dataHora": "Fecha y Hora",
     "ent.indicadoPor": "Referido por",
     "ent.linkMeet": "Enlace Google Meet",
@@ -513,6 +539,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "emb.ingresso": "Joined",
     "emb.aniversario": "Birthday",
     "emb.renovacao": "Renewal",
+    "emb.nome": "Full Name",
+    "emb.nascimento": "Date of Birth",
+    "emb.nomeObrigatorio": "Name is required",
+    "emb.excluir": "Delete",
     "emb.total": "Total",
 
     // Common
@@ -550,6 +580,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "tg.cancelada": "Cancelled",
     "tg.semResumo": "No summary or testimony recorded yet.",
     "tg.status": "Status",
+    "tg.temaObrigatorio": "Topic is required",
 
     // Terça de Glória (terca prefix - legacy)
     "terca.title": "Tuesday of Glory",
@@ -589,6 +620,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "kit.pendente": "Pending",
     "kit.parcial": "Partial",
     "kit.completo": "Complete",
+    "kit.buscar": "Search kit...",
+    "kit.itensEntregues": "items delivered",
     "kit.semNome": "No name",
 
     // Eventos
@@ -615,6 +648,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "ev.realizado": "Completed",
     "ev.cancelado": "Cancelled",
     "ev.ate": "until",
+    "ev.tituloObrigatorio": "Title is required",
+    "ev.excluir": "Delete",
     "ev.passado": "Past",
 
     // Entrevistas
@@ -627,6 +662,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.nomeCandidato": "Candidate Name",
     "ent.emailCandidato": "Email",
     "ent.telCandidato": "Phone",
+    "ent.telefoneCandidato": "Phone",
+    "ent.dataEntrevista": "Interview Date",
+    "ent.status": "Status",
+    "ent.nomeObrigatorio": "Name is required",
     "ent.dataHora": "Date & Time",
     "ent.indicadoPor": "Referred by",
     "ent.linkMeet": "Google Meet Link",
