@@ -7,8 +7,7 @@ import {
 import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
-const LOGO_EMBAIXADOR = "https://d2xsxph8kpxj0f.cloudfront.net/310519663385583502/Ed66sXViBkMN3knWB5TRxe/logo-embaixador_dde21016.jpeg";
-const LOGO_LEGENDARIOS = "/logo-legendarios.png";
+const LOGO_LEGENDARIOS = "/logo-legendarios.jpeg";
 
 const LANGS: { code: Locale; label: string; flag: string }[] = [
   { code: "pt", label: "Português", flag: "🇧🇷" },
@@ -17,8 +16,8 @@ const LANGS: { code: Locale; label: string; flag: string }[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user: authUser, signOut, isAdmin } = useAuth();
-  const user = { name: authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User", email: authUser?.email || "" };
+  const { user: authUser, signOut, isAdmin, userName } = useAuth();
+  const user = { name: userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User", email: authUser?.email || "" };
   const [location] = useLocation();
   const { t, locale, setLocale } = useI18n();
   const [showLang, setShowLang] = useState(false);
@@ -56,8 +55,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Brand */}
         <div className="px-5 pt-7 pb-5">
           <div className="flex items-center gap-3">
-            <img src={LOGO_LEGENDARIOS} alt="" className="w-9 h-9 rounded-xl object-cover" />
-            <img src={LOGO_EMBAIXADOR} alt="" className="w-9 h-9 rounded-xl object-cover" />
+            <img src={LOGO_LEGENDARIOS} alt="Legendários" className="h-10 object-contain" />
           </div>
           <p className="apple-caption mt-4">Sistema de Gestão</p>
         </div>

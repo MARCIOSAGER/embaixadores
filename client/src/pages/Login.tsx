@@ -3,8 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
-const LOGO_LEGENDARIOS = "/logo-legendarios.png";
-const LOGO_EMBAIXADOR = "https://d2xsxph8kpxj0f.cloudfront.net/310519663385583502/Ed66sXViBkMN3knWB5TRxe/logo-embaixador_dde21016.jpeg";
+const LOGO_LEGENDARIOS = "/logo-legendarios.jpeg";
 
 export default function Login() {
   const { t } = useI18n();
@@ -47,8 +46,7 @@ export default function Login() {
       <div className="relative z-10 flex flex-col items-center gap-8 max-w-[380px] w-full mx-auto px-6 animate-fade-up">
         {/* Logos */}
         <div className="flex items-center gap-5">
-          <img src={LOGO_LEGENDARIOS} alt="Legendarios" className="w-20 h-20 object-contain drop-shadow-2xl" />
-          <img src={LOGO_EMBAIXADOR} alt="Embaixadores" className="w-20 h-20 rounded-2xl object-cover shadow-2xl shadow-black/60" />
+          <img src={LOGO_LEGENDARIOS} alt="Legendários" className="w-32 h-32 object-contain drop-shadow-2xl" />
         </div>
 
         {/* Title */}

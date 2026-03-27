@@ -7,6 +7,7 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     // Get initial session
@@ -32,10 +33,11 @@ export function useAuth() {
     try {
       const { data } = await supabase
         .from("users")
-        .select("role")
+        .select("role, name")
         .eq("openId", authId)
         .single();
       setUserRole(data?.role ?? "user");
+      setUserName(data?.name ?? null);
     } catch {
       setUserRole("user");
     } finally {
@@ -65,6 +67,7 @@ export function useAuth() {
     session,
     loading,
     role: userRole,
+    userName,
     isAdmin: userRole === "admin",
     isAuthenticated: !!session,
     signIn,
