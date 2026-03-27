@@ -7,7 +7,7 @@ import {
 import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
-const LOGO_LEGENDARIOS = "/logo-legendarios.jpeg";
+const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
 const LANGS: { code: Locale; label: string; flag: string }[] = [
   { code: "pt", label: "Português", flag: "🇧🇷" },

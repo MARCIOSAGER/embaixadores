@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { useDashboardStats } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church } from "lucide-react";
 
@@ -86,7 +87,8 @@ function Skeleton() {
 }
 
 export default function Home() {
-  const user = { name: "Admin" };
+  const { user: authUser, userName } = useAuth();
+  const user = { name: userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User" };
   const { t } = useI18n();
   const { data, isLoading } = useDashboardStats();
 

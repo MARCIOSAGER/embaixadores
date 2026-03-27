@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
-const LOGO_LEGENDARIOS = "/logo-legendarios.jpeg";
+const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
 export default function Login() {
   const { t } = useI18n();
@@ -79,37 +79,39 @@ export default function Login() {
           ) : (
             <>
               {/* Email */}
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" />
+              <div>
+                <label className="apple-input-label block mb-1.5 text-[#86868b]">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
+                  placeholder="email@exemplo.com"
                   required
-                  className="apple-input w-full pl-10 pr-4 py-3 text-[0.9375rem]"
+                  className="apple-input w-full px-4 py-3 text-[0.9375rem]"
                 />
               </div>
 
               {/* Password (hidden in reset mode) */}
               {!resetMode && (
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Senha"
-                    required
-                    className="apple-input w-full pl-10 pr-10 py-3 text-[0.9375rem]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#48484a] hover:text-[#86868b]"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                <div>
+                  <label className="apple-input-label block mb-1.5 text-[#86868b]">Senha</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Digite sua senha"
+                      required
+                      className="apple-input w-full pl-4 pr-10 py-3 text-[0.9375rem]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#48484a] hover:text-[#86868b]"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               )}
 
