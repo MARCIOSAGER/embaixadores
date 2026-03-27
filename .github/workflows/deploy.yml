@@ -34,6 +34,13 @@ jobs:
           echo 'RewriteCond %{REQUEST_FILENAME} !-f' >> dist/.htaccess
           echo 'RewriteCond %{REQUEST_FILENAME} !-d' >> dist/.htaccess
           echo 'RewriteRule ^ index.html [L]' >> dist/.htaccess
+          echo '' >> dist/.htaccess
+          echo '# Prevent caching of index.html so new deploys load immediately' >> dist/.htaccess
+          echo '<Files "index.html">' >> dist/.htaccess
+          echo '  Header set Cache-Control "no-cache, no-store, must-revalidate"' >> dist/.htaccess
+          echo '  Header set Pragma "no-cache"' >> dist/.htaccess
+          echo '  Header set Expires "0"' >> dist/.htaccess
+          echo '</Files>' >> dist/.htaccess
           cat dist/.htaccess
 
       - name: Setup SSH key
