@@ -1,0 +1,129 @@
+export type Database = {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: number;
+          openId: string;
+          name: string | null;
+          email: string | null;
+          loginMethod: string | null;
+          role: "user" | "admin";
+          createdAt: string;
+          updatedAt: string;
+          lastSignedIn: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+      };
+      embaixadores: {
+        Row: {
+          id: number;
+          nomeCompleto: string;
+          numeroLegendario: string | null;
+          numeroEmbaixador: string | null;
+          email: string | null;
+          telefone: string | null;
+          cidade: string | null;
+          estado: string | null;
+          profissao: string | null;
+          empresa: string | null;
+          dataNascimento: number | null;
+          dataIngresso: number;
+          dataRenovacao: number | null;
+          status: "ativo" | "inativo" | "pendente_renovacao";
+          observacoes: string | null;
+          fotoUrl: string | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["embaixadores"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["embaixadores"]["Insert"]>;
+      };
+      pagamentos: {
+        Row: {
+          id: number;
+          embaixadorId: number;
+          valor: string;
+          dataVencimento: number;
+          dataPagamento: number | null;
+          status: "pendente" | "pago" | "atrasado";
+          observacoes: string | null;
+          createdAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["pagamentos"]["Row"], "id" | "createdAt">;
+        Update: Partial<Database["public"]["Tables"]["pagamentos"]["Insert"]>;
+      };
+      tercaGloria: {
+        Row: {
+          id: number;
+          data: number;
+          tema: string;
+          pregador: string | null;
+          resumo: string | null;
+          testemunhos: string | null;
+          linkMeet: string | null;
+          versiculoBase: string | null;
+          status: "planejada" | "realizada" | "cancelada";
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["tercaGloria"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["tercaGloria"]["Insert"]>;
+      };
+      welcomeKits: {
+        Row: {
+          id: number;
+          embaixadorId: number;
+          patchEntregue: boolean;
+          pinBoneEntregue: boolean;
+          anelEntregue: boolean;
+          espadaEntregue: boolean;
+          mochilaBalacEntregue: boolean;
+          dataEntrega: number | null;
+          status: "pendente" | "parcial" | "completo";
+          observacoes: string | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["welcomeKits"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["welcomeKits"]["Insert"]>;
+      };
+      eventos: {
+        Row: {
+          id: number;
+          titulo: string;
+          descricao: string | null;
+          data: number;
+          dataFim: number | null;
+          local: string | null;
+          tipo: "encontro" | "conferencia" | "retiro" | "treinamento" | "outro";
+          linkMeet: string | null;
+          recorrente: boolean;
+          status: "agendado" | "realizado" | "cancelado";
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["eventos"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["eventos"]["Insert"]>;
+      };
+      entrevistas: {
+        Row: {
+          id: number;
+          nomeCandidato: string;
+          emailCandidato: string | null;
+          telefoneCandidato: string | null;
+          dataEntrevista: number;
+          linkMeet: string | null;
+          status: "agendada" | "realizada" | "aprovada" | "reprovada" | "cancelada";
+          observacoes: string | null;
+          indicadoPor: string | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["entrevistas"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["entrevistas"]["Insert"]>;
+      };
+    };
+  };
+};

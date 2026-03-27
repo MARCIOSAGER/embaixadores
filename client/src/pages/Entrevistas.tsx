@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { trpc } from "@/lib/trpc";
+import { useEntrevistas, useCreateEntrevista, useUpdateEntrevista, useDeleteEntrevista } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
@@ -36,11 +36,10 @@ export default function Entrevistas() {
   const [selected, setSelected] = useState<any>(null);
   const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "" });
 
-  const { data: entrevistas, isLoading } = trpc.entrevista.list.useQuery();
-  const utils = trpc.useUtils();
-  const createMut = trpc.entrevista.create.useMutation({ onSuccess: () => { utils.entrevista.list.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); }, onError: (e: any) => toast.error(e.message) });
-  const updateMut = trpc.entrevista.update.useMutation({ onSuccess: () => { utils.entrevista.list.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); }, onError: (e: any) => toast.error(e.message) });
-  const deleteMut = trpc.entrevista.delete.useMutation({ onSuccess: () => { utils.entrevista.list.invalidate(); toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) });
+  const { data: entrevistas, isLoading } = useEntrevistas();
+  const createMut = useCreateEntrevista();
+  const updateMut = useUpdateEntrevista();
+  const deleteMut = useDeleteEntrevista();
 
   function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "" }); setEditingId(null); }
   function openEdit(ent: any) {
@@ -51,7 +50,9 @@ export default function Entrevistas() {
   function handleSubmit() {
     if (!form.nomeCandidato.trim() || !form.dataEntrevista) return toast.error(t("ent.nomeObrigatorio"));
     const d = { nomeCandidato: form.nomeCandidato, emailCandidato: form.emailCandidato || null, telefoneCandidato: form.telefoneCandidato || null, dataEntrevista: dateToTimestamp(form.dataEntrevista), linkMeet: form.linkMeet || null, status: form.status as any, observacoes: form.observacoes || null, indicadoPor: form.indicadoPor || null };
-    if (editingId) updateMut.mutate({ id: editingId, ...d }); else createMut.mutate(d);
+    const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
+    const onError = (e: any) => toast.error(e.message);
+    if (editingId) updateMut.mutate({ id: editingId, ...d }, { onSuccess, onError }); else createMut.mutate(d, { onSuccess, onError });
   }
 
   const filtered = useMemo(() => {
@@ -178,7 +179,7 @@ export default function Entrevistas() {
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
                     <Edit2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.editar")}
                   </button>
-                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: selected.id }); }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
+                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: selected.id }, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
                     <Trash2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.excluir")}
                   </button>
                 </div>

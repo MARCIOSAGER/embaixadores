@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { trpc } from "@/lib/trpc";
+import { useEventos, useCreateEvento, useUpdateEvento, useDeleteEvento } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
@@ -38,11 +38,10 @@ export default function Eventos() {
   const [filter, setFilter] = useState("all");
   const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado" });
 
-  const { data: eventos, isLoading } = trpc.evento.list.useQuery();
-  const utils = trpc.useUtils();
-  const createMut = trpc.evento.create.useMutation({ onSuccess: () => { utils.evento.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); }, onError: (e: any) => toast.error(e.message) });
-  const updateMut = trpc.evento.update.useMutation({ onSuccess: () => { utils.evento.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); }, onError: (e: any) => toast.error(e.message) });
-  const deleteMut = trpc.evento.delete.useMutation({ onSuccess: () => { utils.evento.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); }, onError: (e: any) => toast.error(e.message) });
+  const { data: eventos, isLoading } = useEventos();
+  const createMut = useCreateEvento();
+  const updateMut = useUpdateEvento();
+  const deleteMut = useDeleteEvento();
 
   function resetForm() { setForm({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado" }); setEditingId(null); }
   function openEdit(ev: any) {
@@ -53,7 +52,9 @@ export default function Eventos() {
   function handleSubmit() {
     if (!form.titulo.trim() || !form.data) return toast.error(t("ev.tituloObrigatorio"));
     const d = { titulo: form.titulo, descricao: form.descricao || null, data: dateToTimestamp(form.data), dataFim: form.dataFim ? dateToTimestamp(form.dataFim) : null, local: form.local || null, tipo: form.tipo as any, linkMeet: form.linkMeet || null, recorrente: form.recorrente, status: form.status as any };
-    if (editingId) updateMut.mutate({ id: editingId, ...d }); else createMut.mutate(d);
+    const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
+    const onError = (e: any) => toast.error(e.message);
+    if (editingId) updateMut.mutate({ id: editingId, ...d }, { onSuccess, onError }); else createMut.mutate(d, { onSuccess, onError });
   }
 
   const filtered = useMemo(() => {
@@ -136,7 +137,7 @@ export default function Eventos() {
                     <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
                       <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.editar")}
                     </button>
-                    <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: ev.id }); }} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
+                    <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: ev.id }, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                   </div>

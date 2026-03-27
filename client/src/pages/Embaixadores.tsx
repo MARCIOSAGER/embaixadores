@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { trpc } from "@/lib/trpc";
+import { useEmbaixadores, useEmbaixadoresStats, useCreateEmbaixador, useUpdateEmbaixador, useDeleteEmbaixador } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -35,23 +35,13 @@ export default function Embaixadores() {
     dataRenovacao: "", status: "ativo" as string, observacoes: "",
   });
 
-  const searchInput = useMemo(() => search ? { search } : undefined, [search]);
-  const { data: embaixadores, isLoading } = trpc.embaixador.list.useQuery(searchInput);
-  const { data: stats } = trpc.embaixador.stats.useQuery();
-  const utils = trpc.useUtils();
+  const searchTerm = useMemo(() => search || undefined, [search]);
+  const { data: embaixadores, isLoading } = useEmbaixadores(searchTerm);
+  const { data: stats } = useEmbaixadoresStats();
 
-  const createMut = trpc.embaixador.create.useMutation({
-    onSuccess: () => { utils.embaixador.list.invalidate(); utils.embaixador.stats.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); },
-    onError: (e: any) => toast.error(e.message),
-  });
-  const updateMut = trpc.embaixador.update.useMutation({
-    onSuccess: () => { utils.embaixador.list.invalidate(); utils.embaixador.stats.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); },
-    onError: (e: any) => toast.error(e.message),
-  });
-  const deleteMut = trpc.embaixador.delete.useMutation({
-    onSuccess: () => { utils.embaixador.list.invalidate(); utils.embaixador.stats.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setSelected(null); },
-    onError: (e: any) => toast.error(e.message),
-  });
+  const createMut = useCreateEmbaixador();
+  const updateMut = useUpdateEmbaixador();
+  const deleteMut = useDeleteEmbaixador();
 
   function resetForm() {
     setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", observacoes: "" });
@@ -80,8 +70,10 @@ export default function Embaixadores() {
       dataRenovacao: dateToTs(form.dataRenovacao), status: form.status as "ativo" | "inativo" | "pendente_renovacao",
       observacoes: form.observacoes || null,
     };
-    if (editingId) updateMut.mutate({ id: editingId, ...data });
-    else createMut.mutate(data);
+    const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
+    const onError = (e: any) => toast.error(e.message);
+    if (editingId) updateMut.mutate({ id: editingId, ...data }, { onSuccess, onError });
+    else createMut.mutate(data, { onSuccess, onError });
   }
 
   const filtered = useMemo(() => {
@@ -234,7 +226,7 @@ export default function Embaixadores() {
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
                     <Edit2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.editar")}
                   </button>
-                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) { deleteMut.mutate({ id: selected.id }); } }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
+                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) { deleteMut.mutate({ id: selected.id }, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) }); } }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
                     <Trash2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.excluir")}
                   </button>
                 </div>

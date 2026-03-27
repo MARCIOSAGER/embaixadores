@@ -1,5 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { useLocation, Link } from "wouter";
 import {
@@ -18,7 +16,7 @@ const LANGS: { code: Locale; label: string; flag: string }[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  const user = { name: "Admin", email: "admin@embaixadores.com" };
   const [location] = useLocation();
   const { t, locale, setLocale } = useI18n();
   const [showLang, setShowLang] = useState(false);
@@ -40,59 +38,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [showLang]);
 
-  // Loading
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="apple-mesh" />
-        <div className="flex flex-col items-center gap-6 animate-fade-up">
-          <div className="flex items-center gap-3">
-            <img src={LOGO_LEGENDARIOS} alt="" className="w-12 h-12 rounded-2xl object-cover" />
-            <img src={LOGO_EMBAIXADOR} alt="" className="w-12 h-12 rounded-2xl object-cover" />
-          </div>
-          <Loader2 className="w-6 h-6 text-[#0A84FF] animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  // Login
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
-        <div className="apple-mesh" />
-        {/* Ambient glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#0A84FF]/[0.06] rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-[#5E5CE6]/[0.04] rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col items-center gap-10 max-w-[340px] mx-auto px-6 text-center animate-fade-up">
-          {/* Logos */}
-          <div className="flex items-center gap-5">
-            <img src={LOGO_LEGENDARIOS} alt="" className="w-20 h-20 object-contain drop-shadow-2xl" />
-            <img src={LOGO_EMBAIXADOR} alt="" className="w-20 h-20 rounded-2xl object-cover shadow-2xl shadow-black/60" />
-          </div>
-
-          {/* Text */}
-          <div className="space-y-3">
-            <h1 className="text-[2rem] font-bold tracking-[-0.04em] text-white leading-[1.05]">
-              Embaixadores
-            </h1>
-            <p className="text-[0.9375rem] text-[#86868b] leading-relaxed tracking-[-0.01em]">
-              {t("auth.subtitle")}
-            </p>
-          </div>
-
-          {/* Login Button */}
-          <a
-            href={getLoginUrl()}
-            className="apple-btn apple-btn-filled w-full py-3.5 text-[0.9375rem] font-semibold rounded-[14px]"
-          >
-            {t("auth.login")}
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   const initial = user?.name?.charAt(0)?.toUpperCase() || "E";
 

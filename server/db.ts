@@ -1,5 +1,6 @@
 import { eq, desc, asc, and, gte, lte, sql, like, or } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser, users,
   embaixadores, InsertEmbaixador,
@@ -16,7 +17,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.DATABASE_URL);
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -46,7 +48,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (user.role !== undefined) { values.role = user.role; updateSet.role = user.role; } else if (user.openId === ENV.ownerOpenId) { values.role = 'admin'; updateSet.role = 'admin'; }
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
   } catch (error) { console.error("[Database] Failed to upsert user:", error); throw error; }
 }
 
@@ -83,8 +85,8 @@ export async function getEmbaixador(id: number) {
 export async function createEmbaixador(data: InsertEmbaixador) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(embaixadores).values(data);
-  return result[0].insertId;
+  const result = await db.insert(embaixadores).values(data).returning({ id: embaixadores.id });
+  return result[0].id;
 }
 
 export async function updateEmbaixador(id: number, data: Partial<InsertEmbaixador>) {
@@ -124,8 +126,8 @@ export async function listPagamentos(embaixadorId?: number) {
 export async function createPagamento(data: InsertPagamento) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(pagamentos).values(data);
-  return result[0].insertId;
+  const result = await db.insert(pagamentos).values(data).returning({ id: pagamentos.id });
+  return result[0].id;
 }
 
 export async function updatePagamento(id: number, data: Partial<InsertPagamento>) {
@@ -157,8 +159,8 @@ export async function getTercaGloria(id: number) {
 export async function createTercaGloria(data: InsertTercaGloria) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(tercaGloria).values(data);
-  return result[0].insertId;
+  const result = await db.insert(tercaGloria).values(data).returning({ id: tercaGloria.id });
+  return result[0].id;
 }
 
 export async function updateTercaGloria(id: number, data: Partial<InsertTercaGloria>) {
@@ -190,8 +192,8 @@ export async function getWelcomeKit(embaixadorId: number) {
 export async function createWelcomeKit(data: InsertWelcomeKit) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(welcomeKits).values(data);
-  return result[0].insertId;
+  const result = await db.insert(welcomeKits).values(data).returning({ id: welcomeKits.id });
+  return result[0].id;
 }
 
 export async function updateWelcomeKit(id: number, data: Partial<InsertWelcomeKit>) {
@@ -217,8 +219,8 @@ export async function getEvento(id: number) {
 export async function createEvento(data: InsertEvento) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(eventos).values(data);
-  return result[0].insertId;
+  const result = await db.insert(eventos).values(data).returning({ id: eventos.id });
+  return result[0].id;
 }
 
 export async function updateEvento(id: number, data: Partial<InsertEvento>) {
@@ -250,8 +252,8 @@ export async function getEntrevista(id: number) {
 export async function createEntrevista(data: InsertEntrevista) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(entrevistas).values(data);
-  return result[0].insertId;
+  const result = await db.insert(entrevistas).values(data).returning({ id: entrevistas.id });
+  return result[0].id;
 }
 
 export async function updateEntrevista(id: number, data: Partial<InsertEntrevista>) {

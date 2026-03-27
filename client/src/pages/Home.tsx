@@ -1,7 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { trpc } from "@/lib/trpc";
+import { useDashboardStats } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church } from "lucide-react";
 
 function ProgressRing({ value, max, color, size = 56 }: { value: number; max: number; color: string; size?: number }) {
@@ -87,9 +86,9 @@ function Skeleton() {
 }
 
 export default function Home() {
-  const { user } = useAuth();
+  const user = { name: "Admin" };
   const { t } = useI18n();
-  const { data, isLoading } = trpc.dashboard.stats.useQuery();
+  const { data, isLoading } = useDashboardStats();
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t("dash.bomDia") : hour < 18 ? t("dash.boaTarde") : t("dash.boaNoite");

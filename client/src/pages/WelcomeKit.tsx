@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { trpc } from "@/lib/trpc";
+import { useWelcomeKits, useUpdateWelcomeKit, useEmbaixadores } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
@@ -23,14 +23,10 @@ export default function WelcomeKit() {
   const [filter, setFilter] = useState("all");
   const [selectedKit, setSelectedKit] = useState<any>(null);
 
-  const { data: kits, isLoading } = trpc.welcomeKit.list.useQuery();
-  const { data: embaixadores } = trpc.embaixador.list.useQuery();
-  const utils = trpc.useUtils();
+  const { data: kits, isLoading } = useWelcomeKits();
+  const { data: embaixadores } = useEmbaixadores();
 
-  const updateMut = trpc.welcomeKit.update.useMutation({
-    onSuccess: () => { utils.welcomeKit.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); },
-    onError: (e: any) => toast.error(e.message),
-  });
+  const updateMut = useUpdateWelcomeKit();
 
   function getEmbName(embId: number) {
     return embaixadores?.find((e: any) => e.id === embId)?.nomeCompleto || `#${embId}`;
@@ -39,7 +35,7 @@ export default function WelcomeKit() {
   function toggleItem(kit: any, key: KitItemKey) {
     const payload: any = { id: kit.id };
     KIT_KEYS.forEach(k => { payload[k] = k === key ? !kit[k] : kit[k]; });
-    updateMut.mutate(payload);
+    updateMut.mutate(payload, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) });
   }
 
   function getKitProgress(kit: any): number {

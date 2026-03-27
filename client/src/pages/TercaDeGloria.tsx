@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { trpc } from "@/lib/trpc";
+import { useTercaGloria, useCreateTercaGloria, useUpdateTercaGloria, useDeleteTercaGloria } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
@@ -28,11 +28,10 @@ export default function TercaDeGloria() {
   const [filter, setFilter] = useState("all");
   const [form, setForm] = useState({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" as string });
 
-  const { data: reunioes, isLoading } = trpc.tercaGloria.list.useQuery();
-  const utils = trpc.useUtils();
-  const createMut = trpc.tercaGloria.create.useMutation({ onSuccess: () => { utils.tercaGloria.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); }, onError: (e: any) => toast.error(e.message) });
-  const updateMut = trpc.tercaGloria.update.useMutation({ onSuccess: () => { utils.tercaGloria.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); }, onError: (e: any) => toast.error(e.message) });
-  const deleteMut = trpc.tercaGloria.delete.useMutation({ onSuccess: () => { utils.tercaGloria.list.invalidate(); utils.dashboard.stats.invalidate(); toast.success(t("common.sucesso")); }, onError: (e: any) => toast.error(e.message) });
+  const { data: reunioes, isLoading } = useTercaGloria();
+  const createMut = useCreateTercaGloria();
+  const updateMut = useUpdateTercaGloria();
+  const deleteMut = useDeleteTercaGloria();
 
   function resetForm() { setForm({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" }); setEditingId(null); }
   function openEdit(r: any) {
@@ -43,7 +42,9 @@ export default function TercaDeGloria() {
   function handleSubmit() {
     if (!form.tema.trim()) return toast.error(t("tg.temaObrigatorio"));
     const d = { tema: form.tema, data: dateToTs(form.data) || Date.now(), pregador: form.pregador || null, resumo: form.resumo || null, testemunhos: form.testemunhos || null, linkMeet: form.linkMeet || null, versiculoBase: form.versiculoBase || null, status: form.status as any };
-    if (editingId) updateMut.mutate({ id: editingId, ...d }); else createMut.mutate(d);
+    const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
+    const onError = (e: any) => toast.error(e.message);
+    if (editingId) updateMut.mutate({ id: editingId, ...d }, { onSuccess, onError }); else createMut.mutate(d, { onSuccess, onError });
   }
 
   const filtered = useMemo(() => {
@@ -150,7 +151,7 @@ export default function TercaDeGloria() {
                         <button onClick={() => openEdit(r)} className="apple-btn apple-btn-tinted flex-1 py-2">
                           <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.editar")}
                         </button>
-                        <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: r.id }); }} className="apple-btn apple-btn-destructive flex-1 py-2">
+                        <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: r.id }, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive flex-1 py-2">
                           <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.excluir")}
                         </button>
                       </div>
