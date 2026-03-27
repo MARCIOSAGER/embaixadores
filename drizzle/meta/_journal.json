@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1774622238337,
+      "tag": "0000_material_sally_floyd",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774622428202,
+      "tag": "0001_bouncy_morbius",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774627622041,
+      "tag": "0002_square_morg",
+      "breakpoints": true
+    }
+  ]
+}
