@@ -71,14 +71,13 @@ export default function Admin() {
             {t("admin.invite")}
           </h2>
           <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" />
+            <div className="flex-1">
               <input
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder={t("admin.email")}
-                className="apple-input w-full pl-10 pr-4 py-2.5 text-sm"
+                placeholder="email@exemplo.com"
+                className="apple-input w-full px-4 py-2.5 text-sm"
                 onKeyDown={(e) => e.key === "Enter" && handleInvite()}
               />
             </div>
