@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useWelcomeKits, useUpdateWelcomeKit, useEmbaixadores } from "@/hooks/useSupabase";
+import { useWelcomeKits, useUpdateWelcomeKit, useCreateWelcomeKit, useEmbaixadores } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight } from "lucide-react";
+import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2 } from "lucide-react";
 
 type KitItemKey = "patchEntregue" | "pinBoneEntregue" | "anelEntregue" | "espadaEntregue" | "mochilaBalacEntregue";
 const KIT_KEYS: KitItemKey[] = ["patchEntregue", "pinBoneEntregue", "anelEntregue", "espadaEntregue", "mochilaBalacEntregue"];
@@ -22,11 +22,33 @@ export default function WelcomeKit() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedKit, setSelectedKit] = useState<any>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [selectedEmbId, setSelectedEmbId] = useState<number | "">("");
 
   const { data: kits, isLoading } = useWelcomeKits();
   const { data: embaixadores } = useEmbaixadores();
 
   const updateMut = useUpdateWelcomeKit();
+  const createMut = useCreateWelcomeKit();
+
+  // Embaixadores that don't have a kit yet
+  const availableEmb = useMemo(() => {
+    if (!embaixadores || !kits) return [];
+    const kitEmbIds = new Set(kits.map((k: any) => k.embaixadorId));
+    return embaixadores.filter((e: any) => !kitEmbIds.has(e.id));
+  }, [embaixadores, kits]);
+
+  const handleCreateKit = () => {
+    if (!selectedEmbId) return;
+    createMut.mutate({ embaixadorId: Number(selectedEmbId) }, {
+      onSuccess: () => {
+        toast.success("Kit criado com sucesso!");
+        setShowCreate(false);
+        setSelectedEmbId("");
+      },
+      onError: (e: any) => toast.error(e.message),
+    });
+  };
 
   function getEmbName(embId: number) {
     return embaixadores?.find((e: any) => e.id === embId)?.nomeCompleto || `#${embId}`;
@@ -67,10 +89,53 @@ export default function WelcomeKit() {
     <DashboardLayout>
       <div className="space-y-5">
         {/* Header */}
-        <div className="animate-fade-up">
-          <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("kit.title")}</h1>
-          <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("kit.subtitle")}</p>
+        <div className="flex items-start justify-between animate-fade-up">
+          <div>
+            <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("kit.title")}</h1>
+            <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("kit.subtitle")}</p>
+          </div>
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Novo Kit</span>
+          </button>
         </div>
+
+        {/* Create Kit Form */}
+        {showCreate && (
+          <div className="apple-card p-5 space-y-4 animate-fade-up">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Gift className="w-4 h-4 text-[#FF6B00]" />
+              Criar Kit para Embaixador
+            </h3>
+            {availableEmb.length === 0 ? (
+              <p className="text-sm text-[#86868b]">Todos os embaixadores já possuem kit.</p>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <select
+                  value={selectedEmbId}
+                  onChange={(e) => setSelectedEmbId(e.target.value ? Number(e.target.value) : "")}
+                  className="apple-input flex-1 px-4 py-2.5 text-sm"
+                >
+                  <option value="">Selecione o embaixador...</option>
+                  {availableEmb.map((e: any) => (
+                    <option key={e.id} value={e.id}>{e.nomeCompleto}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleCreateKit}
+                  disabled={!selectedEmbId || createMut.isPending}
+                  className="apple-btn apple-btn-filled px-5 py-2.5 text-sm font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 shrink-0"
+                >
+                  {createMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Criar Kit
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "50ms" }}>
