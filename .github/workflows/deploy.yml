@@ -28,14 +28,7 @@ jobs:
           VITE_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.VITE_SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Create .htaccess
-        run: |
-          cat > dist/.htaccess << 'EOF'
-          RewriteEngine On
-          RewriteBase /
-          RewriteCond %{REQUEST_FILENAME} !-f
-          RewriteCond %{REQUEST_FILENAME} !-d
-          RewriteRule ^ index.html [L]
-          EOF
+        run: printf 'RewriteEngine On\nRewriteBase /\nRewriteCond %%{REQUEST_FILENAME} !-f\nRewriteCond %%{REQUEST_FILENAME} !-d\nRewriteRule ^ index.html [L]\n' > dist/.htaccess
 
       - name: Setup SSH key
         run: |
