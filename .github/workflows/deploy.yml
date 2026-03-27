@@ -45,5 +45,9 @@ jobs:
 
       - name: Deploy to Hostinger
         run: |
-          ssh -p 65002 u617589611@62.72.62.61 "rm -rf ~/domains/embaixadores.marciosager.com/public_html/assets"
+          ssh -p 65002 u617589611@62.72.62.61 "rm -rf ~/domains/embaixadores.marciosager.com/public_html/assets ~/domains/embaixadores.marciosager.com/public_html/.htaccess"
           scp -P 65002 -r dist/* dist/.htaccess u617589611@62.72.62.61:~/domains/embaixadores.marciosager.com/public_html/
+          echo "=== Verifying .htaccess on server ==="
+          ssh -p 65002 u617589611@62.72.62.61 "cat ~/domains/embaixadores.marciosager.com/public_html/.htaccess"
+          echo "=== Verifying static files ==="
+          ssh -p 65002 u617589611@62.72.62.61 "ls -la ~/domains/embaixadores.marciosager.com/public_html/*.png ~/domains/embaixadores.marciosager.com/public_html/*.jpeg 2>/dev/null"
