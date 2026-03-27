@@ -31,8 +31,21 @@ export default function Admin() {
     if (!inviteEmail.trim()) return;
     setInviting(true);
     try {
-      const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail.trim());
-      if (error) throw error;
+      const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": serviceRoleKey,
+          "Authorization": `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.msg || data.message || "Erro ao enviar convite");
+      }
       toast.success(t("admin.inviteSent"));
       setInviteEmail("");
     } catch (err: any) {
