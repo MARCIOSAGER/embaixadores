@@ -62,7 +62,7 @@ export default function Login() {
           </h1>
           <div className="w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-4 rounded-full" />
           <p className="text-[0.9375rem] text-[#86868b] tracking-wide uppercase font-medium">
-            {resetMode ? "Recuperar acesso" : "Sistema de Gestao"}
+            {resetMode ? "Recuperar acesso" : "Sistema de Gestão"}
           </p>
         </div>
 

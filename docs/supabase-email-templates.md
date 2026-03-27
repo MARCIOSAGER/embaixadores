@@ -1,4 +1,4 @@
-# Supabase Email Templates - Embaixadores dos Legendarios
+# Supabase Email Templates - Embaixadores dos Legendários
 
 ## PASSO 1: Configurar Site URL
 
@@ -18,7 +18,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
 
 ### 1. Invite User
 
-**Subject:** Voce foi convidado para o sistema Embaixadores dos Legendarios
+**Subject:** Você foi convidado para o sistema Embaixadores dos Legendários
 
 **Body:**
 ```html
@@ -29,15 +29,15 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendarios</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendários</h1>
           </td>
         </tr>
         <!-- Body -->
         <tr>
           <td style="padding:40px;">
-            <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Voce foi convidado!</h2>
+            <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Você foi convidado!</h2>
             <p style="margin:0 0 24px;color:#86868b;font-size:15px;line-height:1.6;">
-              Voce foi convidado para fazer parte do sistema de gestao dos Embaixadores dos Legendarios. Clique no botao abaixo para aceitar o convite e criar sua conta.
+              Você foi convidado para fazer parte do sistema de gestão dos Embaixadores dos Legendários. Clique no botão abaixo para aceitar o convite e criar sua conta.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
@@ -47,14 +47,14 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
               </tr>
             </table>
             <p style="margin:24px 0 0;color:#48484a;font-size:13px;line-height:1.5;text-align:center;">
-              Se voce nao esperava este convite, pode ignorar este email.
+              Se você não esperava este convite, pode ignorar este email.
             </p>
           </td>
         </tr>
         <!-- Footer -->
         <tr>
           <td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
+            <p style="margin:0;color:#48484a;font-size:12px;">Legendários - Amor, Honra, Unidade</p>
           </td>
         </tr>
       </table>
@@ -67,7 +67,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
 
 ### 2. Confirm Sign Up
 
-**Subject:** Confirme seu cadastro - Embaixadores dos Legendarios
+**Subject:** Confirme seu cadastro - Embaixadores dos Legendários
 
 **Body:**
 ```html
@@ -77,14 +77,14 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
       <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
         <tr>
           <td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendarios</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendários</h1>
           </td>
         </tr>
         <tr>
           <td style="padding:40px;">
             <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Confirme seu email</h2>
             <p style="margin:0 0 24px;color:#86868b;font-size:15px;line-height:1.6;">
-              Obrigado por se cadastrar! Clique no botao abaixo para confirmar seu endereco de email.
+              Obrigado por se cadastrar! Clique no botão abaixo para confirmar seu endereço de email.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
@@ -97,7 +97,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
         </tr>
         <tr>
           <td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
+            <p style="margin:0;color:#48484a;font-size:12px;">Legendários - Amor, Honra, Unidade</p>
           </td>
         </tr>
       </table>
@@ -110,7 +110,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
 
 ### 3. Magic Link
 
-**Subject:** Seu link de acesso - Embaixadores dos Legendarios
+**Subject:** Seu link de acesso - Embaixadores dos Legendários
 
 **Body:**
 ```html
@@ -120,14 +120,14 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
       <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
         <tr>
           <td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendarios</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendários</h1>
           </td>
         </tr>
         <tr>
           <td style="padding:40px;">
-            <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Acesso rapido</h2>
+            <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Acesso rápido</h2>
             <p style="margin:0 0 24px;color:#86868b;font-size:15px;line-height:1.6;">
-              Clique no botao abaixo para acessar o sistema. Este link e valido por tempo limitado.
+              Clique no botão abaixo para acessar o sistema. Este link é válido por tempo limitado.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
@@ -140,7 +140,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
         </tr>
         <tr>
           <td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
+            <p style="margin:0;color:#48484a;font-size:12px;">Legendários - Amor, Honra, Unidade</p>
           </td>
         </tr>
       </table>
@@ -153,7 +153,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
 
 ### 4. Change Email Address
 
-**Subject:** Confirme seu novo email - Embaixadores dos Legendarios
+**Subject:** Confirme seu novo email - Embaixadores dos Legendários
 
 **Body:**
 ```html
@@ -163,14 +163,14 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
       <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
         <tr>
           <td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendarios</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendários</h1>
           </td>
         </tr>
         <tr>
           <td style="padding:40px;">
-            <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Alteracao de email</h2>
+            <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Alteração de email</h2>
             <p style="margin:0 0 24px;color:#86868b;font-size:15px;line-height:1.6;">
-              Confirme a alteracao do seu endereco de email clicando no botao abaixo.
+              Confirme a alteração do seu endereço de email clicando no botão abaixo.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
@@ -183,7 +183,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
         </tr>
         <tr>
           <td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
+            <p style="margin:0;color:#48484a;font-size:12px;">Legendários - Amor, Honra, Unidade</p>
           </td>
         </tr>
       </table>
@@ -196,7 +196,7 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
 
 ### 5. Reset Password
 
-**Subject:** Redefinir senha - Embaixadores dos Legendarios
+**Subject:** Redefinir senha - Embaixadores dos Legendários
 
 **Body:**
 ```html
@@ -206,14 +206,14 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
       <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
         <tr>
           <td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendarios</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.02em;">Embaixadores dos Legendários</h1>
           </td>
         </tr>
         <tr>
           <td style="padding:40px;">
             <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:20px;font-weight:600;">Redefinir senha</h2>
             <p style="margin:0 0 24px;color:#86868b;font-size:15px;line-height:1.6;">
-              Recebemos uma solicitacao para redefinir sua senha. Clique no botao abaixo para criar uma nova senha.
+              Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
@@ -223,13 +223,13 @@ Em Supabase > Authentication > Email Templates, substituir cada template:
               </tr>
             </table>
             <p style="margin:24px 0 0;color:#48484a;font-size:13px;line-height:1.5;text-align:center;">
-              Se voce nao solicitou esta alteracao, pode ignorar este email.
+              Se você não solicitou esta alteração, pode ignorar este email.
             </p>
           </td>
         </tr>
         <tr>
           <td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
+            <p style="margin:0;color:#48484a;font-size:12px;">Legendários - Amor, Honra, Unidade</p>
           </td>
         </tr>
       </table>
