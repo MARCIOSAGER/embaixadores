@@ -44,7 +44,11 @@ export default function Admin() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.msg || data.message || "Erro ao enviar convite");
+        const msg = data.msg || data.message || "";
+        if (msg.includes("already been registered")) {
+          throw new Error("Este email ja esta cadastrado. Delete o usuario antes de reenviar o convite.");
+        }
+        throw new Error(msg || "Erro ao enviar convite");
       }
       toast.success(t("admin.inviteSent"));
       setInviteEmail("");
