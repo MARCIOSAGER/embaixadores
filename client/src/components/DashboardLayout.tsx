@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Brand */}
         <div className="px-5 pt-7 pb-5">
           <div className="flex items-center gap-3">
-            <img src={LOGO_LEGENDARIOS} alt="Legendários" className="h-10 object-contain invert" />
+            <img src={LOGO_LEGENDARIOS} alt="Legendários" className="h-16 object-contain invert" />
           </div>
           <p className="apple-caption mt-4">Sistema de Gestão</p>
         </div>
