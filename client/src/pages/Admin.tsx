@@ -74,7 +74,7 @@ export default function Admin() {
             <UserPlus className="w-5 h-5 text-[#FF6B00]" />
             {t("admin.invite")}
           </h2>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <input
                 type="email"
@@ -88,7 +88,7 @@ export default function Admin() {
             <button
               onClick={handleInvite}
               disabled={inviting || !inviteEmail.trim()}
-              className="apple-btn apple-btn-filled px-5 py-2.5 text-sm font-medium rounded-xl flex items-center gap-2 disabled:opacity-50"
+              className="apple-btn apple-btn-filled px-5 py-2.5 text-sm font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 shrink-0"
             >
               {inviting && <Loader2 className="w-4 h-4 animate-spin" />}
               {t("admin.sendInvite")}
@@ -114,18 +114,18 @@ export default function Admin() {
           ) : (
             <div className="divide-y divide-white/[0.06]">
               {users.map((u: any) => (
-                <div key={u.id} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-xs font-bold">
+                <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 gap-3 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-xs font-bold shrink-0">
                       {(u.name || u.email || "?").charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">{u.name || u.email || "—"}</p>
-                      <p className="text-xs text-[#48484a]">{u.email}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{u.name || u.email || "—"}</p>
+                      <p className="text-xs text-[#48484a] truncate">{u.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-[#48484a]">
+                  <div className="flex items-center gap-3 sm:shrink-0 pl-12 sm:pl-0">
+                    <span className="text-xs text-[#48484a] whitespace-nowrap">
                       {u.lastSignedIn ? new Date(u.lastSignedIn).toLocaleDateString() : "—"}
                     </span>
                     <select
