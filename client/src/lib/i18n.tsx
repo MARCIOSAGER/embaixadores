@@ -227,6 +227,22 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.agendadas": "Agendadas",
     "ent.aprovadas": "Aprovadas",
     "ent.agendar": "Agendar",
+
+    // Admin
+    "admin.title": "Administração",
+    "admin.subtitle": "Gestão de usuários e permissões",
+    "admin.users": "Usuários",
+    "admin.invite": "Convidar Usuário",
+    "admin.email": "Email",
+    "admin.role": "Perfil",
+    "admin.lastLogin": "Último Acesso",
+    "admin.sendInvite": "Enviar Convite",
+    "admin.roleUser": "Usuário",
+    "admin.roleAdmin": "Administrador",
+    "admin.inviteSent": "Convite enviado com sucesso!",
+    "admin.noUsers": "Nenhum usuário cadastrado",
+    "admin.acessoNegado": "Acesso Negado",
+    "admin.acessoNegadoDesc": "Você não tem permissão para acessar esta área.",
   },
 
   es: {
@@ -453,6 +469,22 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.agendadas": "Programadas",
     "ent.aprovadas": "Aprobadas",
     "ent.agendar": "Programar",
+
+    // Admin
+    "admin.title": "Administración",
+    "admin.subtitle": "Gestión de usuarios y permisos",
+    "admin.users": "Usuarios",
+    "admin.invite": "Invitar Usuario",
+    "admin.email": "Email",
+    "admin.role": "Rol",
+    "admin.lastLogin": "Último Acceso",
+    "admin.sendInvite": "Enviar Invitación",
+    "admin.roleUser": "Usuario",
+    "admin.roleAdmin": "Administrador",
+    "admin.inviteSent": "Invitación enviada con éxito!",
+    "admin.noUsers": "Ningún usuario registrado",
+    "admin.acessoNegado": "Acceso Denegado",
+    "admin.acessoNegadoDesc": "No tiene permiso para acceder a esta área.",
   },
 
   en: {
@@ -679,6 +711,22 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.agendadas": "Scheduled",
     "ent.aprovadas": "Approved",
     "ent.agendar": "Schedule",
+
+    // Admin
+    "admin.title": "Administration",
+    "admin.subtitle": "User management and permissions",
+    "admin.users": "Users",
+    "admin.invite": "Invite User",
+    "admin.email": "Email",
+    "admin.role": "Role",
+    "admin.lastLogin": "Last Login",
+    "admin.sendInvite": "Send Invite",
+    "admin.roleUser": "User",
+    "admin.roleAdmin": "Administrator",
+    "admin.inviteSent": "Invite sent successfully!",
+    "admin.noUsers": "No users registered",
+    "admin.acessoNegado": "Access Denied",
+    "admin.acessoNegadoDesc": "You don't have permission to access this area.",
   },
 };
 

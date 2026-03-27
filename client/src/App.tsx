@@ -12,6 +12,7 @@ import TercaDeGloria from "./pages/TercaDeGloria";
 import WelcomeKit from "./pages/WelcomeKit";
 import Eventos from "./pages/Eventos";
 import Entrevistas from "./pages/Entrevistas";
+import Admin from "./pages/Admin";
 import { Loader2 } from "lucide-react";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/welcome-kit" component={WelcomeKit} />
       <Route path="/eventos" component={Eventos} />
       <Route path="/entrevistas" component={Entrevistas} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

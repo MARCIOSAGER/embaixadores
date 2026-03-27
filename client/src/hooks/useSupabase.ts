@@ -457,3 +457,30 @@ export function useLogout() {
     },
   });
 }
+
+// ========== ADMIN ==========
+
+export function useUsers() {
+  return useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("users").select("*").order("createdAt", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useUpdateUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, role }: { id: number; role: "user" | "admin" }) => {
+      const { error } = await supabase.from("users").update({ role }).eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+}

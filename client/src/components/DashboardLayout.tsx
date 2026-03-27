@@ -2,7 +2,7 @@ import { useI18n, type Locale } from "@/lib/i18n";
 import { useLocation, Link } from "wouter";
 import {
   LayoutDashboard, Users, Church, Gift, Calendar, UserPlus,
-  LogOut, Globe, Loader2
+  LogOut, Globe, Loader2, Shield
 } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { t, locale, setLocale } = useI18n();
   const [showLang, setShowLang] = useState(false);
 
-  const navItems = [
+  const baseNavItems = [
     { path: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
     { path: "/embaixadores", icon: Users, label: t("nav.embaixadores") },
     { path: "/terca-de-gloria", icon: Church, label: t("nav.tercaGloria") },
@@ -31,6 +31,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { path: "/eventos", icon: Calendar, label: t("nav.eventos") },
     { path: "/entrevistas", icon: UserPlus, label: t("nav.entrevistas") },
   ];
+
+  const navItems = isAdmin
+    ? [...baseNavItems, { path: "/admin", icon: Shield, label: t("admin.title") }]
+    : baseNavItems;
 
   useEffect(() => {
     if (showLang) {
