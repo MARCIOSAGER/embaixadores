@@ -5,6 +5,7 @@ import {
   LogOut, Globe, Loader2
 } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const LOGO_EMBAIXADOR = "https://d2xsxph8kpxj0f.cloudfront.net/310519663385583502/Ed66sXViBkMN3knWB5TRxe/logo-embaixador_dde21016.jpeg";
 const LOGO_LEGENDARIOS = "/logo-legendarios.png";
@@ -16,7 +17,8 @@ const LANGS: { code: Locale; label: string; flag: string }[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const user = { name: "Admin", email: "admin@embaixadores.com" };
+  const { user: authUser, signOut, isAdmin } = useAuth();
+  const user = { name: authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User", email: authUser?.email || "" };
   const [location] = useLocation();
   const { t, locale, setLocale } = useI18n();
   const [showLang, setShowLang] = useState(false);
@@ -123,7 +125,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <p className="text-[0.8125rem] font-medium text-[#f5f5f7] truncate">{user?.name}</p>
               <p className="text-[0.6875rem] text-[#48484a] truncate">{user?.email}</p>
             </div>
-            <button onClick={() => logout()} className="text-[#48484a] hover:text-[#FF453A] transition-colors duration-200 p-1.5 rounded-lg hover:bg-white/[0.03]">
+            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] transition-colors duration-200 p-1.5 rounded-lg hover:bg-white/[0.03]">
               <LogOut className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
@@ -144,7 +146,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             >
               <Globe className="w-[18px] h-[18px]" strokeWidth={1.5} />
             </button>
-            <button onClick={() => logout()} className="text-[#48484a] hover:text-[#FF453A] p-2 rounded-lg hover:bg-white/[0.03]">
+            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] p-2 rounded-lg hover:bg-white/[0.03]">
               <LogOut className="w-[18px] h-[18px]" strokeWidth={1.5} />
             </button>
           </div>
