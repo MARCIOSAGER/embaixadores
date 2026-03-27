@@ -7,7 +7,7 @@ import {
 import { ReactNode, useState, useEffect } from "react";
 
 const LOGO_EMBAIXADOR = "https://d2xsxph8kpxj0f.cloudfront.net/310519663385583502/Ed66sXViBkMN3knWB5TRxe/logo-embaixador_dde21016.jpeg";
-const LOGO_LEGENDARIOS = "https://d2xsxph8kpxj0f.cloudfront.net/310519663385583502/Ed66sXViBkMN3knWB5TRxe/logo-legendarios_7b9be7a6.png";
+const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
 const LANGS: { code: Locale; label: string; flag: string }[] = [
   { code: "pt", label: "Português", flag: "🇧🇷" },
@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 >
                   <item.icon
                     className={`w-[18px] h-[18px] transition-colors duration-300 ${
-                      active ? "text-[#0A84FF]" : "text-[#48484a] group-hover:text-[#636366]"
+                      active ? "text-[#FF6B00]" : "text-[#48484a] group-hover:text-[#636366]"
                     }`}
                     strokeWidth={active ? 2 : 1.5}
                   />
@@ -116,7 +116,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           {/* User */}
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0A84FF] to-[#5E5CE6] flex items-center justify-center text-white text-[0.6875rem] font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.6875rem] font-bold shrink-0">
               {initial}
             </div>
             <div className="flex-1 min-w-0">
@@ -176,10 +176,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Link key={item.path} href={item.path}>
                 <div className="flex flex-col items-center gap-[2px] py-1 px-1.5 min-w-[50px]">
                   <item.icon
-                    className={`w-[22px] h-[22px] transition-colors duration-200 ${active ? "text-[#0A84FF]" : "text-[#48484a]"}`}
+                    className={`w-[22px] h-[22px] transition-colors duration-200 ${active ? "text-[#FF6B00]" : "text-[#48484a]"}`}
                     strokeWidth={active ? 2 : 1.5}
                   />
-                  <span className={`text-[0.5625rem] font-medium transition-colors duration-200 ${active ? "text-[#0A84FF]" : "text-[#48484a]"}`}>
+                  <span className={`text-[0.5625rem] font-medium transition-colors duration-200 ${active ? "text-[#FF6B00]" : "text-[#48484a]"}`}>
                     {item.label.length > 9 ? item.label.substring(0, 7) + "…" : item.label}
                   </span>
                 </div>

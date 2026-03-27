@@ -76,7 +76,7 @@ export default function WelcomeKit() {
         <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "50ms" }}>
           {[
             { label: t("kit.pendentes"), val: stats.pendente, color: "#FF9F0A", icon: Package },
-            { label: t("kit.parciais"), val: stats.parcial, color: "#5E5CE6", icon: Gift },
+            { label: t("kit.parciais"), val: stats.parcial, color: "#E85D00", icon: Gift },
             { label: t("kit.completos"), val: stats.completo, color: "#30D158", icon: PackageCheck },
           ].map(({ label, val, color, icon: Icon }) => (
             <div key={label} className="apple-card p-4 flex items-center gap-3">
@@ -127,10 +127,10 @@ export default function WelcomeKit() {
               const progress = getKitProgress(kit);
               const pct = (progress / 5) * 100;
               const name = getEmbName(kit.embaixadorId);
-              const color = progress === 5 ? "#30D158" : progress === 0 ? "#FF9F0A" : "#0A84FF";
+              const color = progress === 5 ? "#30D158" : progress === 0 ? "#FF9F0A" : "#FF6B00";
               return (
                 <div key={kit.id} className="apple-list-item group" onClick={() => setSelectedKit(kit)}>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0A84FF] to-[#5E5CE6] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
                     {name.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -157,7 +157,7 @@ export default function WelcomeKit() {
               <div className="p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0A84FF] to-[#5E5CE6] flex items-center justify-center text-white text-lg font-bold">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-lg font-bold">
                       {getEmbName(selectedKit.embaixadorId).charAt(0)?.toUpperCase()}
                     </div>
                     <div>
@@ -174,7 +174,7 @@ export default function WelcomeKit() {
                 <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700" style={{
                     width: `${(getKitProgress(selectedKit) / 5) * 100}%`,
-                    background: getKitProgress(selectedKit) === 5 ? "#30D158" : "#0A84FF",
+                    background: getKitProgress(selectedKit) === 5 ? "#30D158" : "#FF6B00",
                   }} />
                 </div>
 

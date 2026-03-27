@@ -49,8 +49,8 @@ function SectionCard({ icon: Icon, title, children, delay }: { icon: any; title:
   return (
     <div className="apple-card overflow-hidden animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="px-5 pt-5 pb-3 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-[#0A84FF]" strokeWidth={1.8} />
+        <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />
         </div>
         <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">{title}</h3>
       </div>
@@ -101,7 +101,7 @@ export default function Home() {
           {/* Hero Greeting */}
           <div className="animate-fade-up">
             <div className="flex items-center gap-4 mb-1">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0A84FF] to-[#5E5CE6] flex items-center justify-center text-white text-lg font-bold">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-lg font-bold">
                 {firstName.charAt(0)}
               </div>
               <div>
@@ -115,7 +115,7 @@ export default function Home() {
 
           {/* Metrics Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard icon={Users} label={t("dash.totalEmb")} value={data.embaixadores.total} subtitle={t("dash.cadastrados")} color="#0A84FF" delay={50} />
+            <MetricCard icon={Users} label={t("dash.totalEmb")} value={data.embaixadores.total} subtitle={t("dash.cadastrados")} color="#FF6B00" delay={50} />
             <MetricCard icon={UserCheck} label={t("dash.ativos")} value={data.embaixadores.ativos} subtitle={t("dash.emAtividade")} color="#30D158" delay={100} />
             <MetricCard icon={Clock} label={t("dash.pendentes")} value={data.embaixadores.pendentes} subtitle={t("dash.aguardandoRenov")} color="#FF9F0A" delay={150} />
             <MetricCard icon={UserX} label={t("dash.inativos")} value={data.embaixadores.inativos} subtitle={t("dash.semAtividade")} color="#FF453A" delay={200} />
@@ -124,7 +124,7 @@ export default function Home() {
           {/* Kit Rings */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <KitRingCard label={t("dash.kitsPendentes")} value={data.kitsStats.pendentes} total={data.embaixadores.total} color="#FF9F0A" delay={250} />
-            <KitRingCard label={t("dash.kitsParciais")} value={data.kitsStats.parciais} total={data.embaixadores.total} color="#5E5CE6" delay={300} />
+            <KitRingCard label={t("dash.kitsParciais")} value={data.kitsStats.parciais} total={data.embaixadores.total} color="#E85D00" delay={300} />
             <KitRingCard label={t("dash.kitsCompletos")} value={data.kitsStats.completos} total={data.embaixadores.total} color="#30D158" delay={350} />
           </div>
 

@@ -14,7 +14,7 @@
   --color-card-foreground: oklch(0.97 0 0);
   --color-popover: oklch(0.11 0.003 260);
   --color-popover-foreground: oklch(0.97 0 0);
-  --color-primary: oklch(0.62 0.19 255);
+  --color-primary: oklch(0.65 0.22 45);
   --color-primary-foreground: oklch(1 0 0);
   --color-secondary: oklch(0.14 0.003 260);
   --color-secondary-foreground: oklch(0.85 0 0);
@@ -26,20 +26,20 @@
   --color-destructive-foreground: oklch(1 0 0);
   --color-border: oklch(0.20 0.003 260);
   --color-input: oklch(0.17 0.003 260);
-  --color-ring: oklch(0.62 0.19 255);
-  --color-chart-1: oklch(0.62 0.19 255);
+  --color-ring: oklch(0.65 0.22 45);
+  --color-chart-1: oklch(0.65 0.22 45);
   --color-chart-2: oklch(0.65 0.18 160);
   --color-chart-3: oklch(0.60 0.20 300);
   --color-chart-4: oklch(0.70 0.18 80);
   --color-chart-5: oklch(0.55 0.22 25);
   --color-sidebar: oklch(0.00 0 0);
   --color-sidebar-foreground: oklch(0.85 0 0);
-  --color-sidebar-primary: oklch(0.62 0.19 255);
+  --color-sidebar-primary: oklch(0.65 0.22 45);
   --color-sidebar-primary-foreground: oklch(1 0 0);
   --color-sidebar-accent: oklch(0.14 0.005 260);
   --color-sidebar-accent-foreground: oklch(0.90 0 0);
   --color-sidebar-border: oklch(0.17 0.003 260);
-  --color-sidebar-ring: oklch(0.62 0.19 255);
+  --color-sidebar-ring: oklch(0.65 0.22 45);
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
@@ -158,24 +158,24 @@ body {
 }
 
 .apple-btn-filled {
-  background: #0A84FF;
+  background: #FF6B00;
   color: white;
   padding: 0.6875rem 1.375rem;
 }
 
 .apple-btn-filled:hover {
-  background: #409CFF;
-  box-shadow: 0 4px 20px rgba(10, 132, 255, 0.3);
+  background: #FF8C33;
+  box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
 }
 
 .apple-btn-tinted {
-  background: rgba(10, 132, 255, 0.12);
-  color: #0A84FF;
+  background: rgba(255, 107, 0, 0.12);
+  color: #FF6B00;
   padding: 0.6875rem 1.375rem;
 }
 
 .apple-btn-tinted:hover {
-  background: rgba(10, 132, 255, 0.18);
+  background: rgba(255, 107, 0, 0.18);
 }
 
 .apple-btn-gray {
@@ -190,12 +190,12 @@ body {
 
 .apple-btn-plain {
   background: transparent;
-  color: #0A84FF;
+  color: #FF6B00;
   padding: 0.5rem 0.75rem;
 }
 
 .apple-btn-plain:hover {
-  background: rgba(10, 132, 255, 0.08);
+  background: rgba(255, 107, 0, 0.08);
 }
 
 .apple-btn-destructive {
@@ -227,9 +227,9 @@ body {
 }
 
 .apple-input:focus {
-  border-color: #0A84FF;
+  border-color: #FF6B00;
   background: rgba(118, 118, 128, 0.18);
-  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.20);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.20);
 }
 
 .apple-input-label {
@@ -252,7 +252,7 @@ body {
   letter-spacing: 0;
 }
 
-.apple-badge-blue { background: rgba(10, 132, 255, 0.14); color: #409CFF; }
+.apple-badge-blue { background: rgba(255, 107, 0, 0.14); color: #FF8C33; }
 .apple-badge-green { background: rgba(48, 209, 88, 0.14); color: #30D158; }
 .apple-badge-orange { background: rgba(255, 159, 10, 0.14); color: #FF9F0A; }
 .apple-badge-red { background: rgba(255, 69, 58, 0.14); color: #FF453A; }
@@ -310,8 +310,8 @@ body {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(10, 132, 255, 0.06), transparent),
-    radial-gradient(ellipse 50% 40% at 85% 50%, rgba(94, 92, 230, 0.04), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 107, 0, 0.06), transparent),
+    radial-gradient(ellipse 50% 40% at 85% 50%, rgba(232, 93, 0, 0.04), transparent),
     radial-gradient(ellipse 40% 50% at 15% 80%, rgba(48, 209, 88, 0.02), transparent),
     #000000;
 }

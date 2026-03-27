@@ -107,7 +107,7 @@ export default function Embaixadores() {
         {/* Mini Stats */}
         <div className="grid grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
           {[
-            { icon: Users, val: stats?.total || 0, label: t("emb.total"), color: "#0A84FF" },
+            { icon: Users, val: stats?.total || 0, label: t("emb.total"), color: "#FF6B00" },
             { icon: UserCheck, val: stats?.ativos || 0, label: t("emb.ativo"), color: "#30D158" },
             { icon: Clock, val: stats?.pendentes || 0, label: t("emb.pendRenov"), color: "#FF9F0A" },
             { icon: UserX, val: stats?.inativos || 0, label: t("emb.inativo"), color: "#FF453A" },
@@ -151,7 +151,7 @@ export default function Embaixadores() {
               const sc = STATUS_MAP[emb.status] || STATUS_MAP.ativo;
               return (
                 <div key={emb.id} className="apple-list-item group" onClick={() => setSelected(emb)}>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0A84FF] to-[#5E5CE6] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
                     {emb.nomeCompleto?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -164,7 +164,7 @@ export default function Embaixadores() {
                     <div className="flex items-center gap-3 mt-0.5">
                       {emb.cidade && <span className="text-[0.6875rem] text-[#6e6e73] truncate">{emb.cidade}</span>}
                       {emb.numeroLegendario && <span className="text-[0.6875rem] text-[#FF9F0A]">L#{emb.numeroLegendario}</span>}
-                      {emb.numeroEmbaixador && <span className="text-[0.6875rem] text-[#0A84FF]">E#{emb.numeroEmbaixador}</span>}
+                      {emb.numeroEmbaixador && <span className="text-[0.6875rem] text-[#FF6B00]">E#{emb.numeroEmbaixador}</span>}
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-[#3a3a3c] group-hover:text-[#636366] shrink-0" strokeWidth={1.5} />
@@ -181,7 +181,7 @@ export default function Embaixadores() {
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0A84FF] to-[#5E5CE6] flex items-center justify-center text-white text-xl font-bold">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-xl font-bold">
                     {selected.nomeCompleto?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex-1">

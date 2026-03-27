@@ -15,7 +15,7 @@ function dateToTs(d: string): number | null { return d ? new Date(d + "T12:00:00
 function tsToInput(ts: number | null | undefined): string { return ts ? new Date(ts).toISOString().split("T")[0] : ""; }
 
 const STATUS_MAP: Record<string, { color: string; bg: string; label: string }> = {
-  planejada: { color: "#0A84FF", bg: "rgba(10,132,255,0.14)", label: "Planejada" },
+  planejada: { color: "#FF6B00", bg: "rgba(255,107,0,0.14)", label: "Planejada" },
   realizada: { color: "#30D158", bg: "rgba(48,209,88,0.14)", label: "Realizada" },
   cancelada: { color: "#FF453A", bg: "rgba(255,69,58,0.14)", label: "Cancelada" },
 };
@@ -100,8 +100,8 @@ export default function TercaDeGloria() {
               return (
                 <div key={r.id} className="apple-card overflow-hidden">
                   <div className="p-5 flex items-start gap-4 cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
-                    <div className="w-12 h-12 rounded-2xl bg-[#5E5CE6]/10 flex items-center justify-center shrink-0">
-                      <Church className="w-5 h-5 text-[#5E5CE6]" strokeWidth={1.5} />
+                    <div className="w-12 h-12 rounded-2xl bg-[#E85D00]/10 flex items-center justify-center shrink-0">
+                      <Church className="w-5 h-5 text-[#E85D00]" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
