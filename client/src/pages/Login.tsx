@@ -119,7 +119,7 @@ export default function Login() {
 
         {/* Form card */}
         <div className="w-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {resetSent ? (
               <div className="text-center space-y-4 py-4">
                 <div className="w-14 h-14 mx-auto rounded-full bg-[#30D158]/10 flex items-center justify-center">
@@ -150,7 +150,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="seu@email.com"
                     required
-                    className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-3.5 text-white text-[0.9375rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
+                    className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-3 text-white text-[0.875rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                   />
                 </div>
 
@@ -191,14 +191,14 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || !turnstileToken}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[0.9375rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
+                  className="w-full py-3 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[0.875rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
                 >
                   {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                   {resetMode ? "ENVIAR LINK" : "ENTRAR NO SISTEMA"}
                 </button>
 
                 {/* Turnstile CAPTCHA */}
-                <div ref={turnstileRef} className="flex justify-center scale-90 origin-center" style={{ colorScheme: "dark" }} />
+                <div ref={turnstileRef} className="flex justify-center scale-[0.85] origin-center -my-1" style={{ colorScheme: "dark" }} />
 
                 {/* Divider */}
                 {!resetMode && (
@@ -221,7 +221,7 @@ export default function Login() {
                         }
                       }}
                       disabled={loading}
-                      className="w-full py-3.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white font-semibold text-[0.9375rem] rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                      className="w-full py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white font-semibold text-[0.8125rem] rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
                     >
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
