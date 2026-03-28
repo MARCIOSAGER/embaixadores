@@ -57,7 +57,7 @@ export default function Entrevistas() {
       const message = `*Entrevista Agendada*\nCandidato: ${eventData.nomeCandidato}\nData: ${dateStr}\nIndicado por: ${eventData.indicadoPor || "—"}`;
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
         body: JSON.stringify({
           channel,
           subject: `Entrevista: ${eventData.nomeCandidato}`,
@@ -326,7 +326,7 @@ export default function Entrevistas() {
                         try {
                           const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
                             method: "POST",
-                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
                             body: JSON.stringify({ title: `Entrevista - ${form.nomeCandidato || "Candidato"}`, date: form.dataEntrevista, googleToken }),
                           });
                           const data = await res.json();

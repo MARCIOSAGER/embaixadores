@@ -59,7 +59,7 @@ export default function Eventos() {
       const message = `*${eventData.titulo}*\nData: ${dateStr}\nLocal: ${eventData.local || "A definir"}`;
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
         body: JSON.stringify({
           channel,
           subject: `Novo Evento: ${eventData.titulo}`,
@@ -299,6 +299,7 @@ export default function Eventos() {
                             headers: {
                               "Content-Type": "application/json",
                               "Authorization": `Bearer ${session?.access_token}`,
+                              "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
                             },
                             body: JSON.stringify({ title: form.titulo || "Reunião Legendários", date: form.data, googleToken }),
                           });

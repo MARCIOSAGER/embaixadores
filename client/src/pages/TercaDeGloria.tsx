@@ -49,7 +49,7 @@ export default function TercaDeGloria() {
       const message = `*Terca de Gloria*\nTema: ${eventData.tema}\nData: ${dateStr}\nPregador: ${eventData.pregador || "A definir"}`;
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
         body: JSON.stringify({
           channel,
           subject: `Terca de Gloria: ${eventData.tema}`,
@@ -295,7 +295,7 @@ export default function TercaDeGloria() {
                         try {
                           const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
                             method: "POST",
-                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
                             body: JSON.stringify({ title: `Terça de Glória - ${form.tema || "Reunião"}`, date: form.data, googleToken }),
                           });
                           const data = await res.json();
