@@ -40,6 +40,7 @@ export default function Eventos() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [filter, setFilter] = useState("all");
+  const [notifyTarget, setNotifyTarget] = useState<any>(null);
   const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: eventos, isLoading } = useEventos();
@@ -224,25 +225,9 @@ export default function Eventos() {
                       </a>
                     )}
                     <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        const dateStr = ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "A definir";
-                        const msg = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || 'A definir'}`;
-                        toast.loading("Enviando WhatsApp para todos...");
-                        try {
-                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-                            body: JSON.stringify({ channel: "whatsapp", subject: ev.titulo, title: ev.titulo, message: msg, meetLink: ev.linkMeet || undefined }),
-                          });
-                          const data = await res.json();
-                          toast.dismiss();
-                          if (data.success) toast.success(`WhatsApp enviado para ${data.results.whatsapp.sent} embaixadores`);
-                          else toast.error(data.error || "Erro ao enviar");
-                        } catch { toast.dismiss(); toast.error("Erro ao enviar WhatsApp"); }
-                      }}
+                      onClick={(e) => { e.stopPropagation(); setNotifyTarget(ev); }}
                       className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#25D366] hover:text-[#128C7E]"
-                      title="Enviar WhatsApp para todos embaixadores"
+                      title="Notificar embaixadores"
                     >
                       <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
@@ -376,6 +361,58 @@ export default function Eventos() {
                   {(createMut.isPending || updateMut.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? t("common.salvar") : t("common.criar")}
                 </button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Notify Dialog */}
+        <Dialog open={!!notifyTarget} onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}>
+          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-sm p-0">
+            <div className="p-6 space-y-4">
+              <h2 className="text-lg font-bold text-white tracking-[-0.02em] flex items-center gap-2">
+                <Send className="w-5 h-5 text-[#FF6B00]" />
+                Notificar Embaixadores
+              </h2>
+              <p className="text-[0.8125rem] text-[#86868b]">{notifyTarget?.titulo}</p>
+              <div className="flex flex-col gap-2">
+                {([
+                  { key: "both", label: "WhatsApp + Email" },
+                  { key: "whatsapp", label: "Somente WhatsApp" },
+                  { key: "email", label: "Somente Email" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={async () => {
+                      const ev = notifyTarget;
+                      setNotifyTarget(null);
+                      const dateStr = ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "A definir";
+                      const msg = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || 'A definir'}`;
+                      toast.loading("Enviando notificacoes...");
+                      try {
+                        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
+                          body: JSON.stringify({ channel: opt.key, subject: `Evento: ${ev.titulo}`, title: ev.titulo, message: msg, meetLink: ev.linkMeet || undefined }),
+                        });
+                        const data = await res.json();
+                        toast.dismiss();
+                        if (data.success) {
+                          const parts = [];
+                          if (data.results.whatsapp?.sent > 0) parts.push(`${data.results.whatsapp.sent} WhatsApp`);
+                          if (data.results.email?.sent > 0) parts.push(`${data.results.email.sent} Email`);
+                          toast.success(`Enviado: ${parts.join(", ")}`);
+                        } else toast.error(data.error || "Erro ao enviar");
+                      } catch { toast.dismiss(); toast.error("Erro ao enviar notificacoes"); }
+                    }}
+                    className="apple-btn apple-btn-gray w-full py-3 text-[0.8125rem] flex items-center gap-2 justify-center"
+                  >
+                    {opt.key !== "email" && <MessageCircle className="w-4 h-4 text-[#25D366]" />}
+                    {opt.key !== "whatsapp" && <Mail className="w-4 h-4 text-[#FF6B00]" />}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setNotifyTarget(null)} className="apple-btn apple-btn-gray w-full py-2.5 text-[0.8125rem]">Cancelar</button>
             </div>
           </DialogContent>
         </Dialog>

@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
     switch (action) {
       case "debug": {
         const c = getZapiCreds();
+        const authHeader = req.headers.get("Authorization") || "NONE";
         return json({
+          authHeader: authHeader.slice(0, 20) + "..." + (authHeader.length > 20 ? ` (len=${authHeader.length})` : ""),
           instanceId: c.instanceId ? `${c.instanceId.slice(0, 4)}...${c.instanceId.slice(-4)} (len=${c.instanceId.length})` : "EMPTY",
           token: c.token ? `${c.token.slice(0, 4)}...${c.token.slice(-4)} (len=${c.token.length})` : "EMPTY",
           clientToken: c.clientToken ? `${c.clientToken.slice(0, 4)}...${c.clientToken.slice(-4)} (len=${c.clientToken.length})` : "EMPTY",
