@@ -120,13 +120,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           {/* User */}
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.6875rem] font-bold shrink-0">
-              {initial}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[0.8125rem] font-medium text-[#f5f5f7] truncate">{user?.name}</p>
-              <p className="text-[0.6875rem] text-[#48484a] truncate">{user?.email}</p>
-            </div>
+            <Link href="/perfil">
+              <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.6875rem] font-bold shrink-0">
+                  {initial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[0.8125rem] font-medium text-[#f5f5f7] truncate group-hover:text-[#FF6B00] transition-colors duration-200">{user?.name}</p>
+                  <p className="text-[0.6875rem] text-[#48484a] truncate">{user?.email}</p>
+                </div>
+              </div>
+            </Link>
             <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] transition-colors duration-200 p-1.5 rounded-lg hover:bg-white/[0.03]">
               <LogOut className="w-4 h-4" strokeWidth={1.5} />
             </button>

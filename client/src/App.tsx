@@ -14,6 +14,7 @@ import WelcomeKit from "./pages/WelcomeKit";
 import Eventos from "./pages/Eventos";
 import Entrevistas from "./pages/Entrevistas";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/eventos" component={Eventos} />
       <Route path="/entrevistas" component={Entrevistas} />
       <Route path="/admin" component={Admin} />
+      <Route path="/perfil" component={Profile} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -103,6 +103,23 @@ export function useDeleteEmbaixador() {
   });
 }
 
+export function useProfileEmbaixador(email: string | null) {
+  return useQuery({
+    queryKey: ["embaixador", "profile", email],
+    queryFn: async () => {
+      if (!email) return null;
+      const { data, error } = await supabase
+        .from("embaixadores")
+        .select("*")
+        .eq("email", email)
+        .single();
+      if (error) throw error;
+      return data as Embaixador;
+    },
+    enabled: !!email,
+  });
+}
+
 // ========== TERÇA DE GLÓRIA ==========
 
 export function useTercaGloria() {
