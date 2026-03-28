@@ -76,7 +76,7 @@ function Skeleton() {
         <div className="apple-skeleton h-8 w-48" />
         <div className="apple-skeleton h-4 w-72" />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => <div key={i} className="apple-skeleton h-32 rounded-[20px]" />)}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -116,7 +116,7 @@ export default function Home() {
           </div>
 
           {/* Metrics Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <MetricCard icon={Users} label={t("dash.totalEmb")} value={data.embaixadores.total} subtitle={t("dash.cadastrados")} color="#FF6B00" delay={50} />
             <MetricCard icon={UserCheck} label={t("dash.ativos")} value={data.embaixadores.ativos} subtitle={t("dash.emAtividade")} color="#30D158" delay={100} />
             <MetricCard icon={Clock} label={t("dash.pendentes")} value={data.embaixadores.pendentes} subtitle={t("dash.aguardandoRenov")} color="#FF9F0A" delay={150} />
@@ -124,7 +124,7 @@ export default function Home() {
           </div>
 
           {/* Kit Rings */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <KitRingCard label={t("dash.kitsPendentes")} value={data.kitsStats.pendentes} total={data.embaixadores.total} color="#FF9F0A" delay={250} />
             <KitRingCard label={t("dash.kitsParciais")} value={data.kitsStats.parciais} total={data.embaixadores.total} color="#E85D00" delay={300} />
             <KitRingCard label={t("dash.kitsCompletos")} value={data.kitsStats.completos} total={data.embaixadores.total} color="#30D158" delay={350} />

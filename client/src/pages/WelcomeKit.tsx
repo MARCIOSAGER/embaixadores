@@ -138,7 +138,7 @@ export default function WelcomeKit() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "50ms" }}>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "50ms" }}>
           {[
             { label: t("kit.pendentes"), val: stats.pendente, color: "#FF9F0A", icon: Package },
             { label: t("kit.parciais"), val: stats.parcial, color: "#E85D00", icon: Gift },

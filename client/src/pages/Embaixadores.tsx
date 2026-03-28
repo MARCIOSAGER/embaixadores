@@ -105,7 +105,7 @@ export default function Embaixadores() {
         </div>
 
         {/* Mini Stats */}
-        <div className="grid grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
           {[
             { icon: Users, val: stats?.total || 0, label: t("emb.total"), color: "#FF6B00" },
             { icon: UserCheck, val: stats?.ativos || 0, label: t("emb.ativo"), color: "#30D158" },
@@ -157,7 +157,7 @@ export default function Embaixadores() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-[0.875rem] font-medium text-white truncate">{emb.nomeCompleto}</span>
-                      <span className="apple-badge text-[0.5625rem]" style={{ background: sc.bg, color: sc.color }}>
+                      <span className="apple-badge text-[0.6875rem]" style={{ background: sc.bg, color: sc.color }}>
                         {emb.status === "ativo" ? t("emb.ativo") : emb.status === "inativo" ? t("emb.inativo") : t("emb.pendRenov")}
                       </span>
                     </div>
@@ -177,7 +177,7 @@ export default function Embaixadores() {
         {/* Detail Sheet */}
         {selected && (
           <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)}>
-            <div className="apple-sheet-content w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
+            <div className="apple-sheet-content w-full max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">
                 <div className="flex items-center gap-4">
@@ -202,14 +202,14 @@ export default function Embaixadores() {
                   {(selected.cidade || selected.estado) && <div className="flex items-center gap-3"><MapPin className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{[selected.cidade, selected.estado].filter(Boolean).join(", ")}</span></div>}
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {[
                     { label: t("emb.nascimento"), val: formatDate(selected.dataNascimento, locale) },
                     { label: t("emb.ingresso"), val: formatDate(selected.dataIngresso, locale) },
                     { label: t("emb.renovacao"), val: formatDate(selected.dataRenovacao, locale) },
                   ].map(d => (
                     <div key={d.label} className="apple-card-inset p-3 text-center">
-                      <p className="text-[0.5625rem] text-[#6e6e73] uppercase tracking-wider">{d.label}</p>
+                      <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider">{d.label}</p>
                       <p className="text-[0.8125rem] text-white font-medium mt-1">{d.val}</p>
                     </div>
                   ))}
@@ -217,7 +217,7 @@ export default function Embaixadores() {
 
                 {selected.observacoes && (
                   <div className="apple-card-inset p-4">
-                    <p className="text-[0.5625rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.observacoes")}</p>
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.observacoes")}</p>
                     <p className="text-[0.8125rem] text-[#d2d2d7] leading-relaxed">{selected.observacoes}</p>
                   </div>
                 )}
@@ -237,7 +237,7 @@ export default function Embaixadores() {
 
         {/* Form Dialog */}
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-lg max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white tracking-[-0.02em]">{editingId ? t("emb.editar") : t("emb.novo")}</h2>
@@ -248,19 +248,19 @@ export default function Embaixadores() {
                   <label className="apple-input-label">{t("emb.nome")} *</label>
                   <input value={form.nomeCompleto} onChange={e => setForm({ ...form, nomeCompleto: e.target.value })} className="apple-input" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("emb.numLegendario")}</label><input value={form.numeroLegendario} onChange={e => setForm({ ...form, numeroLegendario: e.target.value })} className="apple-input" placeholder="L#" /></div>
                   <div><label className="apple-input-label">{t("emb.numEmbaixador")}</label><input value={form.numeroEmbaixador} onChange={e => setForm({ ...form, numeroEmbaixador: e.target.value })} className="apple-input" placeholder="E#" /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("emb.email")}</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="apple-input" /></div>
                   <div><label className="apple-input-label">{t("emb.telefone")}</label><input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="apple-input" /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("emb.cidade")}</label><input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="apple-input" /></div>
                   <div><label className="apple-input-label">{t("emb.estado")}</label><input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="apple-input" /></div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div><label className="apple-input-label">{t("emb.nascimento")}</label><input type="date" value={form.dataNascimento} onChange={e => setForm({ ...form, dataNascimento: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                   <div><label className="apple-input-label">{t("emb.ingresso")}</label><input type="date" value={form.dataIngresso} onChange={e => setForm({ ...form, dataIngresso: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                   <div><label className="apple-input-label">{t("emb.renovacao")}</label><input type="date" value={form.dataRenovacao} onChange={e => setForm({ ...form, dataRenovacao: e.target.value })} className="apple-input text-[0.8125rem]" /></div>

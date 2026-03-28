@@ -115,7 +115,7 @@ export default function Entrevistas() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[0.875rem] font-semibold text-white truncate">{ent.nomeCandidato}</span>
-                        <span className="apple-badge text-[0.5625rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ent.${ent.status}`)}</span>
+                        <span className="apple-badge text-[0.6875rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ent.${ent.status}`)}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-[#6e6e73]">
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ent.dataEntrevista, locale)}</span>
@@ -137,7 +137,7 @@ export default function Entrevistas() {
         {/* Detail Sheet */}
         {selected && (
           <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)}>
-            <div className="apple-sheet-content w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
+            <div className="apple-sheet-content w-full max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">
                 <div className="flex items-center gap-4">
@@ -190,12 +190,12 @@ export default function Entrevistas() {
 
         {/* Form Dialog */}
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-lg max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
             <div className="p-6 space-y-5">
               <h2 className="text-lg font-bold text-white tracking-[-0.02em]">{editingId ? t("ent.editar") : t("ent.nova")}</h2>
               <div className="space-y-4">
                 <div><label className="apple-input-label">{t("ent.nomeCandidato")} *</label><input value={form.nomeCandidato} onChange={e => setForm({ ...form, nomeCandidato: e.target.value })} className="apple-input" /></div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("ent.emailCandidato")}</label><input type="email" value={form.emailCandidato} onChange={e => setForm({ ...form, emailCandidato: e.target.value })} className="apple-input" /></div>
                   <div><label className="apple-input-label">{t("ent.telefoneCandidato")}</label><input value={form.telefoneCandidato} onChange={e => setForm({ ...form, telefoneCandidato: e.target.value })} className="apple-input" /></div>
                 </div>

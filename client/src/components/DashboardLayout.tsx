@@ -144,11 +144,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-1">
             <button
               onClick={(e) => { e.stopPropagation(); setShowLang(!showLang); }}
-              className="text-[#48484a] p-2 rounded-lg hover:bg-white/[0.03]"
+              className="text-[#48484a] p-2.5 rounded-lg hover:bg-white/[0.03]"
             >
               <Globe className="w-[18px] h-[18px]" strokeWidth={1.5} />
             </button>
-            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] p-2 rounded-lg hover:bg-white/[0.03]">
+            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] p-2.5 rounded-lg hover:bg-white/[0.03]">
               <LogOut className="w-[18px] h-[18px]" strokeWidth={1.5} />
             </button>
           </div>
@@ -183,7 +183,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     className={`w-[22px] h-[22px] transition-colors duration-200 ${active ? "text-[#FF6B00]" : "text-[#48484a]"}`}
                     strokeWidth={active ? 2 : 1.5}
                   />
-                  <span className={`text-[0.5625rem] font-medium transition-colors duration-200 ${active ? "text-[#FF6B00]" : "text-[#48484a]"}`}>
+                  <span className={`text-[0.6875rem] font-medium transition-colors duration-200 ${active ? "text-[#FF6B00]" : "text-[#48484a]"}`}>
                     {item.label.length > 9 ? item.label.substring(0, 7) + "…" : item.label}
                   </span>
                 </div>

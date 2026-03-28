@@ -116,9 +116,9 @@ export default function Eventos() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-[0.875rem] font-semibold text-white">{ev.titulo}</span>
-                        <span className="apple-badge text-[0.5625rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ev.${ev.status}`)}</span>
-                        <span className="apple-badge text-[0.5625rem]" style={{ background: `${typeColor}14`, color: typeColor }}>{t(`ev.${ev.tipo}`)}</span>
-                        {ev.recorrente && <span className="apple-badge apple-badge-indigo text-[0.5625rem] flex items-center gap-1"><Repeat className="w-3 h-3" />{t("ev.recorrente")}</span>}
+                        <span className="apple-badge text-[0.6875rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ev.${ev.status}`)}</span>
+                        <span className="apple-badge text-[0.6875rem]" style={{ background: `${typeColor}14`, color: typeColor }}>{t(`ev.${ev.tipo}`)}</span>
+                        {ev.recorrente && <span className="apple-badge apple-badge-indigo text-[0.6875rem] flex items-center gap-1"><Repeat className="w-3 h-3" />{t("ev.recorrente")}</span>}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-[#6e6e73]">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ev.data, locale)}</span>
@@ -149,12 +149,12 @@ export default function Eventos() {
 
         {/* Form Dialog */}
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-lg max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
             <div className="p-6 space-y-5">
               <h2 className="text-lg font-bold text-white tracking-[-0.02em]">{editingId ? t("ev.editar") : t("ev.novo")}</h2>
               <div className="space-y-4">
                 <div><label className="apple-input-label">{t("ev.titulo")} *</label><input value={form.titulo} onChange={e => setForm({ ...form, titulo: e.target.value })} className="apple-input" /></div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="apple-input-label">{t("ev.tipo")}</label>
                     <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="apple-input">
@@ -174,7 +174,7 @@ export default function Eventos() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("ev.dataInicio")} *</label><input type="datetime-local" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                   <div><label className="apple-input-label">{t("ev.dataFim")}</label><input type="datetime-local" value={form.dataFim} onChange={e => setForm({ ...form, dataFim: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                 </div>

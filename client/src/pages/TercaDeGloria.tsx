@@ -106,7 +106,7 @@ export default function TercaDeGloria() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[0.875rem] font-semibold text-white truncate">{r.tema}</span>
-                        <span className="apple-badge text-[0.5625rem]" style={{ background: sc.bg, color: sc.color }}>{t(`tg.${r.status}`)}</span>
+                        <span className="apple-badge text-[0.6875rem]" style={{ background: sc.bg, color: sc.color }}>{t(`tg.${r.status}`)}</span>
                       </div>
                       <div className="flex items-center gap-3 text-[0.75rem] text-[#6e6e73]">
                         <span>{formatDate(r.data, locale)}</span>
@@ -165,13 +165,13 @@ export default function TercaDeGloria() {
 
         {/* Form Dialog */}
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-lg max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white tracking-[-0.02em]">{editingId ? t("tg.editar") : t("tg.nova")}</h2>
               </div>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("tg.data")}</label><input type="date" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                   <div>
                     <label className="apple-input-label">{t("tg.status")}</label>
