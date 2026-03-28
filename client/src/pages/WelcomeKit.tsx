@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { useWelcomeKits, useUpdateWelcomeKit, useCreateWelcomeKit, useEmbaixadores } from "@/hooks/useSupabase";
+import { useWelcomeKits, useUpdateWelcomeKit, useCreateWelcomeKit, useEmbaixadores, useAddKitHistory, useKitHistory } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { exportKitsPdf } from "@/lib/exportPdf";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, Download } from "lucide-react";
-import { exportToXlsx } from "@/lib/exportXlsx";
+import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, FileDown, Clock } from "lucide-react";
 
 type KitItemKey = "patchEntregue" | "pinBoneEntregue" | "anelEntregue" | "espadaEntregue" | "mochilaBalacEntregue";
 const KIT_KEYS: KitItemKey[] = ["patchEntregue", "pinBoneEntregue", "anelEntregue", "espadaEntregue", "mochilaBalacEntregue"];
@@ -26,11 +27,16 @@ export default function WelcomeKit() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEmbId, setSelectedEmbId] = useState<number | "">("");
 
+  const { userName, user: authUser } = useAuth();
+  const currentUserName = userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Sistema";
+
   const { data: kits, isLoading } = useWelcomeKits();
   const { data: embaixadores } = useEmbaixadores();
 
   const updateMut = useUpdateWelcomeKit();
   const createMut = useCreateWelcomeKit();
+  const addHistoryMut = useAddKitHistory();
+  const { data: kitHistory, isLoading: historyLoading } = useKitHistory(selectedKit?.id ?? null);
 
   // Embaixadores that don't have a kit yet
   const availableEmb = useMemo(() => {
@@ -58,7 +64,20 @@ export default function WelcomeKit() {
   function toggleItem(kit: any, key: KitItemKey) {
     const payload: any = { id: kit.id };
     KIT_KEYS.forEach(k => { payload[k] = k === key ? !kit[k] : kit[k]; });
-    updateMut.mutate(payload, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) });
+    const newValue = !kit[key];
+    updateMut.mutate(payload, {
+      onSuccess: () => {
+        toast.success(t("common.sucesso"));
+        // Record history (fire-and-forget, don't block on errors since table may not exist yet)
+        addHistoryMut.mutate({
+          kitId: kit.id,
+          item: kitLabel(key, t),
+          action: newValue ? "entregue" : "removido",
+          userName: currentUserName,
+        });
+      },
+      onError: (e: any) => toast.error(e.message),
+    });
   }
 
   function getKitProgress(kit: any): number {
@@ -78,22 +97,6 @@ export default function WelcomeKit() {
     return list;
   }, [kits, search, filter, embaixadores]);
 
-  function handleExport() {
-    const data = filtered.map((kit: any) => {
-      const progress = getKitProgress(kit);
-      return {
-        "Embaixador": getEmbName(kit.embaixadorId),
-        "Patch": kit.patchEntregue ? "Sim" : "Nao",
-        "Pin": kit.pinBoneEntregue ? "Sim" : "Nao",
-        "Anel": kit.anelEntregue ? "Sim" : "Nao",
-        "Espada": kit.espadaEntregue ? "Sim" : "Nao",
-        "Mochila": kit.mochilaBalacEntregue ? "Sim" : "Nao",
-        "Status": progress === 5 ? "Completo" : progress === 0 ? "Pendente" : "Parcial",
-      };
-    });
-    exportToXlsx(data, `welcome-kits-${new Date().toISOString().split("T")[0]}`);
-  }
-
   const stats = useMemo(() => {
     if (!kits) return { total: 0, pendente: 0, parcial: 0, completo: 0 };
     const total = kits.length;
@@ -111,18 +114,23 @@ export default function WelcomeKit() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("kit.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("kit.subtitle")}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={handleExport}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title="Exportar XLSX"
+              onClick={() => {
+                if (filtered && filtered.length > 0) {
+                  exportKitsPdf(filtered, getEmbName);
+                } else {
+                  toast.error("Nenhum kit para exportar");
+                }
+              }}
+              className="apple-btn apple-btn-gray px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2"
             >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Exportar</span>
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
             </button>
             <button
               onClick={() => setShowCreate(!showCreate)}
-              className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2 shrink-0"
+              className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Novo Kit</span>
@@ -293,6 +301,43 @@ export default function WelcomeKit() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Historico */}
+                <div className="space-y-3">
+                  <h3 className="text-[0.8125rem] font-semibold text-[#86868b] flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5" />
+                    Historico
+                  </h3>
+                  {historyLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-[#48484a]" />
+                    </div>
+                  ) : !kitHistory || kitHistory.length === 0 ? (
+                    <p className="text-[0.75rem] text-[#48484a] py-2">Nenhum historico</p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {kitHistory.map((entry: any) => (
+                        <div key={entry.id} className="flex items-start gap-2 text-[0.75rem]">
+                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${entry.action === "entregue" ? "bg-[#30D158]" : "bg-[#FF453A]"}`} />
+                          <div className="min-w-0">
+                            <p className="text-white/80">
+                              <span className="font-medium text-white">{entry.userName}</span>
+                              {" "}marcou{" "}
+                              <span className="font-medium text-white">{entry.item}</span>
+                              {" "}como{" "}
+                              <span className={entry.action === "entregue" ? "text-[#30D158]" : "text-[#FF453A]"}>
+                                {entry.action}
+                              </span>
+                            </p>
+                            <p className="text-[#48484a] text-[0.6875rem]">
+                              {new Date(entry.createdAt).toLocaleString("pt-BR")}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

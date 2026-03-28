@@ -236,6 +236,35 @@ export function useCreateWelcomeKit() {
   });
 }
 
+// ========== KIT HISTORICO ==========
+// NOTE: Requires `kit_historico` table in Supabase — see client/src/lib/kitHistory.ts for DDL
+
+export function useAddKitHistory() {
+  return useMutation({
+    mutationFn: async (data: { kitId: number; item: string; action: string; userName: string }) => {
+      const { error } = await supabase.from("kit_historico").insert(data);
+      if (error) throw error;
+    },
+  });
+}
+
+export function useKitHistory(kitId: number | null) {
+  return useQuery({
+    queryKey: ["kitHistory", kitId],
+    queryFn: async () => {
+      if (!kitId) return [];
+      const { data, error } = await supabase
+        .from("kit_historico")
+        .select("*")
+        .eq("kitId", kitId)
+        .order("createdAt", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!kitId,
+  });
+}
+
 // ========== EVENTOS ==========
 
 export function useEventos() {
