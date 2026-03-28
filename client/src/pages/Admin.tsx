@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useUsers, useUpdateUserRole } from "@/hooks/useSupabase";
 import { useState } from "react";
-import { trpc } from "@/lib/trpc";
+import { supabase } from "@/lib/supabase";
 import { Shield, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,15 +13,7 @@ export default function Admin() {
   const { data: users, isLoading } = useUsers();
   const updateRole = useUpdateUserRole();
   const [inviteEmail, setInviteEmail] = useState("");
-  const inviteMutation = trpc.users.invite.useMutation({
-    onSuccess: () => {
-      toast.success(t("admin.inviteSent"));
-      setInviteEmail("");
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Erro ao enviar convite");
-    },
-  });
+  const [inviting, setInviting] = useState(false);
 
   if (!isAdmin) {
     return (
@@ -35,9 +27,36 @@ export default function Admin() {
     );
   }
 
-  const handleInvite = () => {
+  const handleInvite = async () => {
     if (!inviteEmail.trim()) return;
-    inviteMutation.mutate({ email: inviteEmail.trim() });
+    setInviting(true);
+    try {
+      const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": serviceRoleKey,
+          "Authorization": `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        const msg = data.msg || data.message || "";
+        if (msg.includes("already been registered")) {
+          throw new Error("Este email já está cadastrado. Delete o usuário antes de reenviar o convite.");
+        }
+        throw new Error(msg || "Erro ao enviar convite");
+      }
+      toast.success(t("admin.inviteSent"));
+      setInviteEmail("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar convite");
+    } finally {
+      setInviting(false);
+    }
   };
 
   return (
@@ -68,10 +87,10 @@ export default function Admin() {
             </div>
             <button
               onClick={handleInvite}
-              disabled={inviteMutation.isPending || !inviteEmail.trim()}
+              disabled={inviting || !inviteEmail.trim()}
               className="apple-btn apple-btn-filled px-5 py-2.5 text-sm font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 shrink-0"
             >
-              {inviteMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {inviting && <Loader2 className="w-4 h-4 animate-spin" />}
               {t("admin.sendInvite")}
             </button>
           </div>
