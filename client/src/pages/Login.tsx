@@ -98,21 +98,21 @@ export default function Login() {
       <div className="relative z-10 flex flex-col items-center w-full max-w-[420px] mx-auto px-6">
 
         {/* Logo */}
-        <div className="mb-4">
+        <div className="mb-3">
           <img
             src={LOGO_LEGENDARIOS}
             alt="Legendários"
-            className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)] invert"
+            className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)] invert"
           />
         </div>
 
         {/* Title block */}
-        <div className="text-center mb-6">
-          <h1 className="text-[2rem] sm:text-[2.5rem] font-black tracking-[-0.04em] text-white leading-[1] mb-2">
+        <div className="text-center mb-5">
+          <h1 className="text-[1.5rem] sm:text-[2rem] font-black tracking-[-0.04em] text-white leading-[1] mb-1.5">
             EMBAIXADORES
           </h1>
-          <div className="w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-3 rounded-full" />
-          <p className="text-[0.8125rem] text-[#86868b] tracking-wide uppercase font-medium">
+          <div className="w-12 h-0.5 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-2 rounded-full" />
+          <p className="text-[0.75rem] text-[#86868b] tracking-wide uppercase font-medium">
             {resetMode ? "Recuperar acesso" : "Sistema de Gestão"}
           </p>
         </div>
