@@ -16,7 +16,8 @@ function json(data: unknown, status = 200) {
 
 const LOGO_URL = "https://embaixadores.marciosager.com/logo-legendarios.png";
 
-function buildEmailHtml(title: string, body: string, buttonText?: string, buttonUrl?: string) {
+function buildEmailHtml(title: string, body: string, locale: Locale = "pt", buttonText?: string, buttonUrl?: string) {
+  const footer = t("footer", locale);
   const buttonHtml = buttonText && buttonUrl ? `<div style="text-align:center;padding:24px 0 8px;">
         <a href="${buttonUrl}" style="display:inline-block;background:linear-gradient(135deg,#FF6B00,#E85D00);color:#fff;font-size:14px;font-weight:600;padding:12px 32px;border-radius:12px;text-decoration:none;">${buttonText}</a>
       </div>` : "";
@@ -36,7 +37,7 @@ function buildEmailHtml(title: string, body: string, buttonText?: string, button
         ${buttonHtml}
       </td></tr>
       <tr><td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-        <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
+        <p style="margin:0;color:#48484a;font-size:12px;">${footer}</p>
       </td></tr>
     </table>
   </td></tr>
@@ -45,8 +46,32 @@ function buildEmailHtml(title: string, body: string, buttonText?: string, button
 </html>`;
 }
 
-function formatDate(ts: number): string {
-  return new Date(ts).toLocaleString("pt-BR", {
+type Locale = "pt" | "es" | "en";
+
+const i18n: Record<string, Record<Locale, string>> = {
+  date: { pt: "Data", es: "Fecha", en: "Date" },
+  local: { pt: "Local", es: "Lugar", en: "Location" },
+  tbd: { pt: "A definir", es: "Por definir", en: "TBD" },
+  meet: { pt: "Entrar na reuniao (Google Meet)", es: "Entrar a la reunion (Google Meet)", en: "Join meeting (Google Meet)" },
+  saveCalendar: { pt: "Salvar na agenda", es: "Guardar en la agenda", en: "Save to calendar" },
+  tema: { pt: "Tema", es: "Tema", en: "Topic" },
+  pregador: { pt: "Pregador", es: "Predicador", en: "Preacher" },
+  tercaTitle: { pt: "Terca de Gloria", es: "Martes de Gloria", en: "Tuesday of Glory" },
+  candidato: { pt: "Candidato", es: "Candidato", en: "Candidate" },
+  indicadoPor: { pt: "Indicado por", es: "Referido por", en: "Referred by" },
+  entrevistaTitle: { pt: "Entrevista Agendada", es: "Entrevista Programada", en: "Interview Scheduled" },
+  evento: { pt: "Evento", es: "Evento", en: "Event" },
+  entrevista: { pt: "Entrevista", es: "Entrevista", en: "Interview" },
+  footer: { pt: "Legendarios - Amor, Honra, Unidade", es: "Legendarios - Amor, Honor, Unidad", en: "Legendarios - Love, Honor, Unity" },
+};
+
+function t(key: string, locale: Locale): string {
+  return i18n[key]?.[locale] || i18n[key]?.pt || key;
+}
+
+function formatDate(ts: number, locale: Locale): string {
+  const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
+  return new Date(ts).toLocaleString(loc, {
     weekday: "short", day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo",
   });
@@ -55,11 +80,7 @@ function formatDate(ts: number): string {
 function buildCalendarLink(title: string, ts: number, tsEnd?: number, location?: string, meetLink?: string): string {
   const start = new Date(ts).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const end = new Date(tsEnd || ts + 3600000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: title,
-    dates: `${start}/${end}`,
-  });
+  const params = new URLSearchParams({ action: "TEMPLATE", text: title, dates: `${start}/${end}` });
   if (location) params.set("location", location);
   if (meetLink) params.set("details", `Meet: ${meetLink}`);
   return `https://calendar.google.com/calendar/render?${params}`;
@@ -71,28 +92,30 @@ interface EventoData { titulo: string; data: number; dataFim?: number; local?: s
 interface TercaData { tema: string; data: number; pregador?: string; linkMeet?: string; versiculoBase?: string; }
 interface EntrevistaData { nomeCandidato: string; dataEntrevista: number; linkMeet?: string; indicadoPor?: string; emailCandidato?: string; telefoneCandidato?: string; }
 
-function buildEventoMsg(ev: EventoData) {
-  const dateStr = formatDate(ev.data);
+function buildEventoMsg(ev: EventoData, locale: Locale) {
+  const dateStr = formatDate(ev.data, locale);
   const calLink = buildCalendarLink(ev.titulo, ev.data, ev.dataFim, ev.local, ev.linkMeet);
-  const whatsapp = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || "A definir"}${ev.linkMeet ? `\nMeet: ${ev.linkMeet}` : ""}\n\nSalvar na agenda: ${calLink}`;
-  const emailBody = `<strong>Data:</strong> ${dateStr}<br><strong>Local:</strong> ${ev.local || "A definir"}${ev.linkMeet ? `<br><br><a href="${ev.linkMeet}" style="color:#FF6B00;">Entrar na reuniao (Google Meet)</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">Salvar na agenda</a>`;
-  return { whatsapp, emailSubject: `Evento: ${ev.titulo}`, emailTitle: ev.titulo, emailBody };
+  const whatsapp = `*${ev.titulo}*\n${t("date", locale)}: ${dateStr}\n${t("local", locale)}: ${ev.local || t("tbd", locale)}${ev.linkMeet ? `\nMeet: ${ev.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
+  const emailBody = `<strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("local", locale)}:</strong> ${ev.local || t("tbd", locale)}${ev.linkMeet ? `<br><br><a href="${ev.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
+  return { whatsapp, emailSubject: `${t("evento", locale)}: ${ev.titulo}`, emailTitle: ev.titulo, emailBody };
 }
 
-function buildTercaMsg(tg: TercaData) {
-  const dateStr = formatDate(tg.data);
-  const calLink = buildCalendarLink(`Terca de Gloria - ${tg.tema}`, tg.data, undefined, undefined, tg.linkMeet);
-  const whatsapp = `*Terca de Gloria*\nTema: ${tg.tema}\nData: ${dateStr}\nPregador: ${tg.pregador || "A definir"}${tg.linkMeet ? `\nMeet: ${tg.linkMeet}` : ""}\n\nSalvar na agenda: ${calLink}`;
-  const emailBody = `<strong>Tema:</strong> ${tg.tema}<br><strong>Data:</strong> ${dateStr}<br><strong>Pregador:</strong> ${tg.pregador || "A definir"}${tg.linkMeet ? `<br><br><a href="${tg.linkMeet}" style="color:#FF6B00;">Entrar na reuniao (Google Meet)</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">Salvar na agenda</a>`;
-  return { whatsapp, emailSubject: `Terca de Gloria: ${tg.tema}`, emailTitle: `Terca de Gloria - ${tg.tema}`, emailBody };
+function buildTercaMsg(tg: TercaData, locale: Locale) {
+  const dateStr = formatDate(tg.data, locale);
+  const title = `${t("tercaTitle", locale)} - ${tg.tema}`;
+  const calLink = buildCalendarLink(title, tg.data, undefined, undefined, tg.linkMeet);
+  const whatsapp = `*${t("tercaTitle", locale)}*\n${t("tema", locale)}: ${tg.tema}\n${t("date", locale)}: ${dateStr}\n${t("pregador", locale)}: ${tg.pregador || t("tbd", locale)}${tg.linkMeet ? `\nMeet: ${tg.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
+  const emailBody = `<strong>${t("tema", locale)}:</strong> ${tg.tema}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("pregador", locale)}:</strong> ${tg.pregador || t("tbd", locale)}${tg.linkMeet ? `<br><br><a href="${tg.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
+  return { whatsapp, emailSubject: `${t("tercaTitle", locale)}: ${tg.tema}`, emailTitle: title, emailBody };
 }
 
-function buildEntrevistaMsg(ent: EntrevistaData) {
-  const dateStr = formatDate(ent.dataEntrevista);
-  const calLink = buildCalendarLink(`Entrevista - ${ent.nomeCandidato}`, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
-  const whatsapp = `*Entrevista Agendada*\nCandidato: ${ent.nomeCandidato}\nData: ${dateStr}\nIndicado por: ${ent.indicadoPor || "—"}${ent.linkMeet ? `\nMeet: ${ent.linkMeet}` : ""}\n\nSalvar na agenda: ${calLink}`;
-  const emailBody = `<strong>Candidato:</strong> ${ent.nomeCandidato}<br><strong>Data:</strong> ${dateStr}<br><strong>Indicado por:</strong> ${ent.indicadoPor || "—"}${ent.linkMeet ? `<br><br><a href="${ent.linkMeet}" style="color:#FF6B00;">Entrar na reuniao (Google Meet)</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">Salvar na agenda</a>`;
-  return { whatsapp, emailSubject: `Entrevista: ${ent.nomeCandidato}`, emailTitle: `Entrevista - ${ent.nomeCandidato}`, emailBody };
+function buildEntrevistaMsg(ent: EntrevistaData, locale: Locale) {
+  const dateStr = formatDate(ent.dataEntrevista, locale);
+  const title = `${t("entrevista", locale)} - ${ent.nomeCandidato}`;
+  const calLink = buildCalendarLink(title, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
+  const whatsapp = `*${t("entrevistaTitle", locale)}*\n${t("candidato", locale)}: ${ent.nomeCandidato}\n${t("date", locale)}: ${dateStr}\n${t("indicadoPor", locale)}: ${ent.indicadoPor || "—"}${ent.linkMeet ? `\nMeet: ${ent.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
+  const emailBody = `<strong>${t("candidato", locale)}:</strong> ${ent.nomeCandidato}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("indicadoPor", locale)}:</strong> ${ent.indicadoPor || "—"}${ent.linkMeet ? `<br><br><a href="${ent.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
+  return { whatsapp, emailSubject: `${t("entrevista", locale)}: ${ent.nomeCandidato}`, emailTitle: title, emailBody };
 }
 
 /**
@@ -135,7 +158,8 @@ Deno.serve(async (req) => {
       return json({ error: "Apenas administradores podem enviar notificacoes" }, 403);
     }
 
-    const { type, id, channel, recipients = "all", includeCandidato = true } = await req.json();
+    const { type, id, channel, recipients = "all", includeCandidato = true, locale: reqLocale = "pt" } = await req.json();
+    const locale: Locale = ["pt", "es", "en"].includes(reqLocale) ? reqLocale : "pt";
 
     if (!type || !id || !channel) {
       return json({ error: "type, id e channel sao obrigatorios" }, 400);
@@ -155,15 +179,15 @@ Deno.serve(async (req) => {
     if (type === "evento") {
       const { data, error } = await supabaseAdmin.from("eventos").select("*").eq("id", id).single();
       if (error || !data) return json({ error: "Evento nao encontrado" }, 404);
-      msgData = buildEventoMsg(data);
+      msgData = buildEventoMsg(data, locale);
     } else if (type === "terca") {
       const { data, error } = await supabaseAdmin.from("tercaGloria").select("*").eq("id", id).single();
       if (error || !data) return json({ error: "Reuniao nao encontrada" }, 404);
-      msgData = buildTercaMsg(data);
+      msgData = buildTercaMsg(data, locale);
     } else {
       const { data, error } = await supabaseAdmin.from("entrevistas").select("*").eq("id", id).single();
       if (error || !data) return json({ error: "Entrevista nao encontrada" }, 404);
-      msgData = buildEntrevistaMsg(data);
+      msgData = buildEntrevistaMsg(data, locale);
       candidatePhone = data.telefoneCandidato || null;
       candidateEmail = data.emailCandidato || null;
     }
@@ -258,7 +282,7 @@ Deno.serve(async (req) => {
                 to,
                 subject: msgData.emailSubject,
                 text: msgData.whatsapp,
-                html: buildEmailHtml(msgData.emailTitle, msgData.emailBody),
+                html: buildEmailHtml(msgData.emailTitle, msgData.emailBody, locale),
               });
               results.email.sent++;
             } catch (err) { results.email.failed++; results.email.errors.push(`${name}: ${err.message}`); }

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Send, MessageCircle, Mail, Users, UserCheck, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmbaixadores } from "@/hooks/useSupabase";
+import { useI18n } from "@/lib/i18n";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -18,6 +19,7 @@ interface NotifyDialogProps {
 
 export default function NotifyDialog({ open, onOpenChange, type, id, title }: NotifyDialogProps) {
   const { session } = useAuth();
+  const { locale } = useI18n();
   const { data: embaixadores } = useEmbaixadores();
   const [recipientMode, setRecipientMode] = useState<"all" | "select">("all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -55,6 +57,7 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
           channel,
           recipients: recipientMode === "all" ? "all" : selectedIds,
           includeCandidato: type === "entrevista" ? includeCandidato : undefined,
+          locale,
         }),
       });
       const data = await res.json();
