@@ -20,8 +20,8 @@ export default function ZApiAdmin() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    checkStatus();
-  }, []);
+    if (session?.access_token) checkStatus();
+  }, [session]);
 
   async function callZapi(action: string, extra?: Record<string, string>) {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/zapi-proxy`, {
