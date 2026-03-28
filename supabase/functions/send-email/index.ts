@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const LOGO_URL = "https://embaixadores.marciosager.com/logo-legendarios.png";
+
 function buildEmailHtml(title: string, body: string) {
   return `<!DOCTYPE html>
 <html>
@@ -15,6 +17,7 @@ function buildEmailHtml(title: string, body: string) {
   <tr><td align="center">
     <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
       <tr><td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:24px 32px;text-align:center;">
+        <img src="${LOGO_URL}" alt="Legendarios" width="48" height="48" style="display:block;margin:0 auto 12px;border-radius:12px;" />
         <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">Embaixadores dos Legendarios</h1>
       </td></tr>
       <tr><td style="padding:32px;">
