@@ -80,8 +80,8 @@ export default function Login() {
       }
     } catch (err: any) {
       setError(err.message === "Invalid login credentials"
-        ? "Email ou senha incorretos"
-        : err.message || "Erro ao fazer login");
+        ? t("auth.erroCredenciais")
+        : err.message || t("auth.erroCredenciais"));
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,7 @@ export default function Login() {
           </h1>
           <div className="w-12 h-0.5 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-2 rounded-full" />
           <p className="text-[0.75rem] text-[#86868b] tracking-wide uppercase font-medium">
-            {resetMode ? "Recuperar acesso" : "Sistema de Gestão"}
+            {resetMode ? t("auth.recuperarAcesso") : t("auth.sistemaGestao")}
           </p>
         </div>
 
@@ -125,16 +125,16 @@ export default function Login() {
                 <div className="w-14 h-14 mx-auto rounded-full bg-[#30D158]/10 flex items-center justify-center">
                   <Mail className="w-7 h-7 text-[#30D158]" />
                 </div>
-                <p className="text-white font-semibold text-lg">Email enviado!</p>
+                <p className="text-white font-semibold text-lg">{t("auth.emailEnviado")}</p>
                 <p className="text-[#86868b] text-sm leading-relaxed">
-                  Verifique sua caixa de entrada para redefinir a senha.
+                  {t("auth.verificarCaixa")}
                 </p>
                 <button
                   type="button"
                   onClick={() => { setResetMode(false); setResetSent(false); }}
                   className="text-[#FF6B00] text-sm font-semibold hover:underline mt-2"
                 >
-                  Voltar ao login
+                  {t("auth.voltarLogin")}
                 </button>
               </div>
             ) : (
@@ -142,13 +142,13 @@ export default function Login() {
                 {/* Email */}
                 <div>
                   <label className="block mb-2 text-[0.8125rem] font-semibold text-[#a1a1a6] uppercase tracking-wider">
-                    Email
+                    {t("auth.email")}
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     required
                     className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-3 text-white text-[0.875rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                   />
@@ -158,14 +158,14 @@ export default function Login() {
                 {!resetMode && (
                   <div>
                     <label className="block mb-2 text-[0.8125rem] font-semibold text-[#a1a1a6] uppercase tracking-wider">
-                      Senha
+                      {t("auth.senha")}
                     </label>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Digite sua senha"
+                        placeholder={t("auth.senhaPlaceholder")}
                         required
                         className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-4 pr-11 py-3.5 text-white text-[0.9375rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                       />
@@ -194,7 +194,7 @@ export default function Login() {
                   className="w-full py-3 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[0.875rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
                 >
                   {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-                  {resetMode ? "ENVIAR LINK" : "ENTRAR NO SISTEMA"}
+                  {resetMode ? t("auth.enviarLink") : t("auth.login")}
                 </button>
 
                 {/* Turnstile CAPTCHA */}
@@ -205,7 +205,7 @@ export default function Login() {
                   <>
                     <div className="relative flex items-center gap-3">
                       <div className="flex-1 h-px bg-white/[0.08]" />
-                      <span className="text-xs text-[#48484a] uppercase font-medium tracking-wider">ou</span>
+                      <span className="text-xs text-[#48484a] uppercase font-medium tracking-wider">{t("auth.ou")}</span>
                       <div className="flex-1 h-px bg-white/[0.08]" />
                     </div>
 
@@ -229,14 +229,14 @@ export default function Login() {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11.96 11.96 0 0 0 0 12c0 1.94.46 3.77 1.28 5.4l3.56-2.77.01-.54z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                       </svg>
-                      Entrar com Google
+                      {t("auth.entrarGoogle")}
                     </button>
 
                     <p className="text-[0.6875rem] text-[#48484a] text-center leading-relaxed">
-                      Ao continuar, você concorda com nossa{" "}
-                      <a href="/privacidade" className="text-[#86868b] underline hover:text-white">Política de Privacidade</a>
-                      {" "}e{" "}
-                      <a href="/termos" className="text-[#86868b] underline hover:text-white">Termos de Serviço</a>.
+                      {t("auth.consentimento")}{" "}
+                      <a href="/privacidade" className="text-[#86868b] underline hover:text-white">{t("auth.privacidade")}</a>
+                      {" "}&{" "}
+                      <a href="/termos" className="text-[#86868b] underline hover:text-white">{t("auth.termos")}</a>.
                     </p>
                   </>
                 )}
@@ -248,7 +248,7 @@ export default function Login() {
                     onClick={() => { setResetMode(!resetMode); setError(""); }}
                     className="text-[#86868b] text-sm font-medium hover:text-[#FF6B00] transition-colors"
                   >
-                    {resetMode ? "Voltar ao login" : "Esqueceu a senha?"}
+                    {resetMode ? t("auth.voltarLogin") : t("auth.esqueceuSenha")}
                   </button>
                 </div>
               </>
@@ -258,7 +258,7 @@ export default function Login() {
 
         {/* Description */}
         <p className="mt-6 text-[#86868b] text-xs text-center leading-relaxed max-w-[300px]">
-          Sistema de gestão do programa de embaixadores do movimento Legendários.
+          {t("auth.descricao")}
         </p>
 
         {/* Language selector */}
