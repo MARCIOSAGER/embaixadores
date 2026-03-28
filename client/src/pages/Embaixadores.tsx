@@ -8,15 +8,8 @@ import { toast } from "sonner";
 import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
 import ConfirmDialog from "@/components/ConfirmDialog";
-
-function formatDate(ts: number | null | undefined, locale: string) {
-  if (!ts) return "—";
-  const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
-  return new Date(ts).toLocaleDateString(loc);
-}
-function dateToTs(s: string): number | null { return s ? new Date(s + "T12:00:00").getTime() : null; }
-function tsToDate(ts: number | null | undefined): string { return ts ? new Date(ts).toISOString().split("T")[0] : ""; }
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
   ativo: { color: "#30D158", bg: "rgba(48,209,88,0.14)" },
@@ -246,7 +239,7 @@ export default function Embaixadores() {
                       {selected.numeroEmbaixador && <span className="apple-badge apple-badge-blue text-[0.625rem]">E#{selected.numeroEmbaixador}</span>}
                     </div>
                   </div>
-                  <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b]">
+                  <button onClick={() => setSelected(null)} className="w-11 h-11 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b]" aria-label="Fechar">
                     <X className="w-4 h-4" strokeWidth={2} />
                   </button>
                 </div>

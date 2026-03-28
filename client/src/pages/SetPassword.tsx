@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
 
 const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
 export default function SetPassword() {
+  const { t } = useI18n();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,11 +20,11 @@ export default function SetPassword() {
     setError("");
 
     if (password.length < 8) {
-      setError("A senha deve ter pelo menos 8 caracteres.");
+      setError(t("setpw.erroMinimo"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError(t("setpw.erroNaoCoincidem"));
       return;
     }
 
@@ -35,7 +37,7 @@ export default function SetPassword() {
         window.location.href = "/";
       }, 2000);
     } catch (err: any) {
-      setError(err.message || "Erro ao definir senha");
+      setError(err.message || t("setpw.erroDefinir"));
     } finally {
       setLoading(false);
     }
@@ -53,11 +55,11 @@ export default function SetPassword() {
 
         <div className="text-center mb-10">
           <h1 className="text-[2rem] sm:text-[2.5rem] font-black tracking-[-0.04em] text-white leading-[1] mb-2">
-            {success ? "PRONTO!" : "BEM-VINDO"}
+            {success ? t("setpw.pronto") : t("setpw.bemVindo")}
           </h1>
           <div className="w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-4 rounded-full" />
           <p className="text-[0.9375rem] text-[#86868b] tracking-wide uppercase font-medium">
-            {success ? "Senha definida com sucesso" : "Defina sua senha de acesso"}
+            {success ? t("setpw.senhaCriada") : t("setpw.definaSenha")}
           </p>
         </div>
 
@@ -67,21 +69,21 @@ export default function SetPassword() {
               <div className="w-16 h-16 mx-auto rounded-full bg-[#30D158]/10 flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-[#30D158]" />
               </div>
-              <p className="text-white font-semibold text-lg">Senha definida com sucesso!</p>
-              <p className="text-[#86868b] text-sm">Redirecionando para o sistema...</p>
+              <p className="text-white font-semibold text-lg">{t("setpw.senhaCriadaMsg")}</p>
+              <p className="text-[#86868b] text-sm">{t("setpw.redirecionando")}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block mb-2 text-[0.8125rem] font-semibold text-[#a1a1a6] uppercase tracking-wider">
-                  Nova Senha
+                  {t("setpw.novaSenha")}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t("setpw.placeholderSenha")}
                     required
                     className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-4 pr-11 py-3.5 text-white text-[0.9375rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                   />
@@ -97,13 +99,13 @@ export default function SetPassword() {
 
               <div>
                 <label className="block mb-2 text-[0.8125rem] font-semibold text-[#a1a1a6] uppercase tracking-wider">
-                  Confirmar Senha
+                  {t("setpw.confirmarSenha")}
                 </label>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Digite novamente"
+                  placeholder={t("setpw.placeholderConfirmar")}
                   required
                   className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-3.5 text-white text-[0.9375rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                 />
@@ -121,7 +123,7 @@ export default function SetPassword() {
                 className="w-full py-4 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[1rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
               >
                 {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-                DEFINIR SENHA
+                {t("setpw.btnDefinir")}
               </button>
             </form>
           )}

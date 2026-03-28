@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileEmbaixador, useUpdateEmbaixador, useCreateEmbaixador } from "@/hooks/useSupabase";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
 import { Camera, Loader2, Save, Mail } from "lucide-react";
 
 export default function Profile() {
   const { user: authUser, userName } = useAuth();
+  const { t } = useI18n();
   const { data: embaixador, isLoading } = useProfileEmbaixador(authUser?.email ?? null);
   const updateMut = useUpdateEmbaixador();
   const createMut = useCreateEmbaixador();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -47,7 +51,7 @@ export default function Profile() {
   const initial = displayName.charAt(0).toUpperCase();
 
   function handleSave() {
-    if (!form.nomeCompleto.trim()) return toast.error("Nome completo é obrigatório.");
+    if (!form.nomeCompleto.trim()) return toast.error(t("profile.nomeObrigatorio"));
 
     if (embaixador) {
       updateMut.mutate(
@@ -64,8 +68,8 @@ export default function Profile() {
           fotoUrl: avatarUrl || null,
         },
         {
-          onSuccess: () => toast.success("Perfil atualizado com sucesso!"),
-          onError: (e: any) => toast.error(e.message || "Erro ao atualizar perfil."),
+          onSuccess: () => toast.success(t("profile.atualizado")),
+          onError: (e: any) => toast.error(e.message || t("profile.erroAtualizar")),
         }
       );
     } else {
@@ -85,10 +89,10 @@ export default function Profile() {
         } as any,
         {
           onSuccess: () => {
-            toast.success("Perfil criado com sucesso!");
-            window.location.reload();
+            toast.success(t("profile.criado"));
+            queryClient.invalidateQueries({ queryKey: ["embaixador"] });
           },
-          onError: (e: any) => toast.error(e.message || "Erro ao criar perfil."),
+          onError: (e: any) => toast.error(e.message || t("profile.erroCriar")),
         }
       );
     }
@@ -100,16 +104,16 @@ export default function Profile() {
 
     // Validate file type and size
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      return toast.error("Apenas arquivos JPG e PNG sao permitidos.");
+      return toast.error(t("profile.apenasJpgPng"));
     }
     if (file.size > 2 * 1024 * 1024) {
-      return toast.error("Tamanho maximo: 2MB.");
+      return toast.error(t("profile.tamanhoMax"));
     }
 
     setUploading(true);
     try {
       const userId = authUser?.id;
-      if (!userId) throw new Error("Usuario nao autenticado.");
+      if (!userId) throw new Error(t("profile.usuarioNaoAutenticado"));
 
       // NOTE: The "avatars" bucket must be created in Supabase Dashboard > Storage
       // with public access enabled for getPublicUrl to work.
@@ -125,9 +129,9 @@ export default function Profile() {
         .getPublicUrl(filePath);
 
       setAvatarUrl(urlData.publicUrl);
-      toast.success("Foto enviada! Clique em Salvar para confirmar.");
+      toast.success(t("profile.fotoEnviada"));
     } catch (err: any) {
-      toast.error(err.message || "Erro ao enviar foto.");
+      toast.error(err.message || t("profile.erroFoto"));
     } finally {
       setUploading(false);
     }
@@ -138,8 +142,8 @@ export default function Profile() {
       <div className="space-y-6 max-w-2xl mx-auto">
         {/* Header */}
         <div className="animate-fade-up">
-          <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">Meu Perfil</h1>
-          <p className="text-[0.8125rem] text-[#86868b] mt-0.5">Gerencie suas informacoes pessoais</p>
+          <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("profile.title")}</h1>
+          <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("profile.subtitle")}</p>
         </div>
 
         {isLoading ? (
@@ -182,12 +186,12 @@ export default function Profile() {
                 onChange={handlePhotoUpload}
                 className="hidden"
               />
-              <p className="text-[0.6875rem] text-[#48484a]">Clique para alterar a foto (JPG/PNG, max 2MB)</p>
+              <p className="text-[0.6875rem] text-[#48484a]">{t("profile.fotoHint")}</p>
             </div>
 
             {/* Email (read-only) */}
             <div>
-              <label className="apple-input-label">E-mail</label>
+              <label className="apple-input-label">{t("profile.email")}</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
                 <input
@@ -202,7 +206,7 @@ export default function Profile() {
             {/* Form Fields */}
             <div className="space-y-4">
               <div>
-                <label className="apple-input-label">Nome completo *</label>
+                <label className="apple-input-label">{t("profile.nomeCompleto")} *</label>
                 <input
                   value={form.nomeCompleto}
                   onChange={(e) => setForm({ ...form, nomeCompleto: e.target.value })}
@@ -212,7 +216,7 @@ export default function Profile() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="apple-input-label">Telefone</label>
+                  <label className="apple-input-label">{t("profile.telefone")}</label>
                   <input
                     value={form.telefone}
                     onChange={(e) => setForm({ ...form, telefone: e.target.value })}
@@ -220,7 +224,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="apple-input-label">Profissao</label>
+                  <label className="apple-input-label">{t("profile.profissao")}</label>
                   <input
                     value={form.profissao}
                     onChange={(e) => setForm({ ...form, profissao: e.target.value })}
@@ -231,7 +235,7 @@ export default function Profile() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="apple-input-label">Cidade</label>
+                  <label className="apple-input-label">{t("profile.cidade")}</label>
                   <input
                     value={form.cidade}
                     onChange={(e) => setForm({ ...form, cidade: e.target.value })}
@@ -239,7 +243,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="apple-input-label">Estado</label>
+                  <label className="apple-input-label">{t("profile.estado")}</label>
                   <input
                     value={form.estado}
                     onChange={(e) => setForm({ ...form, estado: e.target.value })}
@@ -249,7 +253,7 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="apple-input-label">Empresa</label>
+                <label className="apple-input-label">{t("profile.empresa")}</label>
                 <input
                   value={form.empresa}
                   onChange={(e) => setForm({ ...form, empresa: e.target.value })}
@@ -259,7 +263,7 @@ export default function Profile() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="apple-input-label">Numero do Legendario</label>
+                  <label className="apple-input-label">{t("profile.numLegendario")}</label>
                   <input
                     value={form.numeroLegendario}
                     onChange={(e) => setForm({ ...form, numeroLegendario: e.target.value })}
@@ -268,7 +272,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="apple-input-label">Numero do Embaixador</label>
+                  <label className="apple-input-label">{t("profile.numEmbaixador")}</label>
                   <input
                     value={form.numeroEmbaixador}
                     onChange={(e) => setForm({ ...form, numeroEmbaixador: e.target.value })}
@@ -291,7 +295,7 @@ export default function Profile() {
                 ) : (
                   <Save className="w-4 h-4" strokeWidth={2} />
                 )}
-                Salvar
+                {t("profile.salvar")}
               </button>
             </div>
           </div>

@@ -10,20 +10,7 @@ import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
-
-function formatDateTime(ts: number | null | undefined, locale: string) {
-  if (!ts) return "—";
-  const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
-  return new Date(ts).toLocaleString(loc, { weekday: "short", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-function dateToTimestamp(d: string): number { return new Date(d).getTime(); }
-function tsToInputDT(ts: number | null | undefined): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  const offset = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - offset * 60000);
-  return local.toISOString().slice(0, 16);
-}
+import { formatDateTime, dateToTimestamp, tsToInputDT } from "@/lib/dateUtils";
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
   agendada: { color: "#FF6B00", bg: "rgba(255,107,0,0.14)" },
@@ -55,43 +42,11 @@ export default function Entrevistas() {
     setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "" });
     setDialogOpen(true);
   }
-  async function sendNotification(eventData: { nomeCandidato: string; dataEntrevista: string; linkMeet: string; indicadoPor: string }, channel: "whatsapp" | "email" | "both") {
-    try {
-      const dateStr = eventData.dataEntrevista ? new Date(eventData.dataEntrevista).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "A definir";
-      const message = `*Entrevista Agendada*\nCandidato: ${eventData.nomeCandidato}\nData: ${dateStr}\nIndicado por: ${eventData.indicadoPor || "—"}`;
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-        body: JSON.stringify({
-          channel,
-          subject: `Entrevista: ${eventData.nomeCandidato}`,
-          title: `Entrevista - ${eventData.nomeCandidato}`,
-          message,
-          meetLink: eventData.linkMeet || undefined,
-        }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        const parts = [];
-        if (result.results.whatsapp.sent > 0) parts.push(`${result.results.whatsapp.sent} WhatsApp`);
-        if (result.results.email.sent > 0) parts.push(`${result.results.email.sent} Email`);
-        toast.success(`Notificacao enviada: ${parts.join(", ")}`);
-      } else {
-        toast.error(result.error || "Erro ao notificar");
-      }
-    } catch {
-      toast.error("Erro ao enviar notificacoes");
-    }
-  }
-
   function handleSubmit() {
     if (!form.nomeCandidato.trim() || !form.dataEntrevista) return toast.error(t("ent.nomeObrigatorio"));
     const d = { nomeCandidato: form.nomeCandidato, emailCandidato: form.emailCandidato || null, telefoneCandidato: form.telefoneCandidato || null, dataEntrevista: dateToTimestamp(form.dataEntrevista), linkMeet: form.linkMeet || null, status: form.status as any, observacoes: form.observacoes || null, indicadoPor: form.indicadoPor || null };
     const onSuccess = () => {
       toast.success(t("common.sucesso"));
-      if (!editingId && form.notificar !== "none") {
-        sendNotification({ nomeCandidato: form.nomeCandidato, dataEntrevista: form.dataEntrevista, linkMeet: form.linkMeet, indicadoPor: form.indicadoPor }, form.notificar);
-      }
       setDialogOpen(false); resetForm();
     };
     const onError = (e: any) => toast.error(e.message);
@@ -217,13 +172,14 @@ export default function Entrevistas() {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={(e) => { e.stopPropagation(); setNotifyTarget(ent); }}
-                        className="w-10 h-10 rounded-xl bg-[#25D366]/10 flex items-center justify-center text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                        className="w-11 h-11 rounded-xl bg-[#25D366]/10 flex items-center justify-center text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
                         title="Notificar sobre entrevista"
+                        aria-label="Notificar sobre entrevista via WhatsApp"
                       >
                         <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
                       </button>
                       {ent.linkMeet && (
-                        <a href={ent.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-10 h-10 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors">
+                        <a href={ent.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-11 h-11 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors" aria-label="Abrir Google Meet">
                           <Video className="w-5 h-5" strokeWidth={1.5} />
                         </a>
                       )}
@@ -249,7 +205,7 @@ export default function Entrevistas() {
                     <h2 className="text-xl font-bold text-white tracking-[-0.02em]">{selected.nomeCandidato}</h2>
                     <span className="apple-badge text-[0.625rem] mt-1" style={{ background: STATUS_MAP[selected.status]?.bg, color: STATUS_MAP[selected.status]?.color }}>{t(`ent.${selected.status}`)}</span>
                   </div>
-                  <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b]">
+                  <button onClick={() => setSelected(null)} className="w-11 h-11 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b]" aria-label="Fechar">
                     <X className="w-4 h-4" strokeWidth={2} />
                   </button>
                 </div>
@@ -279,8 +235,9 @@ export default function Entrevistas() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNotifyTarget(selected)}
-                    className="apple-btn apple-btn-gray py-2.5 px-3 text-[#25D366] hover:text-[#128C7E]"
+                    className="apple-btn apple-btn-gray py-2.5 px-3 text-[#25D366] hover:text-[#128C7E] min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Notificar sobre entrevista"
+                    aria-label="Notificar sobre entrevista via WhatsApp"
                   >
                     <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
                   </button>

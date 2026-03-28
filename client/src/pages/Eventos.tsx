@@ -11,20 +11,7 @@ import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
-
-function formatDateTime(ts: number | null | undefined, locale: string) {
-  if (!ts) return "—";
-  const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
-  return new Date(ts).toLocaleString(loc, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-function dateToTimestamp(d: string): number { return new Date(d).getTime(); }
-function tsToInputDT(ts: number | null | undefined): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  const offset = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - offset * 60000);
-  return local.toISOString().slice(0, 16);
-}
+import { formatDateTime, dateToTimestamp, tsToInputDT } from "@/lib/dateUtils";
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
   agendado: { color: "#FF6B00", bg: "rgba(255,107,0,0.14)" },
@@ -57,43 +44,11 @@ export default function Eventos() {
     setForm({ titulo: ev.titulo || "", descricao: ev.descricao || "", data: tsToInputDT(ev.data), dataFim: tsToInputDT(ev.dataFim), local: ev.local || "", tipo: ev.tipo || "encontro", linkMeet: ev.linkMeet || "", recorrente: ev.recorrente || false, status: ev.status || "agendado" });
     setDialogOpen(true);
   }
-  async function sendNotification(eventData: { titulo: string; data: string; local: string; linkMeet: string }, channel: "whatsapp" | "email" | "both") {
-    try {
-      const dateStr = eventData.data ? new Date(eventData.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "A definir";
-      const message = `*${eventData.titulo}*\nData: ${dateStr}\nLocal: ${eventData.local || "A definir"}`;
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-        body: JSON.stringify({
-          channel,
-          subject: `Novo Evento: ${eventData.titulo}`,
-          title: eventData.titulo,
-          message,
-          meetLink: eventData.linkMeet || undefined,
-        }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        const parts = [];
-        if (result.results.whatsapp.sent > 0) parts.push(`${result.results.whatsapp.sent} WhatsApp`);
-        if (result.results.email.sent > 0) parts.push(`${result.results.email.sent} Email`);
-        toast.success(`Notificacao enviada: ${parts.join(", ")}`);
-      } else {
-        toast.error(result.error || "Erro ao notificar");
-      }
-    } catch {
-      toast.error("Erro ao enviar notificacoes");
-    }
-  }
-
   function handleSubmit() {
     if (!form.titulo.trim() || !form.data) return toast.error(t("ev.tituloObrigatorio"));
     const d = { titulo: form.titulo, descricao: form.descricao || null, data: dateToTimestamp(form.data), dataFim: form.dataFim ? dateToTimestamp(form.dataFim) : null, local: form.local || null, tipo: form.tipo as any, linkMeet: form.linkMeet || null, recorrente: form.recorrente, status: form.status as any };
     const onSuccess = () => {
       toast.success(t("common.sucesso"));
-      if (!editingId && form.notificar !== "none") {
-        sendNotification({ titulo: form.titulo, data: form.data, local: form.local, linkMeet: form.linkMeet }, form.notificar);
-      }
       setDialogOpen(false); resetForm();
     };
     const onError = (e: any) => toast.error(e.message);
@@ -229,15 +184,16 @@ export default function Eventos() {
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); setNotifyTarget(ev); }}
-                      className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#25D366] hover:text-[#128C7E]"
+                      className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#25D366] hover:text-[#128C7E] min-h-[44px] min-w-[44px] flex items-center justify-center"
                       title="Notificar embaixadores"
+                      aria-label="Notificar embaixadores via WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                     <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
                       <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("ev.editar") || "Editar Evento"}
                     </button>
-                    <button onClick={() => setConfirmDelete(ev.id)} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
+                    <button onClick={() => setConfirmDelete(ev.id)} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem] min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Excluir evento">
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                   </div>

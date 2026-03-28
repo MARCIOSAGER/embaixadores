@@ -154,6 +154,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t("auth.emailPlaceholder")}
                     required
+                    autoComplete="email"
                     className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-3 text-white text-[0.875rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                   />
                 </div>
@@ -171,12 +172,14 @@ export default function Login() {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder={t("auth.senhaPlaceholder")}
                         required
+                        autoComplete="current-password"
                         className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-4 pr-11 py-3.5 text-white text-[0.9375rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#48484a] hover:text-[#86868b] transition-colors p-1"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#48484a] hover:text-[#86868b] transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                       >
                         {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                       </button>
@@ -275,7 +278,7 @@ export default function Login() {
             <button
               key={l.code}
               onClick={() => setLocale(l.code)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.75rem] font-medium transition-all ${locale === l.code ? "bg-white/[0.08] text-white" : "text-[#48484a] hover:text-[#86868b]"}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.75rem] font-medium transition-all min-h-[44px] min-w-[44px] ${locale === l.code ? "bg-white/[0.08] text-white" : "text-[#48484a] hover:text-[#86868b]"}`}
             >
               <img src={l.flag} alt="" className="w-4 h-3 rounded-[1px] object-cover" />
               {l.label}

@@ -49,6 +49,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-black">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#FF6B00] focus:text-white focus:rounded-lg">
+        Pular para o conteudo
+      </a>
       <div className="apple-mesh" />
 
       {/* ── Desktop Sidebar ── */}
@@ -133,7 +136,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
               </div>
             </Link>
-            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] transition-colors duration-200 p-1.5 rounded-lg hover:bg-white/[0.03]">
+            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] transition-colors duration-200 p-1.5 rounded-lg hover:bg-white/[0.03]" aria-label="Sair">
               <LogOut className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
@@ -150,11 +153,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-1">
             <button
               onClick={(e) => { e.stopPropagation(); setShowLang(!showLang); }}
-              className="text-[#48484a] p-2.5 rounded-lg hover:bg-white/[0.03]"
+              className="text-[#48484a] p-2.5 rounded-lg hover:bg-white/[0.03] min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Alterar idioma"
             >
               <Globe className="w-[18px] h-[18px]" strokeWidth={1.5} />
             </button>
-            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] p-2.5 rounded-lg hover:bg-white/[0.03]">
+            <button onClick={() => signOut()} className="text-[#48484a] hover:text-[#FF453A] p-2.5 rounded-lg hover:bg-white/[0.03] min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Sair">
               <LogOut className="w-[18px] h-[18px]" strokeWidth={1.5} />
             </button>
           </div>
@@ -200,7 +204,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </nav>
 
       {/* ── Content ── */}
-      <main className="lg:ml-[260px] min-h-screen pt-12 pb-20 lg:pt-0 lg:pb-0">
+      <main id="main-content" className="lg:ml-[260px] min-h-screen pt-12 pb-20 lg:pt-0 lg:pb-0">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {children}
         </div>

@@ -19,7 +19,7 @@ interface NotifyDialogProps {
 
 export default function NotifyDialog({ open, onOpenChange, type, id, title }: NotifyDialogProps) {
   const { session } = useAuth();
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const { data: embaixadores } = useEmbaixadores();
   const [recipientMode, setRecipientMode] = useState<"all" | "select">("all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -67,14 +67,14 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
         if (data.results.email?.sent > 0) parts.push(`${data.results.email.sent} Email`);
         if (data.results.whatsapp?.failed > 0 || data.results.email?.failed > 0) {
           const fails = (data.results.whatsapp?.failed || 0) + (data.results.email?.failed || 0);
-          parts.push(`${fails} falha(s)`);
+          parts.push(`${fails} ${t("notify.falhas")}`);
         }
-        toast.success(`Enviado: ${parts.join(", ") || "nenhum destinatario"}`);
+        toast.success(`${t("notify.enviado")}: ${parts.join(", ") || t("notify.nenhumDest")}`);
       } else {
-        toast.error(data.error || "Erro ao enviar");
+        toast.error(data.error || t("notify.erroEnviar"));
       }
     } catch {
-      toast.error("Erro ao enviar notificacoes");
+      toast.error(t("notify.erroEnviar"));
     } finally {
       setSending(false);
       onOpenChange(false);
@@ -87,27 +87,27 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
         <div className="p-6 space-y-4">
           <h2 className="text-lg font-bold text-white tracking-[-0.02em] flex items-center gap-2">
             <Send className="w-5 h-5 text-[#FF6B00]" />
-            Notificar
+            {t("notify.title")}
           </h2>
           <p className="text-[0.8125rem] text-[#86868b]">{title}</p>
 
           {/* Recipient mode */}
           <div className="space-y-2">
-            <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">Destinatarios</label>
+            <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">{t("notify.destinatarios")}</label>
             <div className="flex gap-2">
               <button
                 onClick={() => setRecipientMode("all")}
                 className={`flex-1 py-2 px-3 rounded-lg border text-[0.8125rem] flex items-center gap-2 justify-center transition-all ${recipientMode === "all" ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
               >
                 <Users className="w-4 h-4" />
-                Todos ({activeEmbaixadores.length})
+                {t("notify.todos")} ({activeEmbaixadores.length})
               </button>
               <button
                 onClick={() => setRecipientMode("select")}
                 className={`flex-1 py-2 px-3 rounded-lg border text-[0.8125rem] flex items-center gap-2 justify-center transition-all ${recipientMode === "select" ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
               >
                 <UserCheck className="w-4 h-4" />
-                Selecionar
+                {t("notify.selecionar")}
               </button>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
                 </button>
               ))}
               {activeEmbaixadores.length === 0 && (
-                <p className="text-[0.8125rem] text-[#48484a] text-center py-4">Nenhum embaixador ativo</p>
+                <p className="text-[0.8125rem] text-[#48484a] text-center py-4">{t("notify.nenhumAtivo")}</p>
               )}
             </div>
           )}
@@ -149,17 +149,17 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
               <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${includeCandidato ? "border-[#FF6B00] bg-[#FF6B00]" : "border-white/[0.15]"}`}>
                 {includeCandidato && <Check className="w-3 h-3 text-white" />}
               </div>
-              <span className="text-[0.8125rem] text-[#d2d2d7]">Notificar candidato tambem</span>
+              <span className="text-[0.8125rem] text-[#d2d2d7]">{t("notify.incluirCandidato")}</span>
             </button>
           )}
 
           {/* Channel buttons */}
           <div className="flex flex-col gap-2 pt-1">
-            <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">Enviar via</label>
+            <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">{t("notify.enviarVia")}</label>
             {([
-              { key: "both" as const, label: "WhatsApp + Email" },
-              { key: "whatsapp" as const, label: "Somente WhatsApp" },
-              { key: "email" as const, label: "Somente Email" },
+              { key: "both" as const, label: t("notify.waBoth") },
+              { key: "whatsapp" as const, label: t("notify.waOnly") },
+              { key: "email" as const, label: t("notify.emailOnly") },
             ]).map(opt => (
               <button
                 key={opt.key}
@@ -179,7 +179,7 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
           </div>
 
           <button onClick={() => onOpenChange(false)} className="apple-btn apple-btn-gray w-full py-2.5 text-[0.8125rem]">
-            Cancelar
+            {t("notify.cancelar")}
           </button>
         </div>
       </DialogContent>

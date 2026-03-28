@@ -10,14 +10,7 @@ import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
-
-function formatDate(ts: number | null | undefined, locale: string) {
-  if (!ts) return "—";
-  const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
-  return new Date(ts).toLocaleDateString(loc, { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
-}
-function dateToTs(d: string): number | null { return d ? new Date(d + "T12:00:00").getTime() : null; }
-function tsToInput(ts: number | null | undefined): string { return ts ? new Date(ts).toISOString().split("T")[0] : ""; }
+import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
 
 const STATUS_MAP: Record<string, { color: string; bg: string; label: string }> = {
   planejada: { color: "#FF6B00", bg: "rgba(255,107,0,0.14)", label: "Planejada" },
@@ -44,46 +37,14 @@ export default function TercaDeGloria() {
   function resetForm() { setForm({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada", notificar: "both" }); setEditingId(null); }
   function openEdit(r: any) {
     setEditingId(r.id);
-    setForm({ data: tsToInput(r.data), tema: r.tema || "", pregador: r.pregador || "", resumo: r.resumo || "", testemunhos: r.testemunhos || "", linkMeet: r.linkMeet || "", versiculoBase: r.versiculoBase || "", status: r.status || "planejada" });
+    setForm({ data: tsToDate(r.data), tema: r.tema || "", pregador: r.pregador || "", resumo: r.resumo || "", testemunhos: r.testemunhos || "", linkMeet: r.linkMeet || "", versiculoBase: r.versiculoBase || "", status: r.status || "planejada" });
     setDialogOpen(true);
   }
-  async function sendNotification(eventData: { tema: string; data: string; pregador: string; linkMeet: string }, channel: "whatsapp" | "email" | "both") {
-    try {
-      const dateStr = eventData.data ? new Date(eventData.data + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }) : "A definir";
-      const message = `*Terca de Gloria*\nTema: ${eventData.tema}\nData: ${dateStr}\nPregador: ${eventData.pregador || "A definir"}`;
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-        body: JSON.stringify({
-          channel,
-          subject: `Terca de Gloria: ${eventData.tema}`,
-          title: `Terca de Gloria - ${eventData.tema}`,
-          message,
-          meetLink: eventData.linkMeet || undefined,
-        }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        const parts = [];
-        if (result.results.whatsapp.sent > 0) parts.push(`${result.results.whatsapp.sent} WhatsApp`);
-        if (result.results.email.sent > 0) parts.push(`${result.results.email.sent} Email`);
-        toast.success(`Notificacao enviada: ${parts.join(", ")}`);
-      } else {
-        toast.error(result.error || "Erro ao notificar");
-      }
-    } catch {
-      toast.error("Erro ao enviar notificacoes");
-    }
-  }
-
   function handleSubmit() {
     if (!form.tema.trim()) return toast.error(t("tg.temaObrigatorio"));
     const d = { tema: form.tema, data: dateToTs(form.data) || Date.now(), pregador: form.pregador || null, resumo: form.resumo || null, testemunhos: form.testemunhos || null, linkMeet: form.linkMeet || null, versiculoBase: form.versiculoBase || null, status: form.status as any };
     const onSuccess = () => {
       toast.success(t("common.sucesso"));
-      if (!editingId && form.notificar !== "none") {
-        sendNotification({ tema: form.tema, data: form.data, pregador: form.pregador, linkMeet: form.linkMeet }, form.notificar);
-      }
       setDialogOpen(false); resetForm();
     };
     const onError = (e: any) => toast.error(e.message);
@@ -204,7 +165,7 @@ export default function TercaDeGloria() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {r.linkMeet && (
-                        <a href={r.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-8 h-8 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors">
+                        <a href={r.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-11 h-11 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors" aria-label="Abrir Google Meet">
                           <Video className="w-4 h-4" strokeWidth={1.5} />
                         </a>
                       )}
@@ -239,8 +200,9 @@ export default function TercaDeGloria() {
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); setNotifyTarget(r); }}
-                          className="apple-btn apple-btn-gray py-2 px-3 text-[#25D366] hover:text-[#128C7E]"
+                          className="apple-btn apple-btn-gray py-2 px-3 text-[#25D366] hover:text-[#128C7E] min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title="Notificar embaixadores"
+                          aria-label="Notificar embaixadores via WhatsApp"
                         >
                           <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                         </button>
