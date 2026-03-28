@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Mail, MessageCircle, Loader2, Save, Eye, EyeOff, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Mail, MessageCircle, Loader2, Save, Eye, EyeOff, Shield, Lock } from "lucide-react";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 interface ConfigItem {
   id: number;
@@ -13,25 +14,38 @@ interface ConfigItem {
 }
 
 export default function Settings() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, session } = useAuth();
   const [configs, setConfigs] = useState<ConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+
+  async function callCrypto(action: string, key?: string, value?: string) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/crypto-config`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ action, key, value }),
+    });
+    return res.json();
+  }
 
   useEffect(() => {
     loadConfigs();
   }, []);
 
   async function loadConfigs() {
-    const { data, error } = await supabase
-      .from("app_config")
-      .select("*")
-      .order("id");
-    if (error) {
+    try {
+      const result = await callCrypto("load");
+      if (result.data) {
+        setConfigs(result.data);
+      } else {
+        toast.error(result.error || "Erro ao carregar configurações");
+      }
+    } catch {
       toast.error("Erro ao carregar configurações");
-    } else {
-      setConfigs(data || []);
     }
     setLoading(false);
   }
@@ -39,14 +53,27 @@ export default function Settings() {
   async function handleSave() {
     setSaving(true);
     try {
+      const sensitiveKeys = ["smtp_password", "zapi_token", "zapi_client_token", "zapi_instance_id"];
       for (const config of configs) {
-        const { error } = await supabase
-          .from("app_config")
-          .update({ value: config.value, updated_at: new Date().toISOString() })
-          .eq("id", config.id);
-        if (error) throw error;
+        if (sensitiveKeys.includes(config.key)) {
+          // Encrypt via Edge Function
+          const result = await callCrypto("save", config.key, config.value);
+          if (result.error) throw new Error(result.error);
+        } else {
+          // Non-sensitive: save directly
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/crypto-config`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ action: "save", key: config.key, value: config.value }),
+          });
+          const result = await res.json();
+          if (result.error) throw new Error(result.error);
+        }
       }
-      toast.success("Configurações salvas com sucesso!");
+      toast.success("Configurações salvas e criptografadas com sucesso!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
     } finally {
@@ -237,6 +264,10 @@ export default function Settings() {
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Salvar Configurações
               </button>
+              <p className="text-xs text-[#48484a] flex items-center gap-1.5 mt-3">
+                <Lock className="w-3.5 h-3.5" />
+                Senhas e tokens são criptografados com AES-256 + salt antes de salvar.
+              </p>
             </div>
           </div>
         )}
