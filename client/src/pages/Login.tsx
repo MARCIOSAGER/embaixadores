@@ -195,10 +195,26 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Footer */}
-        <p className="mt-8 text-[#48484a] text-xs tracking-widest uppercase font-medium">
-          Amor &middot; Honra &middot; Unidade
+        {/* Description */}
+        <p className="mt-6 text-[#86868b] text-xs text-center leading-relaxed max-w-[300px]">
+          Sistema de gestão do programa de embaixadores do movimento Legendários.
         </p>
+
+        {/* Footer with legal links */}
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <p className="text-[#48484a] text-xs tracking-widest uppercase font-medium">
+            Amor &middot; Honra &middot; Unidade
+          </p>
+          <div className="flex gap-3">
+            <a href="/privacidade" className="text-[#48484a] text-[0.6875rem] hover:text-[#86868b] transition-colors">
+              Privacidade
+            </a>
+            <span className="text-[#2a2a2c]">&middot;</span>
+            <a href="/termos" className="text-[#48484a] text-[0.6875rem] hover:text-[#86868b] transition-colors">
+              Termos
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
