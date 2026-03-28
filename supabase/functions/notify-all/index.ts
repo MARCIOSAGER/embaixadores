@@ -230,7 +230,8 @@ Deno.serve(async (req) => {
       const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());
       const smtpUser = (Deno.env.get("SMTP_USER") || "").trim();
       const smtpPass = (Deno.env.get("SMTP_PASSWORD") || "").trim();
-      const smtpFrom = (Deno.env.get("SMTP_FROM") || smtpUser).trim();
+      const smtpFromAddr = (Deno.env.get("SMTP_FROM") || smtpUser).trim();
+      const smtpFrom = `Embaixadores dos Legendarios <${smtpFromAddr}>`;
 
       if (!smtpUser || !smtpPass) {
         results.email.errors.push("SMTP nao configurado");
