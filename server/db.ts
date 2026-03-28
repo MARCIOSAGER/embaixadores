@@ -59,6 +59,12 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function updateUserRole(id: number, role: "user" | "admin") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role, updatedAt: new Date() }).where(eq(users.id, id));
+}
+
 // ========== EMBAIXADORES ==========
 export async function listEmbaixadores(search?: string) {
   const db = await getDb();

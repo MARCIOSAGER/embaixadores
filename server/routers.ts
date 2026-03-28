@@ -29,6 +29,13 @@ export const appRouter = router({
       if (error) throw new Error(error.message);
       return { success: true };
     }),
+    updateRole: adminProcedure.input(z.object({
+      id: z.number(),
+      role: z.enum(["user", "admin"]),
+    })).mutation(async ({ input }) => {
+      await db.updateUserRole(input.id, input.role);
+      return { success: true };
+    }),
   }),
 
   // Dashboard

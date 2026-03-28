@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { trpc } from "../lib/trpc";
 import type { Database } from "../lib/database.types";
 
 type Embaixador = Database["public"]["Tables"]["embaixadores"]["Row"];
@@ -473,12 +474,7 @@ export function useUsers() {
 
 export function useUpdateUserRole() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, role }: { id: number; role: "user" | "admin" }) => {
-      const { error } = await supabase.from("users").update({ role }).eq("id", id);
-      if (error) throw error;
-      return { success: true };
-    },
+  return trpc.users.updateRole.useMutation({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
     },
