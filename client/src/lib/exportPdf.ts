@@ -5,13 +5,18 @@ export function exportKitsPdf(kits: any[], getEmbName: (id: number) => string) {
   const doc = new jsPDF();
   const today = new Date().toLocaleDateString('pt-BR');
 
+  // Logo
+  try {
+    doc.addImage('/logo-legendarios.png', 'PNG', 14, 10, 20, 16);
+  } catch { /* logo not available */ }
+
   // Header
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Relatório de Entrega de Kits', 14, 22);
+  doc.text('Relatório de Entrega de Kits', 38, 20);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Embaixadores dos Legendários - Gerado em ${today}`, 14, 30);
+  doc.text(`Embaixadores dos Legendários - Gerado em ${today}`, 38, 27);
 
   // Table
   const tableData = kits.map((kit: any) => {

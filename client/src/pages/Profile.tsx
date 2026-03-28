@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfileEmbaixador, useUpdateEmbaixador } from "@/hooks/useSupabase";
+import { useProfileEmbaixador, useUpdateEmbaixador, useCreateEmbaixador } from "@/hooks/useSupabase";
 import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Camera, Loader2, Save, Mail, User } from "lucide-react";
+import { Camera, Loader2, Save, Mail } from "lucide-react";
 
 export default function Profile() {
   const { user: authUser, userName } = useAuth();
   const { data: embaixador, isLoading } = useProfileEmbaixador(authUser?.email ?? null);
   const updateMut = useUpdateEmbaixador();
+  const createMut = useCreateEmbaixador();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -46,27 +47,51 @@ export default function Profile() {
   const initial = displayName.charAt(0).toUpperCase();
 
   function handleSave() {
-    if (!embaixador) return toast.error("Perfil de embaixador nao encontrado.");
-    if (!form.nomeCompleto.trim()) return toast.error("Nome completo e obrigatorio.");
+    if (!form.nomeCompleto.trim()) return toast.error("Nome completo é obrigatório.");
 
-    updateMut.mutate(
-      {
-        id: embaixador.id,
-        nomeCompleto: form.nomeCompleto,
-        telefone: form.telefone || null,
-        cidade: form.cidade || null,
-        estado: form.estado || null,
-        profissao: form.profissao || null,
-        empresa: form.empresa || null,
-        numeroLegendario: form.numeroLegendario || null,
-        numeroEmbaixador: form.numeroEmbaixador || null,
-        fotoUrl: avatarUrl || null,
-      },
-      {
-        onSuccess: () => toast.success("Perfil atualizado com sucesso!"),
-        onError: (e: any) => toast.error(e.message || "Erro ao atualizar perfil."),
-      }
-    );
+    if (embaixador) {
+      updateMut.mutate(
+        {
+          id: embaixador.id,
+          nomeCompleto: form.nomeCompleto,
+          telefone: form.telefone || null,
+          cidade: form.cidade || null,
+          estado: form.estado || null,
+          profissao: form.profissao || null,
+          empresa: form.empresa || null,
+          numeroLegendario: form.numeroLegendario || null,
+          numeroEmbaixador: form.numeroEmbaixador || null,
+          fotoUrl: avatarUrl || null,
+        },
+        {
+          onSuccess: () => toast.success("Perfil atualizado com sucesso!"),
+          onError: (e: any) => toast.error(e.message || "Erro ao atualizar perfil."),
+        }
+      );
+    } else {
+      createMut.mutate(
+        {
+          nomeCompleto: form.nomeCompleto,
+          email: email,
+          telefone: form.telefone || null,
+          cidade: form.cidade || null,
+          estado: form.estado || null,
+          profissao: form.profissao || null,
+          empresa: form.empresa || null,
+          numeroLegendario: form.numeroLegendario || null,
+          numeroEmbaixador: form.numeroEmbaixador || null,
+          fotoUrl: avatarUrl || null,
+          status: "ativo",
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success("Perfil criado com sucesso!");
+            window.location.reload();
+          },
+          onError: (e: any) => toast.error(e.message || "Erro ao criar perfil."),
+        }
+      );
+    }
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -120,14 +145,6 @@ export default function Profile() {
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
-          </div>
-        ) : !embaixador ? (
-          <div className="py-16 text-center animate-fade-up">
-            <div className="w-16 h-16 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
-              <User className="w-7 h-7 text-[#48484a]" strokeWidth={1.5} />
-            </div>
-            <p className="text-[0.875rem] text-[#86868b]">Nenhum perfil de embaixador vinculado a este e-mail.</p>
-            <p className="text-[0.75rem] text-[#48484a] mt-2">Entre em contato com o administrador.</p>
           </div>
         ) : (
           <div className="space-y-6 animate-fade-up" style={{ animationDelay: "50ms" }}>

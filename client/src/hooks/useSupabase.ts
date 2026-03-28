@@ -111,9 +111,9 @@ export function useProfileEmbaixador(email: string | null) {
         .from("embaixadores")
         .select("*")
         .eq("email", email)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as Embaixador;
+      return data as Embaixador | null;
     },
     enabled: !!email,
   });
