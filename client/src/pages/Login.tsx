@@ -18,7 +18,7 @@ const TURNSTILE_SITE_KEY = "0x4AAAAAACxP7yh7Dqowfrnn";
 const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
 export default function Login() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const { signIn, signInWithGoogle, resetPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -261,8 +261,26 @@ export default function Login() {
           Sistema de gestão do programa de embaixadores do movimento Legendários.
         </p>
 
+        {/* Language selector */}
+        <div className="mt-4 flex items-center justify-center gap-1">
+          {[
+            { code: "pt" as const, label: "PT", flag: "https://flagcdn.com/w40/br.png" },
+            { code: "es" as const, label: "ES", flag: "https://flagcdn.com/w40/es.png" },
+            { code: "en" as const, label: "EN", flag: "https://flagcdn.com/w40/us.png" },
+          ].map(l => (
+            <button
+              key={l.code}
+              onClick={() => setLocale(l.code)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.75rem] font-medium transition-all ${locale === l.code ? "bg-white/[0.08] text-white" : "text-[#48484a] hover:text-[#86868b]"}`}
+            >
+              <img src={l.flag} alt="" className="w-4 h-3 rounded-[1px] object-cover" />
+              {l.label}
+            </button>
+          ))}
+        </div>
+
         {/* Footer with legal links */}
-        <div className="mt-4 flex flex-col items-center gap-2">
+        <div className="mt-3 flex flex-col items-center gap-2">
           <p className="text-[#48484a] text-xs tracking-widest uppercase font-medium">
             Amor &middot; Honra &middot; Unidade
           </p>

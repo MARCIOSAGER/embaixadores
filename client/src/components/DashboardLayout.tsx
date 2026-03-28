@@ -10,9 +10,9 @@ import { useAuth } from "@/hooks/useAuth";
 const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
 const LANGS: { code: Locale; label: string; flag: string }[] = [
-  { code: "pt", label: "Português", flag: "🇧🇷" },
-  { code: "es", label: "Español", flag: "🇪🇸" },
-  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "pt", label: "Português", flag: "https://flagcdn.com/w40/br.png" },
+  { code: "es", label: "Español", flag: "https://flagcdn.com/w40/es.png" },
+  { code: "en", label: "English", flag: "https://flagcdn.com/w40/us.png" },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -96,7 +96,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               className="flex items-center gap-3 px-3 py-[9px] rounded-[10px] text-[#86868b] hover:text-[#d2d2d7] hover:bg-white/[0.03] transition-all duration-200 w-full"
             >
               <Globe className="w-[18px] h-[18px] text-[#48484a]" strokeWidth={1.5} />
-              <span className="text-[0.8125rem] font-medium">{LANGS.find(l => l.code === locale)?.flag} {LANGS.find(l => l.code === locale)?.label}</span>
+              <img src={LANGS.find(l => l.code === locale)?.flag} alt="" className="w-5 h-3.5 rounded-[2px] object-cover" />
+              <span className="text-[0.8125rem] font-medium">{LANGS.find(l => l.code === locale)?.label}</span>
             </button>
             {showLang && (
               <div className="absolute bottom-full left-0 mb-1.5 w-full apple-card p-1.5 space-y-0.5 animate-scale-in" onClick={e => e.stopPropagation()}>
@@ -108,7 +109,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       locale === l.code ? "bg-white/[0.07] text-white" : "text-[#86868b] hover:bg-white/[0.03] hover:text-[#d2d2d7]"
                     }`}
                   >
-                    <span className="text-sm">{l.flag}</span>
+                    <img src={l.flag} alt="" className="w-5 h-3.5 rounded-[2px] object-cover" />
                     <span>{l.label}</span>
                   </button>
                 ))}
@@ -168,7 +169,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   locale === l.code ? "bg-white/[0.07] text-white" : "text-[#86868b] hover:bg-white/[0.03] hover:text-[#d2d2d7]"
                 }`}
               >
-                <span>{l.flag}</span>
+                <img src={l.flag} alt="" className="w-5 h-3.5 rounded-[2px] object-cover" />
                 <span>{l.label}</span>
               </button>
             ))}
