@@ -32,6 +32,7 @@ export type Database = {
           dataIngresso: number;
           dataRenovacao: number | null;
           status: "ativo" | "inativo" | "pendente_renovacao";
+          idioma: "pt" | "es" | "en";
           observacoes: string | null;
           fotoUrl: string | null;
           createdAt: string;

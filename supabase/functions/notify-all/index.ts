@@ -172,42 +172,54 @@ Deno.serve(async (req) => {
     }
 
     // Fetch event data from database
-    let msgData: { whatsapp: string; emailSubject: string; emailTitle: string; emailBody: string };
+    let eventRecord: any;
     let candidatePhone: string | null = null;
     let candidateEmail: string | null = null;
 
     if (type === "evento") {
       const { data, error } = await supabaseAdmin.from("eventos").select("*").eq("id", id).single();
       if (error || !data) return json({ error: "Evento nao encontrado" }, 404);
-      msgData = buildEventoMsg(data, locale);
+      eventRecord = data;
     } else if (type === "terca") {
       const { data, error } = await supabaseAdmin.from("tercaGloria").select("*").eq("id", id).single();
       if (error || !data) return json({ error: "Reuniao nao encontrada" }, 404);
-      msgData = buildTercaMsg(data, locale);
+      eventRecord = data;
     } else {
       const { data, error } = await supabaseAdmin.from("entrevistas").select("*").eq("id", id).single();
       if (error || !data) return json({ error: "Entrevista nao encontrada" }, 404);
-      msgData = buildEntrevistaMsg(data, locale);
+      eventRecord = data;
       candidatePhone = data.telefoneCandidato || null;
       candidateEmail = data.emailCandidato || null;
     }
 
-    // Fetch recipients
-    let embaixadores: { id: number; nomeCompleto: string; email: string | null; telefone: string | null }[];
+    // Build messages per locale (cache to avoid rebuilding)
+    const msgCache = new Map<Locale, ReturnType<typeof buildEventoMsg>>();
+    function getMsgForLocale(loc: Locale) {
+      if (msgCache.has(loc)) return msgCache.get(loc)!;
+      let msg;
+      if (type === "evento") msg = buildEventoMsg(eventRecord, loc);
+      else if (type === "terca") msg = buildTercaMsg(eventRecord, loc);
+      else msg = buildEntrevistaMsg(eventRecord, loc);
+      msgCache.set(loc, msg);
+      return msg;
+    }
+
+    // Fetch recipients (including their preferred locale)
+    let embaixadores: { id: number; nomeCompleto: string; email: string | null; telefone: string | null; idioma: Locale }[];
     if (recipients === "all") {
       const { data, error } = await supabaseAdmin
         .from("embaixadores")
-        .select("id, nomeCompleto, email, telefone")
+        .select("id, nomeCompleto, email, telefone, idioma")
         .eq("status", "ativo");
       if (error) throw error;
-      embaixadores = data || [];
+      embaixadores = (data || []).map((e: any) => ({ ...e, idioma: e.idioma || "pt" }));
     } else if (Array.isArray(recipients) && recipients.length > 0) {
       const { data, error } = await supabaseAdmin
         .from("embaixadores")
-        .select("id, nomeCompleto, email, telefone")
+        .select("id, nomeCompleto, email, telefone, idioma")
         .in("id", recipients);
       if (error) throw error;
-      embaixadores = data || [];
+      embaixadores = (data || []).map((e: any) => ({ ...e, idioma: e.idioma || "pt" }));
     } else {
       embaixadores = [];
     }
@@ -230,27 +242,29 @@ Deno.serve(async (req) => {
         const zapiHeaders: Record<string, string> = { "Content-Type": "application/json" };
         if (clientToken) zapiHeaders["Client-Token"] = clientToken;
 
-        const sendWa = async (phone: string, name: string) => {
+        const sendWa = async (phone: string, name: string, msg: string) => {
           try {
             const cleanPhone = phone.replace(/\D/g, "");
             const res = await fetch(`${zapiBaseUrl}/send-text`, {
               method: "POST",
               headers: zapiHeaders,
-              body: JSON.stringify({ phone: cleanPhone, message: msgData.whatsapp }),
+              body: JSON.stringify({ phone: cleanPhone, message: msg }),
             });
             if (res.ok) results.whatsapp.sent++;
             else { results.whatsapp.failed++; results.whatsapp.errors.push(`${name}: ${res.statusText}`); }
-          } catch (err) { results.whatsapp.failed++; results.whatsapp.errors.push(`${name}: ${err.message}`); }
+          } catch (err: any) { results.whatsapp.failed++; results.whatsapp.errors.push(`${name}: ${err.message}`); }
         };
 
-        // Send to embaixadores
+        // Send to embaixadores (each in their preferred locale)
         for (const e of embaixadores.filter(e => e.telefone)) {
-          await sendWa(e.telefone!, e.nomeCompleto);
+          const msg = getMsgForLocale(e.idioma);
+          await sendWa(e.telefone!, e.nomeCompleto, msg.whatsapp);
         }
 
-        // Send to candidate (entrevistas only)
+        // Send to candidate (entrevistas only, uses admin locale)
         if (type === "entrevista" && includeCandidato && candidatePhone) {
-          await sendWa(candidatePhone, "Candidato");
+          const msg = getMsgForLocale(locale);
+          await sendWa(candidatePhone, "Candidato", msg.whatsapp);
         }
       }
     }
@@ -275,27 +289,28 @@ Deno.serve(async (req) => {
             auth: { user: smtpUser, pass: smtpPass },
           });
 
-          const sendEmail = async (to: string, name: string) => {
+          const sendEmail = async (to: string, name: string, loc: Locale) => {
             try {
+              const msg = getMsgForLocale(loc);
               await transporter.sendMail({
                 from: smtpFrom,
                 to,
-                subject: msgData.emailSubject,
-                text: msgData.whatsapp,
-                html: buildEmailHtml(msgData.emailTitle, msgData.emailBody, locale),
+                subject: msg.emailSubject,
+                text: msg.whatsapp,
+                html: buildEmailHtml(msg.emailTitle, msg.emailBody, loc),
               });
               results.email.sent++;
-            } catch (err) { results.email.failed++; results.email.errors.push(`${name}: ${err.message}`); }
+            } catch (err: any) { results.email.failed++; results.email.errors.push(`${name}: ${err.message}`); }
           };
 
-          // Send to embaixadores
+          // Send to embaixadores (each in their preferred locale)
           for (const e of embaixadores.filter(e => e.email)) {
-            await sendEmail(e.email!, e.nomeCompleto);
+            await sendEmail(e.email!, e.nomeCompleto, e.idioma);
           }
 
-          // Send to candidate (entrevistas only)
+          // Send to candidate (entrevistas only, uses admin locale)
           if (type === "entrevista" && includeCandidato && candidateEmail) {
-            await sendEmail(candidateEmail, "Candidato");
+            await sendEmail(candidateEmail, "Candidato", locale);
           }
         } catch (err) {
           results.email.errors.push(`SMTP connection: ${err.message}`);

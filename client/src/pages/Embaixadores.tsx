@@ -36,7 +36,7 @@ export default function Embaixadores() {
     nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "",
     email: "", telefone: "", cidade: "", estado: "",
     profissao: "", empresa: "", dataNascimento: "", dataIngresso: "",
-    dataRenovacao: "", status: "ativo" as string, observacoes: "",
+    dataRenovacao: "", status: "ativo" as string, idioma: "pt" as string, observacoes: "",
   });
 
   const searchTerm = useMemo(() => search || undefined, [search]);
@@ -48,7 +48,7 @@ export default function Embaixadores() {
   const deleteMut = useDeleteEmbaixador();
 
   function resetForm() {
-    setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", observacoes: "" });
+    setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", idioma: "pt", observacoes: "" });
     setEditingId(null);
   }
 
@@ -59,7 +59,7 @@ export default function Embaixadores() {
       email: emb.email || "", telefone: emb.telefone || "", cidade: emb.cidade || "", estado: emb.estado || "",
       profissao: emb.profissao || "", empresa: emb.empresa || "",
       dataNascimento: tsToDate(emb.dataNascimento), dataIngresso: tsToDate(emb.dataIngresso),
-      dataRenovacao: tsToDate(emb.dataRenovacao), status: emb.status || "ativo", observacoes: emb.observacoes || "",
+      dataRenovacao: tsToDate(emb.dataRenovacao), status: emb.status || "ativo", idioma: emb.idioma || "pt", observacoes: emb.observacoes || "",
     });
     setDialogOpen(true);
   }
@@ -72,7 +72,7 @@ export default function Embaixadores() {
       profissao: form.profissao || null, empresa: form.empresa || null,
       dataNascimento: dateToTs(form.dataNascimento), dataIngresso: dateToTs(form.dataIngresso) || Date.now(),
       dataRenovacao: dateToTs(form.dataRenovacao), status: form.status as "ativo" | "inativo" | "pendente_renovacao",
-      observacoes: form.observacoes || null,
+      idioma: form.idioma as "pt" | "es" | "en", observacoes: form.observacoes || null,
     };
     const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
     const onError = (e: any) => toast.error(e.message);
@@ -326,6 +326,14 @@ export default function Embaixadores() {
                     <option value="ativo">{t("emb.ativo")}</option>
                     <option value="inativo">{t("emb.inativo")}</option>
                     <option value="pendente_renovacao">{t("emb.pendRenov")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="apple-input-label">Idioma preferido</label>
+                  <select value={form.idioma} onChange={e => setForm({ ...form, idioma: e.target.value })} className="apple-input">
+                    <option value="pt">Portugues</option>
+                    <option value="es">Espanol</option>
+                    <option value="en">English</option>
                   </select>
                 </div>
                 <div>
