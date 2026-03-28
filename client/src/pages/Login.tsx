@@ -37,6 +37,7 @@ export default function Login() {
         turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
           sitekey: TURNSTILE_SITE_KEY,
           theme: "dark",
+          size: "compact",
           callback: (token: string) => setTurnstileToken(token),
           "expired-callback": () => setTurnstileToken(null),
         });
@@ -96,28 +97,28 @@ export default function Login() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center w-full max-w-[420px] mx-auto px-6">
 
-        {/* Logo - grande e imponente */}
-        <div className="mb-6">
+        {/* Logo */}
+        <div className="mb-4">
           <img
             src={LOGO_LEGENDARIOS}
             alt="Legendários"
-            className="w-40 h-40 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)] invert"
+            className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)] invert"
           />
         </div>
 
         {/* Title block */}
-        <div className="text-center mb-10">
-          <h1 className="text-[2.5rem] sm:text-[3rem] font-black tracking-[-0.04em] text-white leading-[1] mb-2">
+        <div className="text-center mb-6">
+          <h1 className="text-[2rem] sm:text-[2.5rem] font-black tracking-[-0.04em] text-white leading-[1] mb-2">
             EMBAIXADORES
           </h1>
-          <div className="w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-4 rounded-full" />
-          <p className="text-[0.9375rem] text-[#86868b] tracking-wide uppercase font-medium">
+          <div className="w-16 h-1 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] mx-auto mb-3 rounded-full" />
+          <p className="text-[0.8125rem] text-[#86868b] tracking-wide uppercase font-medium">
             {resetMode ? "Recuperar acesso" : "Sistema de Gestão"}
           </p>
         </div>
 
         {/* Form card */}
-        <div className="w-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-8">
+        <div className="w-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {resetSent ? (
               <div className="text-center space-y-4 py-4">
@@ -186,18 +187,18 @@ export default function Login() {
                   </div>
                 )}
 
-                {/* Turnstile CAPTCHA */}
-                <div ref={turnstileRef} className="flex justify-center [&_iframe]:rounded-xl [&_iframe]:!border-0" style={{ colorScheme: "dark" }} />
-
                 {/* Submit */}
                 <button
                   type="submit"
                   disabled={loading || !turnstileToken}
-                  className="w-full py-4 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[1rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[0.9375rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
                 >
                   {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                   {resetMode ? "ENVIAR LINK" : "ENTRAR NO SISTEMA"}
                 </button>
+
+                {/* Turnstile CAPTCHA */}
+                <div ref={turnstileRef} className="flex justify-center scale-90 origin-center" style={{ colorScheme: "dark" }} />
 
                 {/* Divider */}
                 {!resetMode && (
