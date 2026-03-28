@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle, FileDown, Send, Mail } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -31,6 +32,7 @@ export default function TercaDeGloria() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [filter, setFilter] = useState("all");
   const [notifyTarget, setNotifyTarget] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [form, setForm] = useState({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: reunioes, isLoading } = useTercaGloria();
@@ -244,7 +246,7 @@ export default function TercaDeGloria() {
                         <button onClick={() => openEdit(r)} className="apple-btn apple-btn-tinted flex-1 py-2">
                           <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />Editar Reuniao
                         </button>
-                        <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate(r.id, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive flex-1 py-2">
+                        <button onClick={() => setConfirmDelete(r.id)} className="apple-btn apple-btn-destructive flex-1 py-2">
                           <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.excluir")}
                         </button>
                       </div>
@@ -404,6 +406,11 @@ export default function TercaDeGloria() {
             </div>
           </DialogContent>
         </Dialog>
+        <ConfirmDialog
+          open={confirmDelete !== null}
+          onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
+          onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
       </div>
     </DashboardLayout>
   );

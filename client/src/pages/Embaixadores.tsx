@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -30,6 +31,7 @@ export default function Embaixadores() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selected, setSelected] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [form, setForm] = useState({
     nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "",
     email: "", telefone: "", cidade: "", estado: "",
@@ -279,7 +281,7 @@ export default function Embaixadores() {
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
                     <Edit2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.editar")}
                   </button>
-                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) { deleteMut.mutate(selected.id, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) }); } }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
+                  <button onClick={() => setConfirmDelete(selected.id)} className="apple-btn apple-btn-destructive flex-1 py-2.5">
                     <Trash2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.excluir")}
                   </button>
                 </div>
@@ -343,6 +345,11 @@ export default function Embaixadores() {
             </div>
           </DialogContent>
         </Dialog>
+        <ConfirmDialog
+          open={confirmDelete !== null}
+          onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
+          onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
       </div>
     </DashboardLayout>
   );
