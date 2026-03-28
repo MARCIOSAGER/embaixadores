@@ -2,7 +2,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useDashboardStats } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
-import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church } from "lucide-react";
+import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 function ProgressRing({ value, max, color, size = 56 }: { value: number; max: number; color: string; size?: number }) {
   const r = (size - 8) / 2;
@@ -66,6 +67,38 @@ function EmptyState({ text }: { text: string }) {
     <div className="py-6 text-center">
       <p className="text-[0.8125rem] text-[#48484a]">{text}</p>
     </div>
+  );
+}
+
+const CHART_COLORS = {
+  ativos: "#30D158",
+  pendentes: "#FF9F0A",
+  inativos: "#FF453A",
+  parciais: "#E85D00",
+  completos: "#30D158",
+};
+
+function CustomTooltip({ active, payload }: any) {
+  if (active && payload?.length) {
+    return (
+      <div className="bg-[#1c1c1e] border border-white/[0.1] rounded-lg px-3 py-2 text-sm">
+        <p className="text-white font-medium">{payload[0].name}: {payload[0].value}</p>
+      </div>
+    );
+  }
+  return null;
+}
+
+function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  if (percent < 0.05) return null;
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
   );
 }
 
@@ -203,6 +236,97 @@ export default function Home() {
                 </div>
               )}
             </SectionCard>
+          </div>
+
+          {/* Analytics Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Donut Chart - Embaixadores por Status */}
+            <div className="apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "600ms" }}>
+              <div className="px-5 pt-5 pb-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
+                  <PieChartIcon className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />
+                </div>
+                <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">
+                  {t("dash.embPorStatus") || "Embaixadores por Status"}
+                </h3>
+              </div>
+              <div className="apple-separator mx-5" />
+              <div className="p-5">
+                {(data.embaixadores.ativos + data.embaixadores.pendentes + data.embaixadores.inativos) === 0 ? (
+                  <EmptyState text={t("dash.semDados") || "Sem dados para exibir"} />
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: t("dash.ativos") || "Ativos", value: data.embaixadores.ativos },
+                          { name: t("dash.pendentes") || "Pendentes", value: data.embaixadores.pendentes },
+                          { name: t("dash.inativos") || "Inativos", value: data.embaixadores.inativos },
+                        ].filter(d => d.value > 0)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        dataKey="value"
+                        labelLine={false}
+                        label={renderCustomLabel}
+                      >
+                        <Cell fill={CHART_COLORS.ativos} />
+                        <Cell fill={CHART_COLORS.pendentes} />
+                        <Cell fill={CHART_COLORS.inativos} />
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend
+                        verticalAlign="bottom"
+                        iconType="circle"
+                        iconSize={8}
+                        formatter={(value: string) => <span className="text-[0.75rem] text-[#86868b]">{value}</span>}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
+            {/* Bar Chart - Status dos Kits */}
+            <div className="apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "650ms" }}>
+              <div className="px-5 pt-5 pb-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />
+                </div>
+                <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">
+                  {t("dash.statusKits") || "Status dos Kits"}
+                </h3>
+              </div>
+              <div className="apple-separator mx-5" />
+              <div className="p-5">
+                {(data.kitsStats.pendentes + data.kitsStats.parciais + data.kitsStats.completos) === 0 ? (
+                  <EmptyState text={t("dash.semDados") || "Sem dados para exibir"} />
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart
+                      data={[
+                        { name: t("dash.pendentes") || "Pendentes", value: data.kitsStats.pendentes, fill: CHART_COLORS.pendentes },
+                        { name: t("dash.parciais") || "Parciais", value: data.kitsStats.parciais, fill: CHART_COLORS.parciais },
+                        { name: t("dash.completos") || "Completos", value: data.kitsStats.completos, fill: CHART_COLORS.completos },
+                      ]}
+                      layout="vertical"
+                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                    >
+                      <XAxis type="number" tick={{ fill: "#86868b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="name" tick={{ fill: "#86868b", fontSize: 12 }} axisLine={false} tickLine={false} width={80} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                      <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={28}>
+                        {[CHART_COLORS.pendentes, CHART_COLORS.parciais, CHART_COLORS.completos].map((color, i) => (
+                          <Cell key={i} fill={color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

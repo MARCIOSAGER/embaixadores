@@ -1,7 +1,7 @@
 import { useI18n, type Locale } from "@/lib/i18n";
 import { useLocation, Link } from "wouter";
 import {
-  LayoutDashboard, Users, Church, Gift, Calendar, UserPlus,
+  LayoutDashboard, Users, Church, Gift, Calendar, UserPlus, DollarSign,
   LogOut, Globe, Loader2, Shield
 } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
@@ -29,6 +29,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { path: "/welcome-kit", icon: Gift, label: t("nav.welcomeKit") },
     { path: "/eventos", icon: Calendar, label: t("nav.eventos") },
     { path: "/entrevistas", icon: UserPlus, label: t("nav.entrevistas") },
+    { path: "/pagamentos", icon: DollarSign, label: t("nav.pagamentos") },
   ];
 
   const navItems = isAdmin

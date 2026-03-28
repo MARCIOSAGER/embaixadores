@@ -13,6 +13,7 @@ import TercaDeGloria from "./pages/TercaDeGloria";
 import WelcomeKit from "./pages/WelcomeKit";
 import Eventos from "./pages/Eventos";
 import Entrevistas from "./pages/Entrevistas";
+import Pagamentos from "./pages/Pagamentos";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/welcome-kit" component={WelcomeKit} />
       <Route path="/eventos" component={Eventos} />
       <Route path="/entrevistas" component={Entrevistas} />
+      <Route path="/pagamentos" component={Pagamentos} />
       <Route path="/admin" component={Admin} />
       <Route path="/perfil" component={Profile} />
       <Route path="/404" component={NotFound} />
