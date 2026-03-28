@@ -244,7 +244,7 @@ export default function TercaDeGloria() {
                         <button onClick={() => openEdit(r)} className="apple-btn apple-btn-tinted flex-1 py-2">
                           <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />Editar Reuniao
                         </button>
-                        <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: r.id }, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive flex-1 py-2">
+                        <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate(r.id, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive flex-1 py-2">
                           <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.excluir")}
                         </button>
                       </div>
@@ -367,8 +367,14 @@ export default function TercaDeGloria() {
                     onClick={async () => {
                       const r = notifyTarget;
                       setNotifyTarget(null);
-                      const dateStr = r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "A definir";
-                      const msg = `*Terca de Gloria*\nTema: ${r.tema}\nData: ${dateStr}\nPregador: ${r.pregador || 'A definir'}`;
+                      const dateStr = r.data ? new Date(r.data).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "A definir";
+                      let calendarLink = "";
+                      if (r.data) {
+                        const start = new Date(r.data).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+                        const end = new Date(r.data + 3600000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+                        calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Terca de Gloria - " + r.tema)}&dates=${start}/${end}&details=${encodeURIComponent(r.linkMeet ? "Meet: " + r.linkMeet : "")}`;
+                      }
+                      const msg = `*Terca de Gloria*\nTema: ${r.tema}\nData: ${dateStr}\nPregador: ${r.pregador || 'A definir'}${calendarLink ? `\n\nSalvar na agenda: ${calendarLink}` : ""}`;
                       toast.loading("Enviando notificacoes...");
                       try {
                         const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {

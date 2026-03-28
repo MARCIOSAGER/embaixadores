@@ -234,7 +234,7 @@ export default function Eventos() {
                     <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
                       <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("ev.editar") || "Editar Evento"}
                     </button>
-                    <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: ev.id }, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
+                    <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate(ev.id, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                   </div>
@@ -385,8 +385,15 @@ export default function Eventos() {
                     onClick={async () => {
                       const ev = notifyTarget;
                       setNotifyTarget(null);
-                      const dateStr = ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "A definir";
-                      const msg = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || 'A definir'}`;
+                      const dateStr = ev.data ? new Date(ev.data).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "A definir";
+                      // Google Calendar link
+                      let calendarLink = "";
+                      if (ev.data) {
+                        const start = new Date(ev.data).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+                        const end = new Date(ev.dataFim || ev.data + 3600000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+                        calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.titulo)}&dates=${start}/${end}&location=${encodeURIComponent(ev.local || "")}&details=${encodeURIComponent(ev.linkMeet ? "Meet: " + ev.linkMeet : "")}`;
+                      }
+                      const msg = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || 'A definir'}${calendarLink ? `\n\nSalvar na agenda: ${calendarLink}` : ""}`;
                       toast.loading("Enviando notificacoes...");
                       try {
                         const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {

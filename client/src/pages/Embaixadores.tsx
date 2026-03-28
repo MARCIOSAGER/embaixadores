@@ -279,7 +279,7 @@ export default function Embaixadores() {
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
                     <Edit2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.editar")}
                   </button>
-                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) { deleteMut.mutate({ id: selected.id }, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) }); } }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
+                  <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) { deleteMut.mutate(selected.id, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) }); } }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
                     <Trash2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.excluir")}
                   </button>
                 </div>
