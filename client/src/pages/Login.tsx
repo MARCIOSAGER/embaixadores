@@ -51,6 +51,26 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
+      // Server-side Turnstile validation
+      if (turnstileToken) {
+        const verifyRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-turnstile`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
+          body: JSON.stringify({ token: turnstileToken }),
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyData.success) {
+          setError("Verificacao de seguranca falhou. Tente novamente.");
+          // Reset turnstile
+          if (turnstileWidgetId.current && window.turnstile) {
+            window.turnstile.reset(turnstileWidgetId.current);
+          }
+          setTurnstileToken(null);
+          setLoading(false);
+          return;
+        }
+      }
+
       if (resetMode) {
         await resetPassword(email);
         setResetSent(true);
@@ -167,7 +187,7 @@ export default function Login() {
                 )}
 
                 {/* Turnstile CAPTCHA */}
-                <div ref={turnstileRef} className="flex justify-center" />
+                <div ref={turnstileRef} className="flex justify-center [&_iframe]:rounded-xl [&_iframe]:!border-0" style={{ colorScheme: "dark" }} />
 
                 {/* Submit */}
                 <button
