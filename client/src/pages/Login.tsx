@@ -177,6 +177,13 @@ export default function Login() {
                       </svg>
                       Entrar com Google
                     </button>
+
+                    <p className="text-[0.6875rem] text-[#48484a] text-center leading-relaxed">
+                      Ao continuar, você concorda com nossa{" "}
+                      <a href="/privacidade" className="text-[#86868b] underline hover:text-white">Política de Privacidade</a>
+                      {" "}e{" "}
+                      <a href="/termos" className="text-[#86868b] underline hover:text-white">Termos de Serviço</a>.
+                    </p>
                   </>
                 )}
 
