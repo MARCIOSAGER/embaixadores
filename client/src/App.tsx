@@ -15,7 +15,7 @@ import Eventos from "./pages/Eventos";
 import Entrevistas from "./pages/Entrevistas";
 import Pagamentos from "./pages/Pagamentos";
 import Admin from "./pages/Admin";
-import Settings from "./pages/Settings";
+
 import ZApiAdmin from "./pages/ZApiAdmin";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
@@ -35,7 +35,7 @@ function Router() {
       <Route path="/entrevistas" component={Entrevistas} />
       <Route path="/pagamentos" component={Pagamentos} />
       <Route path="/admin" component={Admin} />
-      <Route path="/configuracoes" component={Settings} />
+
       <Route path="/whatsapp" component={ZApiAdmin} />
       <Route path="/perfil" component={Profile} />
       <Route path="/404" component={NotFound} />

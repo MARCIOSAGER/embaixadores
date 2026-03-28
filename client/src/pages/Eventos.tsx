@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
@@ -40,23 +40,58 @@ export default function Eventos() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [filter, setFilter] = useState("all");
-  const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado" });
+  const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: eventos, isLoading } = useEventos();
   const createMut = useCreateEvento();
   const updateMut = useUpdateEvento();
   const deleteMut = useDeleteEvento();
 
-  function resetForm() { setForm({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado" }); setEditingId(null); }
+  function resetForm() { setForm({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" }); setEditingId(null); }
   function openEdit(ev: any) {
     setEditingId(ev.id);
     setForm({ titulo: ev.titulo || "", descricao: ev.descricao || "", data: tsToInputDT(ev.data), dataFim: tsToInputDT(ev.dataFim), local: ev.local || "", tipo: ev.tipo || "encontro", linkMeet: ev.linkMeet || "", recorrente: ev.recorrente || false, status: ev.status || "agendado" });
     setDialogOpen(true);
   }
+  async function sendNotification(eventData: { titulo: string; data: string; local: string; linkMeet: string }, channel: "whatsapp" | "email" | "both") {
+    try {
+      const dateStr = eventData.data ? new Date(eventData.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "A definir";
+      const message = `*${eventData.titulo}*\nData: ${dateStr}\nLocal: ${eventData.local || "A definir"}`;
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        body: JSON.stringify({
+          channel,
+          subject: `Novo Evento: ${eventData.titulo}`,
+          title: eventData.titulo,
+          message,
+          meetLink: eventData.linkMeet || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        const parts = [];
+        if (result.results.whatsapp.sent > 0) parts.push(`${result.results.whatsapp.sent} WhatsApp`);
+        if (result.results.email.sent > 0) parts.push(`${result.results.email.sent} Email`);
+        toast.success(`Notificacao enviada: ${parts.join(", ")}`);
+      } else {
+        toast.error(result.error || "Erro ao notificar");
+      }
+    } catch {
+      toast.error("Erro ao enviar notificacoes");
+    }
+  }
+
   function handleSubmit() {
     if (!form.titulo.trim() || !form.data) return toast.error(t("ev.tituloObrigatorio"));
     const d = { titulo: form.titulo, descricao: form.descricao || null, data: dateToTimestamp(form.data), dataFim: form.dataFim ? dateToTimestamp(form.dataFim) : null, local: form.local || null, tipo: form.tipo as any, linkMeet: form.linkMeet || null, recorrente: form.recorrente, status: form.status as any };
-    const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
+    const onSuccess = () => {
+      toast.success(t("common.sucesso"));
+      if (!editingId && form.notificar !== "none") {
+        sendNotification({ titulo: form.titulo, data: form.data, local: form.local, linkMeet: form.linkMeet }, form.notificar);
+      }
+      setDialogOpen(false); resetForm();
+    };
     const onError = (e: any) => toast.error(e.message);
     if (editingId) updateMut.mutate({ id: editingId, ...d }, { onSuccess, onError }); else createMut.mutate(d, { onSuccess, onError });
   }
@@ -293,6 +328,35 @@ export default function Eventos() {
                   <label className="text-[0.8125rem] text-[#d2d2d7]">{t("ev.recorrente")}</label>
                 </div>
                 <div><label className="apple-input-label">{t("ev.descricao")}</label><textarea value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} rows={3} className="apple-input resize-none" /></div>
+
+                {/* Notification selector - only for new events */}
+                {!editingId && (
+                  <div className="apple-card p-4 space-y-2 border border-white/[0.06]">
+                    <label className="apple-input-label flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5 text-[#FF6B00]" />
+                      Notificar Embaixadores
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {([
+                        { key: "both", label: "WhatsApp + Email", icon: "both" },
+                        { key: "whatsapp", label: "WhatsApp", icon: "whatsapp" },
+                        { key: "email", label: "Email", icon: "email" },
+                        { key: "none", label: "Nao notificar", icon: "none" },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, notificar: opt.key }))}
+                          className={`text-[0.75rem] py-1.5 px-3 rounded-lg border transition-all flex items-center gap-1.5 ${form.notificar === opt.key ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
+                        >
+                          {opt.key === "whatsapp" || opt.key === "both" ? <MessageCircle className="w-3 h-3" /> : null}
+                          {opt.key === "email" || opt.key === "both" ? <Mail className="w-3 h-3" /> : null}
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 pt-2">
                 <DialogClose asChild><button className="apple-btn apple-btn-gray flex-1 py-2.5">{t("common.cancelar")}</button></DialogClose>

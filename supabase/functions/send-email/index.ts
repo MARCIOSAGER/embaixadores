@@ -15,14 +15,14 @@ function buildEmailHtml(title: string, body: string) {
   <tr><td align="center">
     <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
       <tr><td style="background:linear-gradient(135deg,#FF6B00 0%,#E85D00 100%);padding:24px 32px;text-align:center;">
-        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">Embaixadores dos Legendários</h1>
+        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">Embaixadores dos Legendarios</h1>
       </td></tr>
       <tr><td style="padding:32px;">
         <h2 style="margin:0 0 16px;color:#f5f5f7;font-size:18px;font-weight:600;">${title}</h2>
         <div style="color:#86868b;font-size:14px;line-height:1.6;">${body}</div>
       </td></tr>
       <tr><td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-        <p style="margin:0;color:#48484a;font-size:12px;">Legendários - Amor, Honra, Unidade</p>
+        <p style="margin:0;color:#48484a;font-size:12px;">Legendarios - Amor, Honra, Unidade</p>
       </td></tr>
     </table>
   </td></tr>
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get SMTP config from secrets
+    // Get SMTP config from Supabase Secrets
     const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.hostinger.com";
     const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
     const smtpUser = Deno.env.get("SMTP_USER") || "";

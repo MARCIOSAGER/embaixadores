@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle, FileDown } from "lucide-react";
+import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle, FileDown, Send, Mail } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
@@ -30,23 +30,58 @@ export default function TercaDeGloria() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [filter, setFilter] = useState("all");
-  const [form, setForm] = useState({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" as string });
+  const [form, setForm] = useState({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: reunioes, isLoading } = useTercaGloria();
   const createMut = useCreateTercaGloria();
   const updateMut = useUpdateTercaGloria();
   const deleteMut = useDeleteTercaGloria();
 
-  function resetForm() { setForm({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" }); setEditingId(null); }
+  function resetForm() { setForm({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada", notificar: "both" }); setEditingId(null); }
   function openEdit(r: any) {
     setEditingId(r.id);
     setForm({ data: tsToInput(r.data), tema: r.tema || "", pregador: r.pregador || "", resumo: r.resumo || "", testemunhos: r.testemunhos || "", linkMeet: r.linkMeet || "", versiculoBase: r.versiculoBase || "", status: r.status || "planejada" });
     setDialogOpen(true);
   }
+  async function sendNotification(eventData: { tema: string; data: string; pregador: string; linkMeet: string }, channel: "whatsapp" | "email" | "both") {
+    try {
+      const dateStr = eventData.data ? new Date(eventData.data + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }) : "A definir";
+      const message = `*Terca de Gloria*\nTema: ${eventData.tema}\nData: ${dateStr}\nPregador: ${eventData.pregador || "A definir"}`;
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+        body: JSON.stringify({
+          channel,
+          subject: `Terca de Gloria: ${eventData.tema}`,
+          title: `Terca de Gloria - ${eventData.tema}`,
+          message,
+          meetLink: eventData.linkMeet || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        const parts = [];
+        if (result.results.whatsapp.sent > 0) parts.push(`${result.results.whatsapp.sent} WhatsApp`);
+        if (result.results.email.sent > 0) parts.push(`${result.results.email.sent} Email`);
+        toast.success(`Notificacao enviada: ${parts.join(", ")}`);
+      } else {
+        toast.error(result.error || "Erro ao notificar");
+      }
+    } catch {
+      toast.error("Erro ao enviar notificacoes");
+    }
+  }
+
   function handleSubmit() {
     if (!form.tema.trim()) return toast.error(t("tg.temaObrigatorio"));
     const d = { tema: form.tema, data: dateToTs(form.data) || Date.now(), pregador: form.pregador || null, resumo: form.resumo || null, testemunhos: form.testemunhos || null, linkMeet: form.linkMeet || null, versiculoBase: form.versiculoBase || null, status: form.status as any };
-    const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
+    const onSuccess = () => {
+      toast.success(t("common.sucesso"));
+      if (!editingId && form.notificar !== "none") {
+        sendNotification({ tema: form.tema, data: form.data, pregador: form.pregador, linkMeet: form.linkMeet }, form.notificar);
+      }
+      setDialogOpen(false); resetForm();
+    };
     const onError = (e: any) => toast.error(e.message);
     if (editingId) updateMut.mutate({ id: editingId, ...d }, { onSuccess, onError }); else createMut.mutate(d, { onSuccess, onError });
   }
@@ -277,6 +312,34 @@ export default function TercaDeGloria() {
                 </div>
                 <div><label className="apple-input-label">{t("tg.resumo")}</label><textarea value={form.resumo} onChange={e => setForm({ ...form, resumo: e.target.value })} rows={3} className="apple-input resize-none" /></div>
                 <div><label className="apple-input-label">{t("tg.testemunhos")}</label><textarea value={form.testemunhos} onChange={e => setForm({ ...form, testemunhos: e.target.value })} rows={2} className="apple-input resize-none" /></div>
+
+                {!editingId && (
+                  <div className="apple-card p-4 space-y-2 border border-white/[0.06]">
+                    <label className="apple-input-label flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5 text-[#FF6B00]" />
+                      Notificar Embaixadores
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {([
+                        { key: "both", label: "WhatsApp + Email", icon: "both" },
+                        { key: "whatsapp", label: "WhatsApp", icon: "whatsapp" },
+                        { key: "email", label: "Email", icon: "email" },
+                        { key: "none", label: "Nao notificar", icon: "none" },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, notificar: opt.key }))}
+                          className={`text-[0.75rem] py-1.5 px-3 rounded-lg border transition-all flex items-center gap-1.5 ${form.notificar === opt.key ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
+                        >
+                          {opt.key === "whatsapp" || opt.key === "both" ? <MessageCircle className="w-3 h-3" /> : null}
+                          {opt.key === "email" || opt.key === "both" ? <Mail className="w-3 h-3" /> : null}
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 pt-2">
                 <DialogClose asChild><button className="apple-btn apple-btn-gray flex-1 py-2.5">{t("common.cancelar")}</button></DialogClose>
