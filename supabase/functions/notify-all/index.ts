@@ -1,6 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -141,11 +141,11 @@ Deno.serve(async (req) => {
 
     // Send Email via SMTP
     if (channel === "email" || channel === "both") {
-      const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.hostinger.com";
-      const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
-      const smtpUser = Deno.env.get("SMTP_USER") || "";
-      const smtpPass = Deno.env.get("SMTP_PASSWORD") || "";
-      const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
+      const smtpHost = (Deno.env.get("SMTP_HOST") || "smtp.hostinger.com").trim();
+      const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());
+      const smtpUser = (Deno.env.get("SMTP_USER") || "").trim();
+      const smtpPass = (Deno.env.get("SMTP_PASSWORD") || "").trim();
+      const smtpFrom = (Deno.env.get("SMTP_FROM") || smtpUser).trim();
 
       if (!smtpUser || !smtpPass) {
         results.email.errors.push("SMTP nao configurado");
@@ -155,21 +155,20 @@ Deno.serve(async (req) => {
           .map(e => ({ name: e.nomeCompleto, email: e.email! }));
 
         try {
-          const client = new SmtpClient();
-          await client.connectTLS({
-            hostname: smtpHost,
+          const transporter = nodemailer.createTransport({
+            host: smtpHost,
             port: smtpPort,
-            username: smtpUser,
-            password: smtpPass,
+            secure: smtpPort === 465,
+            auth: { user: smtpUser, pass: smtpPass },
           });
 
           for (const { name, email } of emailsToSend) {
             try {
-              await client.send({
+              await transporter.sendMail({
                 from: smtpFrom,
                 to: email,
                 subject,
-                content: title,
+                text: title,
                 html: buildEmailHtml(title, fullBody),
               });
               results.email.sent++;
@@ -178,8 +177,6 @@ Deno.serve(async (req) => {
               results.email.errors.push(`${name}: ${err.message}`);
             }
           }
-
-          await client.close();
         } catch (err) {
           results.email.errors.push(`SMTP connection: ${err.message}`);
         }

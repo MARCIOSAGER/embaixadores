@@ -1,6 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,6 +31,13 @@ function buildEmailHtml(title: string, body: string) {
 </html>`;
 }
 
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -44,59 +51,41 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Nao autorizado" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (authError || !user) return json({ error: "Nao autorizado" }, 401);
 
     const { to, subject, title, body } = await req.json();
-
     if (!to || !subject || !title || !body) {
-      return new Response(JSON.stringify({ error: "to, subject, title e body sao obrigatorios" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "to, subject, title e body sao obrigatorios" }, 400);
     }
 
-    // Get SMTP config from Supabase Secrets
-    const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.hostinger.com";
-    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
-    const smtpUser = Deno.env.get("SMTP_USER") || "";
-    const smtpPass = Deno.env.get("SMTP_PASSWORD") || "";
-    const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
+    const smtpHost = (Deno.env.get("SMTP_HOST") || "smtp.hostinger.com").trim();
+    const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());
+    const smtpUser = (Deno.env.get("SMTP_USER") || "").trim();
+    const smtpPass = (Deno.env.get("SMTP_PASSWORD") || "").trim();
+    const smtpFrom = (Deno.env.get("SMTP_FROM") || smtpUser).trim();
 
     if (!smtpUser || !smtpPass) {
-      return new Response(JSON.stringify({ error: "SMTP nao configurado" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "SMTP nao configurado" }, 500);
     }
 
-    // Send via SMTP
-    const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: smtpHost,
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
       port: smtpPort,
-      username: smtpUser,
-      password: smtpPass,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
     });
 
-    await client.send({
+    await transporter.sendMail({
       from: smtpFrom,
       to: Array.isArray(to) ? to.join(",") : to,
       subject,
-      content: title,
+      text: title,
       html: buildEmailHtml(title, body),
     });
 
-    await client.close();
-
-    return new Response(JSON.stringify({ success: true, message: `Email enviado para ${to}` }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ success: true, message: `Email enviado para ${to}` });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: error.message }, 500);
   }
 });
