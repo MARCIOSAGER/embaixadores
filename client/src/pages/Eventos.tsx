@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
@@ -158,6 +158,18 @@ export default function Eventos() {
                         <Video className="w-3.5 h-3.5" strokeWidth={1.5} />Google Meet
                       </a>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dateStr = ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "A definir";
+                        const msg = encodeURIComponent(`\u{1F5D3} *${ev.titulo}*\n\u{1F4C5} Data: ${dateStr}\n\u{1F4CD} Local: ${ev.local || 'A definir'}\n\u{1F517} Link: ${ev.linkMeet || 'A definir'}\n\nEmbaixadores dos Legend\u00e1rios`);
+                        window.open(`https://wa.me/?text=${msg}`, '_blank');
+                      }}
+                      className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#25D366] hover:text-[#128C7E]"
+                      title="Compartilhar via WhatsApp"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </button>
                     <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
                       <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.editar")}
                     </button>

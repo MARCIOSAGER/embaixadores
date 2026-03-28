@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download } from "lucide-react";
+import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
@@ -146,11 +146,25 @@ export default function Entrevistas() {
                         {ent.indicadoPor && <span className="flex items-center gap-1"><User className="w-3 h-3" strokeWidth={1.5} />{ent.indicadoPor}</span>}
                       </div>
                     </div>
-                    {ent.linkMeet && (
-                      <a href={ent.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-10 h-10 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors shrink-0">
-                        <Video className="w-5 h-5" strokeWidth={1.5} />
-                      </a>
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const dateStr = ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "A definir";
+                          const msg = encodeURIComponent(`\u{1F4CB} *Entrevista - ${ent.nomeCandidato}*\n\u{1F4C5} Data: ${dateStr}\n\u{1F517} Link Meet: ${ent.linkMeet || 'A definir'}\n\u{1F464} Indicado por: ${ent.indicadoPor || '-'}\n\nEmbaixadores dos Legend\u00e1rios`);
+                          window.open(`https://wa.me/?text=${msg}`, '_blank');
+                        }}
+                        className="w-10 h-10 rounded-xl bg-[#25D366]/10 flex items-center justify-center text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                        title="Compartilhar via WhatsApp"
+                      >
+                        <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+                      </button>
+                      {ent.linkMeet && (
+                        <a href={ent.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-10 h-10 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors">
+                          <Video className="w-5 h-5" strokeWidth={1.5} />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -200,6 +214,17 @@ export default function Entrevistas() {
                 )}
 
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const dateStr = selected.dataEntrevista ? new Date(selected.dataEntrevista).toLocaleDateString("pt-BR") : "A definir";
+                      const msg = encodeURIComponent(`\u{1F4CB} *Entrevista - ${selected.nomeCandidato}*\n\u{1F4C5} Data: ${dateStr}\n\u{1F517} Link Meet: ${selected.linkMeet || 'A definir'}\n\u{1F464} Indicado por: ${selected.indicadoPor || '-'}\n\nEmbaixadores dos Legend\u00e1rios`);
+                      window.open(`https://wa.me/?text=${msg}`, '_blank');
+                    }}
+                    className="apple-btn apple-btn-gray py-2.5 px-3 text-[#25D366] hover:text-[#128C7E]"
+                    title="Compartilhar via WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
                     <Edit2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.editar")}
                   </button>

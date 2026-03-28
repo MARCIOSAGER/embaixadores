@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download } from "lucide-react";
+import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDate(ts: number | null | undefined, locale: string) {
@@ -170,6 +170,18 @@ export default function TercaDeGloria() {
                         </div>
                       )}
                       <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const dateStr = r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "A definir";
+                            const msg = encodeURIComponent(`\u26EA *Ter\u00e7a de Gl\u00f3ria*\n\u{1F4C5} Data: ${dateStr}\n\u{1F3A4} Pregador: ${r.pregador || 'A definir'}\n\u{1F4D6} Tema: ${r.tema}\n\u{1F517} Link: ${r.linkMeet || 'A definir'}\n\nEmbaixadores dos Legend\u00e1rios`);
+                            window.open(`https://wa.me/?text=${msg}`, '_blank');
+                          }}
+                          className="apple-btn apple-btn-gray py-2 px-3 text-[#25D366] hover:text-[#128C7E]"
+                          title="Compartilhar via WhatsApp"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        </button>
                         <button onClick={() => openEdit(r)} className="apple-btn apple-btn-tinted flex-1 py-2">
                           <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.editar")}
                         </button>
