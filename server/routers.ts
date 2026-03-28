@@ -1,9 +1,11 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import * as db from "./db";
+import { ENV } from "./_core/env";
 
 export const appRouter = router({
   system: systemRouter,
@@ -13,6 +15,19 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+  }),
+
+  // Users (admin)
+  users: router({
+    invite: adminProcedure.input(z.object({ email: z.string().email() })).mutation(async ({ input }) => {
+      const supabaseAdmin = createClient(
+        ENV.supabaseUrl,
+        ENV.supabaseServiceRoleKey
+      );
+      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(input.email);
+      if (error) throw new Error(error.message);
+      return { success: true };
     }),
   }),
 
