@@ -224,14 +224,25 @@ export default function Eventos() {
                       </a>
                     )}
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
                         const dateStr = ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "A definir";
-                        const msg = encodeURIComponent(`\u{1F5D3} *${ev.titulo}*\n\u{1F4C5} Data: ${dateStr}\n\u{1F4CD} Local: ${ev.local || 'A definir'}\n\u{1F517} Link: ${ev.linkMeet || 'A definir'}\n\nEmbaixadores dos Legend\u00e1rios`);
-                        window.open(`https://wa.me/?text=${msg}`, '_blank');
+                        const msg = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || 'A definir'}`;
+                        toast.loading("Enviando WhatsApp para todos...");
+                        try {
+                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
+                            body: JSON.stringify({ channel: "whatsapp", subject: ev.titulo, title: ev.titulo, message: msg, meetLink: ev.linkMeet || undefined }),
+                          });
+                          const data = await res.json();
+                          toast.dismiss();
+                          if (data.success) toast.success(`WhatsApp enviado para ${data.results.whatsapp.sent} embaixadores`);
+                          else toast.error(data.error || "Erro ao enviar");
+                        } catch { toast.dismiss(); toast.error("Erro ao enviar WhatsApp"); }
                       }}
                       className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#25D366] hover:text-[#128C7E]"
-                      title="Compartilhar via WhatsApp"
+                      title="Enviar WhatsApp para todos embaixadores"
                     >
                       <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>

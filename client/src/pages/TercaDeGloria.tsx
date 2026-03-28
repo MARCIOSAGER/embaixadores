@@ -234,14 +234,25 @@ export default function TercaDeGloria() {
                       )}
                       <div className="flex gap-2">
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
                             const dateStr = r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "A definir";
-                            const msg = encodeURIComponent(`\u26EA *Ter\u00e7a de Gl\u00f3ria*\n\u{1F4C5} Data: ${dateStr}\n\u{1F3A4} Pregador: ${r.pregador || 'A definir'}\n\u{1F4D6} Tema: ${r.tema}\n\u{1F517} Link: ${r.linkMeet || 'A definir'}\n\nEmbaixadores dos Legend\u00e1rios`);
-                            window.open(`https://wa.me/?text=${msg}`, '_blank');
+                            const msg = `*Terca de Gloria*\nTema: ${r.tema}\nData: ${dateStr}\nPregador: ${r.pregador || 'A definir'}`;
+                            toast.loading("Enviando WhatsApp para todos...");
+                            try {
+                              const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
+                                body: JSON.stringify({ channel: "whatsapp", subject: `Terca de Gloria: ${r.tema}`, title: `Terca de Gloria - ${r.tema}`, message: msg, meetLink: r.linkMeet || undefined }),
+                              });
+                              const data = await res.json();
+                              toast.dismiss();
+                              if (data.success) toast.success(`WhatsApp enviado para ${data.results.whatsapp.sent} embaixadores`);
+                              else toast.error(data.error || "Erro ao enviar");
+                            } catch { toast.dismiss(); toast.error("Erro ao enviar WhatsApp"); }
                           }}
                           className="apple-btn apple-btn-gray py-2 px-3 text-[#25D366] hover:text-[#128C7E]"
-                          title="Compartilhar via WhatsApp"
+                          title="Enviar WhatsApp para todos embaixadores"
                         >
                           <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                         </button>

@@ -212,14 +212,25 @@ export default function Entrevistas() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
+                          if (!ent.telefoneCandidato) { toast.error("Candidato sem telefone"); return; }
                           const dateStr = ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "A definir";
-                          const msg = encodeURIComponent(`\u{1F4CB} *Entrevista - ${ent.nomeCandidato}*\n\u{1F4C5} Data: ${dateStr}\n\u{1F517} Link Meet: ${ent.linkMeet || 'A definir'}\n\u{1F464} Indicado por: ${ent.indicadoPor || '-'}\n\nEmbaixadores dos Legend\u00e1rios`);
-                          window.open(`https://wa.me/?text=${msg}`, '_blank');
+                          const msg = `*Entrevista - ${ent.nomeCandidato}*\nData: ${dateStr}\nLink Meet: ${ent.linkMeet || 'A definir'}\nIndicado por: ${ent.indicadoPor || '-'}\n\nEmbaixadores dos Legendarios`;
+                          toast.loading("Enviando WhatsApp...");
+                          try {
+                            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zapi-proxy`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
+                              body: JSON.stringify({ action: "send", phone: ent.telefoneCandidato, message: msg }),
+                            });
+                            const data = await res.json();
+                            toast.dismiss();
+                            if (data.success) toast.success("WhatsApp enviado!"); else toast.error(data.error || "Erro ao enviar");
+                          } catch { toast.dismiss(); toast.error("Erro ao enviar WhatsApp"); }
                         }}
                         className="w-10 h-10 rounded-xl bg-[#25D366]/10 flex items-center justify-center text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
-                        title="Compartilhar via WhatsApp"
+                        title="Enviar via WhatsApp (Z-API)"
                       >
                         <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
                       </button>
@@ -279,18 +290,29 @@ export default function Entrevistas() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      if (!selected.telefoneCandidato) { toast.error("Candidato sem telefone cadastrado"); return; }
                       const dateStr = selected.dataEntrevista ? new Date(selected.dataEntrevista).toLocaleDateString("pt-BR") : "A definir";
-                      const msg = encodeURIComponent(`\u{1F4CB} *Entrevista - ${selected.nomeCandidato}*\n\u{1F4C5} Data: ${dateStr}\n\u{1F517} Link Meet: ${selected.linkMeet || 'A definir'}\n\u{1F464} Indicado por: ${selected.indicadoPor || '-'}\n\nEmbaixadores dos Legend\u00e1rios`);
-                      window.open(`https://wa.me/?text=${msg}`, '_blank');
+                      const msg = `*Entrevista - ${selected.nomeCandidato}*\nData: ${dateStr}\nLink Meet: ${selected.linkMeet || 'A definir'}\nIndicado por: ${selected.indicadoPor || '-'}\n\nEmbaixadores dos Legendarios`;
+                      toast.loading("Enviando WhatsApp...");
+                      try {
+                        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zapi-proxy`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
+                          body: JSON.stringify({ action: "send", phone: selected.telefoneCandidato, message: msg }),
+                        });
+                        const data = await res.json();
+                        toast.dismiss();
+                        if (data.success) toast.success("WhatsApp enviado!"); else toast.error(data.error || "Erro ao enviar");
+                      } catch { toast.dismiss(); toast.error("Erro ao enviar WhatsApp"); }
                     }}
                     className="apple-btn apple-btn-gray py-2.5 px-3 text-[#25D366] hover:text-[#128C7E]"
-                    title="Compartilhar via WhatsApp"
+                    title="Enviar via WhatsApp (Z-API)"
                   >
                     <MessageCircle className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
-                    <Edit2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.editar")}
+                    <Edit2 className="w-4 h-4" strokeWidth={1.5} />Editar Entrevista
                   </button>
                   <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: selected.id }, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); }, onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive flex-1 py-2.5">
                     <Trash2 className="w-4 h-4" strokeWidth={1.5} />{t("emb.excluir")}
