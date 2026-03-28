@@ -243,7 +243,46 @@ export default function Eventos() {
                   <div><label className="apple-input-label">{t("ev.dataFim")}</label><input type="datetime-local" value={form.dataFim} onChange={e => setForm({ ...form, dataFim: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                 </div>
                 <div><label className="apple-input-label">{t("ev.local")}</label><input value={form.local} onChange={e => setForm({ ...form, local: e.target.value })} className="apple-input" /></div>
-                <div><label className="apple-input-label">{t("ev.linkMeet")}</label><input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input" placeholder="https://meet.google.com/..." /></div>
+                <div>
+                  <label className="apple-input-label">{t("ev.linkMeet")}</label>
+                  <div className="flex gap-2">
+                    <input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input flex-1" placeholder="https://meet.google.com/..." />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const googleToken = localStorage.getItem("google_token");
+                        if (!googleToken) {
+                          toast.error("Faça login com Google para gerar links do Meet");
+                          return;
+                        }
+                        toast.loading("Gerando link do Meet...");
+                        try {
+                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${googleToken}` },
+                            body: JSON.stringify({ title: form.titulo || "Reunião Legendários", date: form.data }),
+                          });
+                          const data = await res.json();
+                          if (data.meetLink) {
+                            setForm(f => ({ ...f, linkMeet: data.meetLink }));
+                            toast.dismiss();
+                            toast.success("Link do Meet gerado!");
+                          } else {
+                            toast.dismiss();
+                            toast.error(data.error || "Erro ao gerar link");
+                          }
+                        } catch {
+                          toast.dismiss();
+                          toast.error("Erro ao gerar link do Meet");
+                        }
+                      }}
+                      className="apple-btn apple-btn-filled px-3 py-2 text-xs rounded-xl shrink-0 flex items-center gap-1.5"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Gerar Meet</span>
+                    </button>
+                  </div>
+                </div>
                 <div className="flex items-center gap-3 py-1">
                   <Switch checked={form.recorrente} onCheckedChange={v => setForm({ ...form, recorrente: v })} />
                   <label className="text-[0.8125rem] text-[#d2d2d7]">{t("ev.recorrente")}</label>

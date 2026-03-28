@@ -22,6 +22,10 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      // Save Google provider token for Calendar API
+      if (session?.provider_token) {
+        localStorage.setItem("google_token", session.provider_token);
+      }
       if (session?.user) fetchUserRole(session.user.id);
       else { setUserRole("user"); setLoading(false); }
     });
@@ -67,6 +71,7 @@ export function useAuth() {
       provider: "google",
       options: {
         redirectTo: window.location.origin,
+        scopes: "https://www.googleapis.com/auth/calendar.events",
       },
     });
     if (error) throw error;
