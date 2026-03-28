@@ -1,9 +1,11 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import * as db from "./db";
+import { ENV } from "./_core/env";
 
 export const appRouter = router({
   system: systemRouter,
@@ -13,6 +15,26 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+  }),
+
+  // Users (admin)
+  users: router({
+    invite: adminProcedure.input(z.object({ email: z.string().email() })).mutation(async ({ input }) => {
+      const supabaseAdmin = createClient(
+        ENV.supabaseUrl,
+        ENV.supabaseServiceRoleKey
+      );
+      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(input.email);
+      if (error) throw new Error(error.message);
+      return { success: true };
+    }),
+    updateRole: adminProcedure.input(z.object({
+      id: z.number(),
+      role: z.enum(["user", "admin"]),
+    })).mutation(async ({ input }) => {
+      await db.updateUserRole(input.id, input.role);
+      return { success: true };
     }),
   }),
 
@@ -31,7 +53,7 @@ export const appRouter = router({
     get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
       return db.getEmbaixador(input.id);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       nomeCompleto: z.string().min(1),
       numeroLegendario: z.string().optional().nullable(),
       numeroEmbaixador: z.string().optional().nullable(),
@@ -52,7 +74,7 @@ export const appRouter = router({
       await db.createWelcomeKit({ embaixadorId: id, status: "pendente" });
       return { id };
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       nomeCompleto: z.string().min(1).optional(),
       numeroLegendario: z.string().optional().nullable(),
@@ -73,7 +95,7 @@ export const appRouter = router({
       await db.updateEmbaixador(id, data);
       return { success: true };
     }),
-    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteEmbaixador(input.id);
       return { success: true };
     }),
@@ -87,7 +109,7 @@ export const appRouter = router({
     list: protectedProcedure.input(z.object({ embaixadorId: z.number().optional() }).optional()).query(async ({ input }) => {
       return db.listPagamentos(input?.embaixadorId);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       embaixadorId: z.number(),
       valor: z.string(),
       dataVencimento: z.number(),
@@ -98,7 +120,7 @@ export const appRouter = router({
       const id = await db.createPagamento(input);
       return { id };
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       valor: z.string().optional(),
       dataVencimento: z.number().optional(),
@@ -110,7 +132,7 @@ export const appRouter = router({
       await db.updatePagamento(id, data);
       return { success: true };
     }),
-    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deletePagamento(input.id);
       return { success: true };
     }),
@@ -124,7 +146,7 @@ export const appRouter = router({
     get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
       return db.getTercaGloria(input.id);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       data: z.number(),
       tema: z.string().min(1),
       pregador: z.string().optional().nullable(),
@@ -137,7 +159,7 @@ export const appRouter = router({
       const id = await db.createTercaGloria(input);
       return { id };
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       data: z.number().optional(),
       tema: z.string().min(1).optional(),
@@ -152,7 +174,7 @@ export const appRouter = router({
       await db.updateTercaGloria(id, data);
       return { success: true };
     }),
-    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteTercaGloria(input.id);
       return { success: true };
     }),
@@ -166,14 +188,14 @@ export const appRouter = router({
     get: protectedProcedure.input(z.object({ embaixadorId: z.number() })).query(async ({ input }) => {
       return db.getWelcomeKit(input.embaixadorId);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       embaixadorId: z.number(),
       observacoes: z.string().optional().nullable(),
     })).mutation(async ({ input }) => {
       const id = await db.createWelcomeKit({ ...input, status: "pendente" });
       return { id };
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       patchEntregue: z.boolean().optional(),
       pinBoneEntregue: z.boolean().optional(),
@@ -211,7 +233,7 @@ export const appRouter = router({
     get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
       return db.getEvento(input.id);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       titulo: z.string().min(1),
       descricao: z.string().optional().nullable(),
       data: z.number(),
@@ -225,7 +247,7 @@ export const appRouter = router({
       const id = await db.createEvento(input);
       return { id };
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       titulo: z.string().min(1).optional(),
       descricao: z.string().optional().nullable(),
@@ -241,7 +263,7 @@ export const appRouter = router({
       await db.updateEvento(id, data);
       return { success: true };
     }),
-    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteEvento(input.id);
       return { success: true };
     }),
@@ -255,7 +277,7 @@ export const appRouter = router({
     get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
       return db.getEntrevista(input.id);
     }),
-    create: protectedProcedure.input(z.object({
+    create: adminProcedure.input(z.object({
       nomeCandidato: z.string().min(1),
       emailCandidato: z.string().email().optional().nullable(),
       telefoneCandidato: z.string().optional().nullable(),
@@ -268,7 +290,7 @@ export const appRouter = router({
       const id = await db.createEntrevista(input);
       return { id };
     }),
-    update: protectedProcedure.input(z.object({
+    update: adminProcedure.input(z.object({
       id: z.number(),
       nomeCandidato: z.string().min(1).optional(),
       emailCandidato: z.string().email().optional().nullable(),
@@ -283,7 +305,7 @@ export const appRouter = router({
       await db.updateEntrevista(id, data);
       return { success: true };
     }),
-    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
       await db.deleteEntrevista(input.id);
       return { success: true };
     }),
