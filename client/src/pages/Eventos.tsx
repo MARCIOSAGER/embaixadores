@@ -5,7 +5,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download } from "lucide-react";
+import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -63,6 +64,19 @@ export default function Eventos() {
     return eventos.filter((e: any) => e.status === filter);
   }, [eventos, filter]);
 
+  function handleExport() {
+    const statusPt: Record<string, string> = { agendado: "Agendado", realizado: "Realizado", cancelado: "Cancelado" };
+    const tipoPt: Record<string, string> = { encontro: "Encontro", conferencia: "Conferencia", retiro: "Retiro", treinamento: "Treinamento", outro: "Outro" };
+    const data = filtered.map((ev: any) => ({
+      "Titulo": ev.titulo || "",
+      "Data": ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "",
+      "Local": ev.local || "",
+      "Tipo": tipoPt[ev.tipo] || ev.tipo || "",
+      "Status": statusPt[ev.status] || ev.status || "",
+    }));
+    exportToXlsx(data, `eventos-${new Date().toISOString().split("T")[0]}`);
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -72,10 +86,20 @@ export default function Eventos() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("ev.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("ev.subtitle")}</p>
           </div>
-          <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
-            <Plus className="w-4 h-4" strokeWidth={2} />
-            <span className="hidden sm:inline">{t("ev.novo")}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar XLSX"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
+              <Plus className="w-4 h-4" strokeWidth={2} />
+              <span className="hidden sm:inline">{t("ev.novo")}</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

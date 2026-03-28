@@ -4,7 +4,8 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X } from "lucide-react";
+import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download } from "lucide-react";
+import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -61,6 +62,19 @@ export default function Entrevistas() {
     return entrevistas.filter((e: any) => e.status === filter);
   }, [entrevistas, filter]);
 
+  function handleExport() {
+    const statusPt: Record<string, string> = { agendada: "Agendada", realizada: "Realizada", aprovada: "Aprovada", reprovada: "Reprovada", cancelada: "Cancelada" };
+    const data = filtered.map((ent: any) => ({
+      "Candidato": ent.nomeCandidato || "",
+      "Email": ent.emailCandidato || "",
+      "Telefone": ent.telefoneCandidato || "",
+      "Data Entrevista": ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
+      "Status": statusPt[ent.status] || ent.status || "",
+      "Indicado Por": ent.indicadoPor || "",
+    }));
+    exportToXlsx(data, `entrevistas-${new Date().toISOString().split("T")[0]}`);
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -70,10 +84,20 @@ export default function Entrevistas() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("ent.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("ent.subtitle")}</p>
           </div>
-          <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
-            <Plus className="w-4 h-4" strokeWidth={2} />
-            <span className="hidden sm:inline">{t("ent.nova")}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar XLSX"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
+              <Plus className="w-4 h-4" strokeWidth={2} />
+              <span className="hidden sm:inline">{t("ent.nova")}</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

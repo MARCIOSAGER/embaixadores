@@ -4,7 +4,8 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download } from "lucide-react";
+import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -53,6 +54,17 @@ export default function TercaDeGloria() {
     return reunioes.filter((r: any) => r.status === filter);
   }, [reunioes, filter]);
 
+  function handleExport() {
+    const statusPt: Record<string, string> = { planejada: "Planejada", realizada: "Realizada", cancelada: "Cancelada" };
+    const data = filtered.map((r: any) => ({
+      "Data": r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "",
+      "Tema": r.tema || "",
+      "Pregador": r.pregador || "",
+      "Status": statusPt[r.status] || r.status || "",
+    }));
+    exportToXlsx(data, `terca-de-gloria-${new Date().toISOString().split("T")[0]}`);
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -62,10 +74,20 @@ export default function TercaDeGloria() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("tg.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("tg.subtitle")}</p>
           </div>
-          <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
-            <Plus className="w-4 h-4" strokeWidth={2} />
-            <span className="hidden sm:inline">{t("tg.nova")}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar XLSX"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
+              <Plus className="w-4 h-4" strokeWidth={2} />
+              <span className="hidden sm:inline">{t("tg.nova")}</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

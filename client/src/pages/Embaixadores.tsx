@@ -5,7 +5,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download } from "lucide-react";
+import { exportToXlsx } from "@/lib/exportXlsx";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -82,6 +83,21 @@ export default function Embaixadores() {
     return embaixadores.filter((e: any) => e.status === filter);
   }, [embaixadores, filter]);
 
+  function handleExport() {
+    const data = filtered.map((emb: any) => ({
+      "Nome": emb.nomeCompleto || "",
+      "Email": emb.email || "",
+      "Telefone": emb.telefone || "",
+      "Cidade": emb.cidade || "",
+      "Estado": emb.estado || "",
+      "Status": emb.status === "ativo" ? "Ativo" : emb.status === "inativo" ? "Inativo" : "Pendente Renovacao",
+      "Data Ingresso": emb.dataIngresso ? new Date(emb.dataIngresso).toLocaleDateString("pt-BR") : "",
+      "Numero Legendario": emb.numeroLegendario || "",
+      "Numero Embaixador": emb.numeroEmbaixador || "",
+    }));
+    exportToXlsx(data, `embaixadores-${new Date().toISOString().split("T")[0]}`);
+  }
+
   const filters = [
     { key: "all", label: t("common.todos") },
     { key: "ativo", label: t("emb.ativo") },
@@ -98,10 +114,20 @@ export default function Embaixadores() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("emb.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("emb.subtitle")}</p>
           </div>
-          <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
-            <Plus className="w-4 h-4" strokeWidth={2} />
-            <span className="hidden sm:inline">{t("emb.novo")}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar XLSX"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button onClick={() => { resetForm(); setDialogOpen(true); }} className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4">
+              <Plus className="w-4 h-4" strokeWidth={2} />
+              <span className="hidden sm:inline">{t("emb.novo")}</span>
+            </button>
+          </div>
         </div>
 
         {/* Mini Stats */}

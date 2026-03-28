@@ -3,7 +3,8 @@ import { useWelcomeKits, useUpdateWelcomeKit, useCreateWelcomeKit, useEmbaixador
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, Download } from "lucide-react";
+import { exportToXlsx } from "@/lib/exportXlsx";
 
 type KitItemKey = "patchEntregue" | "pinBoneEntregue" | "anelEntregue" | "espadaEntregue" | "mochilaBalacEntregue";
 const KIT_KEYS: KitItemKey[] = ["patchEntregue", "pinBoneEntregue", "anelEntregue", "espadaEntregue", "mochilaBalacEntregue"];
@@ -77,6 +78,22 @@ export default function WelcomeKit() {
     return list;
   }, [kits, search, filter, embaixadores]);
 
+  function handleExport() {
+    const data = filtered.map((kit: any) => {
+      const progress = getKitProgress(kit);
+      return {
+        "Embaixador": getEmbName(kit.embaixadorId),
+        "Patch": kit.patchEntregue ? "Sim" : "Nao",
+        "Pin": kit.pinBoneEntregue ? "Sim" : "Nao",
+        "Anel": kit.anelEntregue ? "Sim" : "Nao",
+        "Espada": kit.espadaEntregue ? "Sim" : "Nao",
+        "Mochila": kit.mochilaBalacEntregue ? "Sim" : "Nao",
+        "Status": progress === 5 ? "Completo" : progress === 0 ? "Pendente" : "Parcial",
+      };
+    });
+    exportToXlsx(data, `welcome-kits-${new Date().toISOString().split("T")[0]}`);
+  }
+
   const stats = useMemo(() => {
     if (!kits) return { total: 0, pendente: 0, parcial: 0, completo: 0 };
     const total = kits.length;
@@ -94,13 +111,23 @@ export default function WelcomeKit() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("kit.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("kit.subtitle")}</p>
           </div>
-          <button
-            onClick={() => setShowCreate(!showCreate)}
-            className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Novo Kit</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar XLSX"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+            <button
+              onClick={() => setShowCreate(!showCreate)}
+              className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Novo Kit</span>
+            </button>
+          </div>
         </div>
 
         {/* Create Kit Form */}
