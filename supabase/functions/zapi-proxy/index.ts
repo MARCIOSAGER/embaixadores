@@ -6,14 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function getZapiCreds() {
+  return {
+    instanceId: (Deno.env.get("ZAPI_INSTANCE_ID") || "").trim(),
+    token: (Deno.env.get("ZAPI_TOKEN") || "").trim(),
+    clientToken: (Deno.env.get("ZAPI_CLIENT_TOKEN") || "").trim(),
+  };
+}
+
 function zapiUrl(path: string): string {
-  const instanceId = Deno.env.get("ZAPI_INSTANCE_ID");
-  const token = Deno.env.get("ZAPI_TOKEN");
+  const { instanceId, token } = getZapiCreds();
   return `https://api.z-api.io/instances/${instanceId}/token/${token}${path}`;
 }
 
 function zapiHeaders(): Record<string, string> {
-  const clientToken = Deno.env.get("ZAPI_CLIENT_TOKEN");
+  const { clientToken } = getZapiCreds();
   return clientToken ? { "Client-Token": clientToken, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
 }
 
@@ -47,6 +54,16 @@ Deno.serve(async (req) => {
     const { action, phone, message } = await req.json();
 
     switch (action) {
+      case "debug": {
+        const c = getZapiCreds();
+        return json({
+          instanceId: c.instanceId ? `${c.instanceId.slice(0, 4)}...${c.instanceId.slice(-4)} (len=${c.instanceId.length})` : "EMPTY",
+          token: c.token ? `${c.token.slice(0, 4)}...${c.token.slice(-4)} (len=${c.token.length})` : "EMPTY",
+          clientToken: c.clientToken ? `${c.clientToken.slice(0, 4)}...${c.clientToken.slice(-4)} (len=${c.clientToken.length})` : "EMPTY",
+          testUrl: zapiUrl("/status"),
+        });
+      }
+
       case "status": {
         const res = await fetch(zapiUrl("/status"), { headers: zapiHeaders() });
         const data = await res.json();
