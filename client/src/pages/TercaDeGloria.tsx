@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTercaGloria, useCreateTercaGloria, useUpdateTercaGloria, useDeleteTercaGloria } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
@@ -24,6 +25,7 @@ const STATUS_MAP: Record<string, { color: string; bg: string; label: string }> =
 
 export default function TercaDeGloria() {
   const { t, locale } = useI18n();
+  const { session } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -245,7 +247,34 @@ export default function TercaDeGloria() {
                 <div><label className="apple-input-label">{t("tg.tema")} *</label><input value={form.tema} onChange={e => setForm({ ...form, tema: e.target.value })} className="apple-input" /></div>
                 <div><label className="apple-input-label">{t("tg.pregador")}</label><input value={form.pregador} onChange={e => setForm({ ...form, pregador: e.target.value })} className="apple-input" /></div>
                 <div><label className="apple-input-label">{t("tg.versiculo")}</label><input value={form.versiculoBase} onChange={e => setForm({ ...form, versiculoBase: e.target.value })} className="apple-input" /></div>
-                <div><label className="apple-input-label">{t("tg.linkMeet")}</label><input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input" placeholder="https://meet.google.com/..." /></div>
+                <div>
+                  <label className="apple-input-label">{t("tg.linkMeet")}</label>
+                  <div className="flex gap-2">
+                    <input value={form.linkMeet} onChange={e => setForm({ ...form, linkMeet: e.target.value })} className="apple-input flex-1" placeholder="https://meet.google.com/..." />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const googleToken = localStorage.getItem("google_token");
+                        if (!googleToken) { toast.error("Faça login com Google para gerar links do Meet"); return; }
+                        toast.loading("Gerando link do Meet...");
+                        try {
+                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+                            body: JSON.stringify({ title: `Terça de Glória - ${form.tema || "Reunião"}`, date: form.data, googleToken }),
+                          });
+                          const data = await res.json();
+                          if (data.meetLink) { setForm(f => ({ ...f, linkMeet: data.meetLink })); toast.dismiss(); toast.success("Link do Meet gerado!"); }
+                          else { toast.dismiss(); toast.error(data.error || "Erro ao gerar link"); }
+                        } catch { toast.dismiss(); toast.error("Erro ao gerar link do Meet"); }
+                      }}
+                      className="apple-btn apple-btn-filled px-3 py-2 text-xs rounded-xl shrink-0 flex items-center gap-1.5"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Gerar Meet</span>
+                    </button>
+                  </div>
+                </div>
                 <div><label className="apple-input-label">{t("tg.resumo")}</label><textarea value={form.resumo} onChange={e => setForm({ ...form, resumo: e.target.value })} rows={3} className="apple-input resize-none" /></div>
                 <div><label className="apple-input-label">{t("tg.testemunhos")}</label><textarea value={form.testemunhos} onChange={e => setForm({ ...form, testemunhos: e.target.value })} rows={2} className="apple-input resize-none" /></div>
               </div>

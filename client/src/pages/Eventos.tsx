@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useEventos, useCreateEvento, useUpdateEvento, useDeleteEvento } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -35,6 +36,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default function Eventos() {
   const { t, locale } = useI18n();
+  const { session } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [filter, setFilter] = useState("all");
@@ -259,8 +261,11 @@ export default function Eventos() {
                         try {
                           const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
                             method: "POST",
-                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${googleToken}` },
-                            body: JSON.stringify({ title: form.titulo || "Reunião Legendários", date: form.data }),
+                            headers: {
+                              "Content-Type": "application/json",
+                              "Authorization": `Bearer ${session?.access_token}`,
+                            },
+                            body: JSON.stringify({ title: form.titulo || "Reunião Legendários", date: form.data, googleToken }),
                           });
                           const data = await res.json();
                           if (data.meetLink) {
