@@ -51,6 +51,12 @@ function App() {
       if (event === "PASSWORD_RECOVERY") {
         setNeedsPassword(true);
       }
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // Clear hash from URL after OAuth callback
+        if (window.location.hash.includes("access_token")) {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      }
       setAuthReady(true);
     });
 
@@ -60,7 +66,11 @@ function App() {
       setNeedsPassword(true);
     }
 
-    setAuthReady(true);
+    // Don't set authReady immediately if there's a hash to process
+    if (!window.location.hash.includes("access_token")) {
+      setAuthReady(true);
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 
