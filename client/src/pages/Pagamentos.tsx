@@ -4,8 +4,9 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, DollarSign, Search, Loader2, Download, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Edit2, Trash2, DollarSign, Search, Loader2, Download, Clock, CheckCircle, AlertTriangle, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
+import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "\u2014";
@@ -113,6 +114,24 @@ export default function Pagamentos() {
     exportToXlsx(data, `pagamentos-${new Date().toISOString().split("T")[0]}`);
   }
 
+  function handleExportPdf() {
+    const statusPt: Record<string, string> = { pendente: "Pendente", pago: "Pago", atrasado: "Atrasado" };
+    const rows = filtered.map((p: any) => [
+      embMap[p.embaixadorId] || `ID ${p.embaixadorId}`,
+      formatCurrency(p.valor),
+      p.dataVencimento ? new Date(p.dataVencimento).toLocaleDateString("pt-BR") : "",
+      p.dataPagamento ? new Date(p.dataPagamento).toLocaleDateString("pt-BR") : "",
+      statusPt[p.status] || p.status || "",
+    ]);
+    exportGenericPdf(
+      "Relatório de Pagamentos",
+      "Embaixadores dos Legendários",
+      ["Embaixador", "Valor", "Vencimento", "Pagamento", "Status"],
+      rows,
+      "pagamentos"
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -123,6 +142,14 @@ export default function Pagamentos() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("pag.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPdf}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
             <button
               onClick={handleExport}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"

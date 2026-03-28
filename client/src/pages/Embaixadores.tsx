@@ -5,8 +5,9 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
+import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -98,6 +99,24 @@ export default function Embaixadores() {
     exportToXlsx(data, `embaixadores-${new Date().toISOString().split("T")[0]}`);
   }
 
+  function handleExportPdf() {
+    const statusPt: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", pendente_renovacao: "Pendente Renovacao" };
+    const rows = filtered.map((emb: any) => [
+      emb.nomeCompleto || "",
+      emb.email || "",
+      emb.telefone || "",
+      emb.cidade || "",
+      statusPt[emb.status] || emb.status || "",
+    ]);
+    exportGenericPdf(
+      "Lista de Embaixadores",
+      "Embaixadores dos Legendários",
+      ["Nome", "Email", "Telefone", "Cidade", "Status"],
+      rows,
+      "embaixadores"
+    );
+  }
+
   const filters = [
     { key: "all", label: t("common.todos") },
     { key: "ativo", label: t("emb.ativo") },
@@ -115,6 +134,14 @@ export default function Embaixadores() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("emb.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPdf}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
             <button
               onClick={handleExport}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"

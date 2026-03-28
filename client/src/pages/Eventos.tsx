@@ -5,8 +5,9 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
+import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -77,6 +78,25 @@ export default function Eventos() {
     exportToXlsx(data, `eventos-${new Date().toISOString().split("T")[0]}`);
   }
 
+  function handleExportPdf() {
+    const statusPt: Record<string, string> = { agendado: "Agendado", realizado: "Realizado", cancelado: "Cancelado" };
+    const tipoPt: Record<string, string> = { encontro: "Encontro", conferencia: "Conferencia", retiro: "Retiro", treinamento: "Treinamento", outro: "Outro" };
+    const rows = filtered.map((ev: any) => [
+      ev.titulo || "",
+      ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "",
+      ev.local || "",
+      tipoPt[ev.tipo] || ev.tipo || "",
+      statusPt[ev.status] || ev.status || "",
+    ]);
+    exportGenericPdf(
+      "Lista de Eventos",
+      "Embaixadores dos Legendários",
+      ["Título", "Data", "Local", "Tipo", "Status"],
+      rows,
+      "eventos"
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -87,6 +107,14 @@ export default function Eventos() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("ev.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPdf}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
             <button
               onClick={handleExport}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"

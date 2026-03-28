@@ -4,8 +4,9 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
+import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -65,6 +66,23 @@ export default function TercaDeGloria() {
     exportToXlsx(data, `terca-de-gloria-${new Date().toISOString().split("T")[0]}`);
   }
 
+  function handleExportPdf() {
+    const statusPt: Record<string, string> = { planejada: "Planejada", realizada: "Realizada", cancelada: "Cancelada" };
+    const rows = filtered.map((r: any) => [
+      r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "",
+      r.tema || "",
+      r.pregador || "",
+      statusPt[r.status] || r.status || "",
+    ]);
+    exportGenericPdf(
+      "Terça de Glória - Reuniões",
+      "Embaixadores dos Legendários",
+      ["Data", "Tema", "Pregador", "Status"],
+      rows,
+      "terca-de-gloria"
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -75,6 +93,14 @@ export default function TercaDeGloria() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("tg.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPdf}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
             <button
               onClick={handleExport}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"

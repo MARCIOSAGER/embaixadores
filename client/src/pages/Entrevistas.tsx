@@ -4,8 +4,9 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle, FileDown } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
+import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -75,6 +76,24 @@ export default function Entrevistas() {
     exportToXlsx(data, `entrevistas-${new Date().toISOString().split("T")[0]}`);
   }
 
+  function handleExportPdf() {
+    const statusPt: Record<string, string> = { agendada: "Agendada", realizada: "Realizada", aprovada: "Aprovada", reprovada: "Reprovada", cancelada: "Cancelada" };
+    const rows = filtered.map((ent: any) => [
+      ent.nomeCandidato || "",
+      ent.emailCandidato || "",
+      ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
+      statusPt[ent.status] || ent.status || "",
+      ent.indicadoPor || "",
+    ]);
+    exportGenericPdf(
+      "Lista de Entrevistas",
+      "Embaixadores dos Legendários",
+      ["Candidato", "Email", "Data", "Status", "Indicado Por"],
+      rows,
+      "entrevistas"
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -85,6 +104,14 @@ export default function Entrevistas() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("ent.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPdf}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
             <button
               onClick={handleExport}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
