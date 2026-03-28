@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,9 @@ const corsHeaders = {
 };
 
 function buildEmailHtml(title: string, body: string) {
-  return `
+  return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#0a0a0a;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;padding:40px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <tr><td align="center">
     <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
@@ -23,7 +26,9 @@ function buildEmailHtml(title: string, body: string) {
       </td></tr>
     </table>
   </td></tr>
-</table>`;
+</table>
+</body>
+</html>`;
 }
 
 Deno.serve(async (req) => {
@@ -32,75 +37,66 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify user is authenticated
-    const supabaseClient = createClient(
+    // Verify authenticated user
+    const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Nao autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Use admin client to send email
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     const { to, subject, title, body } = await req.json();
 
     if (!to || !subject || !title || !body) {
       return new Response(JSON.stringify({ error: "to, subject, title e body sao obrigatorios" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Send email via Supabase Auth admin
-    const htmlContent = buildEmailHtml(title, body);
+    // Get SMTP config from secrets
+    const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.hostinger.com";
+    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
+    const smtpUser = Deno.env.get("SMTP_USER") || "";
+    const smtpPass = Deno.env.get("SMTP_PASSWORD") || "";
+    const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
 
-    // Use the Supabase SMTP to send (via auth.admin)
-    const { error: sendError } = await supabaseAdmin.auth.admin.inviteUserByEmail(to, {
-      data: { _notification: true },
-      redirectTo: undefined,
-    }).catch(() => {
-      // Fallback: if invite fails (user exists), use a different approach
-      return { error: { message: "User already exists" } };
+    if (!smtpUser || !smtpPass) {
+      return new Response(JSON.stringify({ error: "SMTP nao configurado" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Send via SMTP
+    const client = new SmtpClient();
+    await client.connectTLS({
+      hostname: smtpHost,
+      port: smtpPort,
+      username: smtpUser,
+      password: smtpPass,
     });
 
-    // Alternative: use fetch to Supabase's internal email endpoint
-    const response = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/admin/generate_link`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
-      },
-      body: JSON.stringify({
-        type: "magiclink",
-        email: to,
-        options: {
-          data: { notification_title: title, notification_body: body },
-        },
-      }),
+    await client.send({
+      from: smtpFrom,
+      to: Array.isArray(to) ? to.join(",") : to,
+      subject,
+      content: title,
+      html: buildEmailHtml(title, body),
     });
 
-    // For now, just return success - the email template handles the rest
+    await client.close();
+
     return new Response(JSON.stringify({ success: true, message: `Email enviado para ${to}` }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
