@@ -15,6 +15,8 @@ import Eventos from "./pages/Eventos";
 import Entrevistas from "./pages/Entrevistas";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
@@ -87,7 +89,11 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          {isAuthenticated ? <Router /> : <Login />}
+          <Switch>
+            <Route path="/privacidade" component={Privacy} />
+            <Route path="/termos" component={Terms} />
+            <Route>{isAuthenticated ? <Router /> : <Login />}</Route>
+          </Switch>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
