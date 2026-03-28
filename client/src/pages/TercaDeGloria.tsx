@@ -288,7 +288,7 @@ export default function TercaDeGloria() {
                     <button
                       type="button"
                       onClick={async () => {
-                        const googleToken = localStorage.getItem("google_token");
+                        const googleToken = sessionStorage.getItem("google_token");
                         if (!googleToken) { toast.error("Faça login com Google para gerar links do Meet"); return; }
                         toast.loading("Gerando link do Meet...");
                         try {

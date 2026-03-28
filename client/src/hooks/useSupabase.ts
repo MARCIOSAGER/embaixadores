@@ -22,7 +22,8 @@ export function useEmbaixadores(search?: string) {
     queryFn: async () => {
       let query = supabase.from("embaixadores").select("*").order("nomeCompleto", { ascending: true });
       if (search) {
-        query = query.or(`nomeCompleto.ilike.%${search}%,email.ilike.%${search}%,cidade.ilike.%${search}%`);
+        const escaped = search.replace(/[%_\\]/g, '\\$&').replace(/[,().]/g, '');
+        query = query.or(`nomeCompleto.ilike.%${escaped}%,email.ilike.%${escaped}%,cidade.ilike.%${escaped}%`);
       }
       const { data, error } = await query;
       if (error) throw error;

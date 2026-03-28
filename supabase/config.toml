@@ -456,3 +456,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/verify-turnstile/deno.json"
 entrypoint = "./functions/verify-turnstile/index.ts"
+
+[functions.invite-user]
+enabled = true
+verify_jwt = false
+import_map = "./functions/invite-user/deno.json"
+entrypoint = "./functions/invite-user/index.ts"

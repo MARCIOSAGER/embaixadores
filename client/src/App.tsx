@@ -17,6 +17,7 @@ import Pagamentos from "./pages/Pagamentos";
 import Admin from "./pages/Admin";
 
 import ZApiAdmin from "./pages/ZApiAdmin";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -34,9 +35,9 @@ function Router() {
       <Route path="/eventos" component={Eventos} />
       <Route path="/entrevistas" component={Entrevistas} />
       <Route path="/pagamentos" component={Pagamentos} />
-      <Route path="/admin" component={Admin} />
+      <Route path="/admin">{() => <ProtectedRoute requireAdmin><Admin /></ProtectedRoute>}</Route>
 
-      <Route path="/whatsapp" component={ZApiAdmin} />
+      <Route path="/whatsapp">{() => <ProtectedRoute requireAdmin><ZApiAdmin /></ProtectedRoute>}</Route>
       <Route path="/perfil" component={Profile} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

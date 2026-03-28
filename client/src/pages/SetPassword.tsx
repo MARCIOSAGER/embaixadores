@@ -17,8 +17,8 @@ export default function SetPassword() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.");
       return;
     }
     if (password !== confirmPassword) {
@@ -81,7 +81,7 @@ export default function SetPassword() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     required
                     className="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-4 pr-11 py-3.5 text-white text-[0.9375rem] placeholder:text-white/20 outline-none transition-all duration-300 focus:border-[#FF6B00] focus:bg-white/[0.08] focus:shadow-[0_0_0_3px_rgba(255,107,0,0.15)]"
                   />

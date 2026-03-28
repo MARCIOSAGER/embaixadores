@@ -2,10 +2,20 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nodemailer from "npm:nodemailer@6.9.16";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+function getCorsOrigin(req: Request): string {
+  const origin = req.headers.get("origin") || "";
+  const allowed = ["https://embaixadores.marciosager.com", "http://localhost:5173"];
+  return allowed.includes(origin) ? origin : allowed[0];
+}
+
+function corsHeaders(req: Request) {
+  return {
+    "Access-Control-Allow-Origin": getCorsOrigin(req),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
+
+let _req: Request;
 
 const LOGO_URL = "https://embaixadores.marciosager.com/logo-legendarios.png";
 
@@ -37,13 +47,14 @@ function buildEmailHtml(title: string, body: string) {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders(_req), "Content-Type": "application/json" },
   });
 }
 
 Deno.serve(async (req) => {
+  _req = req;
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   try {

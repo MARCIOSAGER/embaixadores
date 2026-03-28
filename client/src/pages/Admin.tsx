@@ -31,24 +31,23 @@ export default function Admin() {
     if (!inviteEmail.trim()) return;
     setInviting(true);
     try {
-      const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const res = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Sessao expirada. Faca login novamente.");
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/invite-user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": serviceRoleKey,
-          "Authorization": `Bearer ${serviceRoleKey}`,
+          "apikey": anonKey,
+          "Authorization": `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ email: inviteEmail.trim() }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
-        const msg = data.msg || data.message || "";
-        if (msg.includes("already been registered")) {
-          throw new Error("Este email já está cadastrado. Delete o usuário antes de reenviar o convite.");
-        }
-        throw new Error(msg || "Erro ao enviar convite");
+        throw new Error(data.error || "Erro ao enviar convite");
       }
       toast.success(t("admin.inviteSent"));
       setInviteEmail("");

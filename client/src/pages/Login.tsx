@@ -49,6 +49,10 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      setError("Verificacao de seguranca necessaria. Aguarde o carregamento.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
