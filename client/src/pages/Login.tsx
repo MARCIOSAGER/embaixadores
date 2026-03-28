@@ -37,7 +37,7 @@ export default function Login() {
         turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
           sitekey: TURNSTILE_SITE_KEY,
           theme: "dark",
-          size: "compact",
+          size: "normal",
           callback: (token: string) => setTurnstileToken(token),
           "expired-callback": () => setTurnstileToken(null),
         });
