@@ -9,6 +9,7 @@ import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import NotifyDialog from "@/components/NotifyDialog";
 
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -350,62 +351,13 @@ export default function TercaDeGloria() {
         </Dialog>
 
         {/* Notify Dialog */}
-        <Dialog open={!!notifyTarget} onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-sm p-0">
-            <div className="p-6 space-y-4">
-              <h2 className="text-lg font-bold text-white tracking-[-0.02em] flex items-center gap-2">
-                <Send className="w-5 h-5 text-[#FF6B00]" />
-                Notificar Embaixadores
-              </h2>
-              <p className="text-[0.8125rem] text-[#86868b]">{notifyTarget?.tema}</p>
-              <div className="flex flex-col gap-2">
-                {([
-                  { key: "both", label: "WhatsApp + Email" },
-                  { key: "whatsapp", label: "Somente WhatsApp" },
-                  { key: "email", label: "Somente Email" },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={async () => {
-                      const r = notifyTarget;
-                      setNotifyTarget(null);
-                      const dateStr = r.data ? new Date(r.data).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "A definir";
-                      let calendarLink = "";
-                      if (r.data) {
-                        const start = new Date(r.data).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-                        const end = new Date(r.data + 3600000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-                        calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Terca de Gloria - " + r.tema)}&dates=${start}/${end}&details=${encodeURIComponent(r.linkMeet ? "Meet: " + r.linkMeet : "")}`;
-                      }
-                      const msg = `*Terca de Gloria*\nTema: ${r.tema}\nData: ${dateStr}\nPregador: ${r.pregador || 'A definir'}${calendarLink ? `\n\nSalvar na agenda: ${calendarLink}` : ""}`;
-                      toast.loading("Enviando notificacoes...");
-                      try {
-                        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-                          body: JSON.stringify({ channel: opt.key, subject: `Terca de Gloria: ${r.tema}`, title: `Terca de Gloria - ${r.tema}`, message: msg, meetLink: r.linkMeet || undefined }),
-                        });
-                        const data = await res.json();
-                        toast.dismiss();
-                        if (data.success) {
-                          const parts = [];
-                          if (data.results.whatsapp?.sent > 0) parts.push(`${data.results.whatsapp.sent} WhatsApp`);
-                          if (data.results.email?.sent > 0) parts.push(`${data.results.email.sent} Email`);
-                          toast.success(`Enviado: ${parts.join(", ")}`);
-                        } else toast.error(data.error || "Erro ao enviar");
-                      } catch { toast.dismiss(); toast.error("Erro ao enviar notificacoes"); }
-                    }}
-                    className="apple-btn apple-btn-gray w-full py-3 text-[0.8125rem] flex items-center gap-2 justify-center"
-                  >
-                    {opt.key !== "email" && <MessageCircle className="w-4 h-4 text-[#25D366]" />}
-                    {opt.key !== "whatsapp" && <Mail className="w-4 h-4 text-[#FF6B00]" />}
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => setNotifyTarget(null)} className="apple-btn apple-btn-gray w-full py-2.5 text-[0.8125rem]">Cancelar</button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <NotifyDialog
+          open={!!notifyTarget}
+          onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}
+          type="terca"
+          id={notifyTarget?.id || null}
+          title={notifyTarget?.tema || ""}
+        />
         <ConfirmDialog
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}

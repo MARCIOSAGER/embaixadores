@@ -9,6 +9,7 @@ import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, Exte
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import NotifyDialog from "@/components/NotifyDialog";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -387,92 +388,13 @@ export default function Entrevistas() {
         </Dialog>
 
         {/* Notify Dialog */}
-        <Dialog open={!!notifyTarget} onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-sm p-0">
-            <div className="p-6 space-y-4">
-              <h2 className="text-lg font-bold text-white tracking-[-0.02em] flex items-center gap-2">
-                <Send className="w-5 h-5 text-[#FF6B00]" />
-                Notificar Candidato
-              </h2>
-              <p className="text-[0.8125rem] text-[#86868b]">{notifyTarget?.nomeCandidato}</p>
-              <p className="text-[0.75rem] text-[#48484a]">
-                {notifyTarget?.telefoneCandidato && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{notifyTarget.telefoneCandidato}</span>}
-                {notifyTarget?.emailCandidato && <span className="flex items-center gap-1 mt-1"><Mail className="w-3 h-3" />{notifyTarget.emailCandidato}</span>}
-              </p>
-              <div className="flex flex-col gap-2">
-                {([
-                  { key: "both", label: "WhatsApp + Email" },
-                  { key: "whatsapp", label: "Somente WhatsApp" },
-                  { key: "email", label: "Somente Email" },
-                ] as const).map(opt => {
-                  const hasPhone = !!notifyTarget?.telefoneCandidato;
-                  const hasEmail = !!notifyTarget?.emailCandidato;
-                  const disabled = (opt.key === "whatsapp" && !hasPhone) || (opt.key === "email" && !hasEmail) || (opt.key === "both" && !hasPhone && !hasEmail);
-                  return (
-                  <button
-                    key={opt.key}
-                    disabled={disabled}
-                    onClick={async () => {
-                      const ent = notifyTarget;
-                      setNotifyTarget(null);
-                      const dateStr = ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "A definir";
-                      const msg = `*Entrevista Agendada*\nData: ${dateStr}\n${ent.linkMeet ? "Link Meet: " + ent.linkMeet + "\n" : ""}Indicado por: ${ent.indicadoPor || "—"}\n\nEmbaixadores dos Legendarios`;
-                      const parts: string[] = [];
-                      toast.loading("Enviando...");
-
-                      // Send WhatsApp to candidate
-                      if ((opt.key === "whatsapp" || opt.key === "both") && ent.telefoneCandidato) {
-                        try {
-                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zapi-proxy`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-                            body: JSON.stringify({ action: "send", phone: ent.telefoneCandidato, message: msg }),
-                          });
-                          const data = await res.json();
-                          if (data.success) parts.push("WhatsApp"); else toast.error("Erro WhatsApp: " + (data.error || "falha"));
-                        } catch { toast.error("Erro ao enviar WhatsApp"); }
-                      }
-
-                      // Notify embaixadores (entrevistadores)
-                      try {
-                        const msgEmb = `*Entrevista Agendada*\nCandidato: ${ent.nomeCandidato}\nData: ${dateStr}\n${ent.linkMeet ? "Link Meet: " + ent.linkMeet + "\n" : ""}Indicado por: ${ent.indicadoPor || "—"}`;
-                        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-                          body: JSON.stringify({ channel: opt.key, subject: `Entrevista: ${ent.nomeCandidato}`, title: `Entrevista - ${ent.nomeCandidato}`, message: msgEmb, meetLink: ent.linkMeet || undefined }),
-                        });
-                      } catch {}
-
-                      // Send Email to candidate
-                      if ((opt.key === "email" || opt.key === "both") && ent.emailCandidato) {
-                        try {
-                          const emailBody = `Data: ${dateStr}<br>${ent.linkMeet ? '<a href="' + ent.linkMeet + '">Entrar na reuniao (Google Meet)</a><br>' : ""}Indicado por: ${ent.indicadoPor || "—"}`;
-                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-                            body: JSON.stringify({ to: ent.emailCandidato, subject: `Entrevista Agendada - Embaixadores dos Legendarios`, title: `Entrevista Agendada`, body: emailBody }),
-                          });
-                          const data = await res.json();
-                          if (data.success) parts.push("Email"); else toast.error("Erro Email: " + (data.error || "falha"));
-                        } catch { toast.error("Erro ao enviar Email"); }
-                      }
-
-                      toast.dismiss();
-                      if (parts.length > 0) toast.success(`Enviado: ${parts.join(", ")}`);
-                    }}
-                    className={`apple-btn apple-btn-gray w-full py-3 text-[0.8125rem] flex items-center gap-2 justify-center ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
-                  >
-                    {opt.key !== "email" && <MessageCircle className="w-4 h-4 text-[#25D366]" />}
-                    {opt.key !== "whatsapp" && <Mail className="w-4 h-4 text-[#FF6B00]" />}
-                    {opt.label}
-                  </button>
-                  );
-                })}
-              </div>
-              <button onClick={() => setNotifyTarget(null)} className="apple-btn apple-btn-gray w-full py-2.5 text-[0.8125rem]">Cancelar</button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <NotifyDialog
+          open={!!notifyTarget}
+          onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}
+          type="entrevista"
+          id={notifyTarget?.id || null}
+          title={`Entrevista: ${notifyTarget?.nomeCandidato || ""}`}
+        />
         <ConfirmDialog
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}

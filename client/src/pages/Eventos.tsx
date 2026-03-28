@@ -10,6 +10,7 @@ import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLi
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import NotifyDialog from "@/components/NotifyDialog";
 
 function formatDateTime(ts: number | null | undefined, locale: string) {
   if (!ts) return "—";
@@ -368,63 +369,13 @@ export default function Eventos() {
         </Dialog>
 
         {/* Notify Dialog */}
-        <Dialog open={!!notifyTarget} onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}>
-          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-sm p-0">
-            <div className="p-6 space-y-4">
-              <h2 className="text-lg font-bold text-white tracking-[-0.02em] flex items-center gap-2">
-                <Send className="w-5 h-5 text-[#FF6B00]" />
-                Notificar Embaixadores
-              </h2>
-              <p className="text-[0.8125rem] text-[#86868b]">{notifyTarget?.titulo}</p>
-              <div className="flex flex-col gap-2">
-                {([
-                  { key: "both", label: "WhatsApp + Email" },
-                  { key: "whatsapp", label: "Somente WhatsApp" },
-                  { key: "email", label: "Somente Email" },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={async () => {
-                      const ev = notifyTarget;
-                      setNotifyTarget(null);
-                      const dateStr = ev.data ? new Date(ev.data).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "A definir";
-                      // Google Calendar link
-                      let calendarLink = "";
-                      if (ev.data) {
-                        const start = new Date(ev.data).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-                        const end = new Date(ev.dataFim || ev.data + 3600000).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-                        calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.titulo)}&dates=${start}/${end}&location=${encodeURIComponent(ev.local || "")}&details=${encodeURIComponent(ev.linkMeet ? "Meet: " + ev.linkMeet : "")}`;
-                      }
-                      const msg = `*${ev.titulo}*\nData: ${dateStr}\nLocal: ${ev.local || 'A definir'}${calendarLink ? `\n\nSalvar na agenda: ${calendarLink}` : ""}`;
-                      toast.loading("Enviando notificacoes...");
-                      try {
-                        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-all`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}`, "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY },
-                          body: JSON.stringify({ channel: opt.key, subject: `Evento: ${ev.titulo}`, title: ev.titulo, message: msg, meetLink: ev.linkMeet || undefined }),
-                        });
-                        const data = await res.json();
-                        toast.dismiss();
-                        if (data.success) {
-                          const parts = [];
-                          if (data.results.whatsapp?.sent > 0) parts.push(`${data.results.whatsapp.sent} WhatsApp`);
-                          if (data.results.email?.sent > 0) parts.push(`${data.results.email.sent} Email`);
-                          toast.success(`Enviado: ${parts.join(", ")}`);
-                        } else toast.error(data.error || "Erro ao enviar");
-                      } catch { toast.dismiss(); toast.error("Erro ao enviar notificacoes"); }
-                    }}
-                    className="apple-btn apple-btn-gray w-full py-3 text-[0.8125rem] flex items-center gap-2 justify-center"
-                  >
-                    {opt.key !== "email" && <MessageCircle className="w-4 h-4 text-[#25D366]" />}
-                    {opt.key !== "whatsapp" && <Mail className="w-4 h-4 text-[#FF6B00]" />}
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => setNotifyTarget(null)} className="apple-btn apple-btn-gray w-full py-2.5 text-[0.8125rem]">Cancelar</button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <NotifyDialog
+          open={!!notifyTarget}
+          onOpenChange={(o) => { if (!o) setNotifyTarget(null); }}
+          type="evento"
+          id={notifyTarget?.id || null}
+          title={notifyTarget?.titulo || ""}
+        />
         <ConfirmDialog
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}

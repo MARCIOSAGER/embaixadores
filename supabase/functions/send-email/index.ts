@@ -53,6 +53,11 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return json({ error: "Nao autorizado" }, 401);
 
+    // Admin check
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const { data: userData } = await supabaseAdmin.from("users").select("role").eq("openId", user.id).single();
+    if (userData?.role !== "admin") return json({ error: "Apenas administradores" }, 403);
+
     const { to, subject, title, body } = await req.json();
     if (!to || !subject || !title || !body) {
       return json({ error: "to, subject, title e body sao obrigatorios" }, 400);

@@ -46,6 +46,11 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return json({ error: "Nao autorizado" }, 401);
 
+    // Admin check
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const { data: userData } = await supabaseAdmin.from("users").select("role").eq("openId", user.id).single();
+    if (userData?.role !== "admin") return json({ error: "Apenas administradores" }, 403);
+
     // Check Z-API is configured
     if (!Deno.env.get("ZAPI_INSTANCE_ID") || !Deno.env.get("ZAPI_TOKEN")) {
       return json({ error: "Z-API nao configurado" }, 500);
@@ -54,18 +59,6 @@ Deno.serve(async (req) => {
     const { action, phone, message } = await req.json();
 
     switch (action) {
-      case "debug": {
-        const c = getZapiCreds();
-        const authHeader = req.headers.get("Authorization") || "NONE";
-        return json({
-          authHeader: authHeader.slice(0, 20) + "..." + (authHeader.length > 20 ? ` (len=${authHeader.length})` : ""),
-          instanceId: c.instanceId ? `${c.instanceId.slice(0, 4)}...${c.instanceId.slice(-4)} (len=${c.instanceId.length})` : "EMPTY",
-          token: c.token ? `${c.token.slice(0, 4)}...${c.token.slice(-4)} (len=${c.token.length})` : "EMPTY",
-          clientToken: c.clientToken ? `${c.clientToken.slice(0, 4)}...${c.clientToken.slice(-4)} (len=${c.clientToken.length})` : "EMPTY",
-          testUrl: zapiUrl("/status"),
-        });
-      }
-
       case "status": {
         const res = await fetch(zapiUrl("/status"), { headers: zapiHeaders() });
         const data = await res.json();
