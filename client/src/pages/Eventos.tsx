@@ -199,7 +199,7 @@ export default function Eventos() {
                       <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                     <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
-                      <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.editar")}
+                      <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("ev.editar") || "Editar Evento"}
                     </button>
                     <button onClick={() => { if (confirm(t("common.confirmarExclusao"))) deleteMut.mutate({ id: ev.id }, { onSuccess: () => toast.success(t("common.sucesso")), onError: (e: any) => toast.error(e.message) }); }} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
