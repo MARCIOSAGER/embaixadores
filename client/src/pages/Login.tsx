@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-const TURNSTILE_SITE_KEY = "0x4AAAAAAACxP7yh7Dqowfrnn";
+const TURNSTILE_SITE_KEY = "0x4AAAAAACxP7yh7Dqowfrnn";
 
 const LOGO_LEGENDARIOS = "/logo-legendarios.png";
 
