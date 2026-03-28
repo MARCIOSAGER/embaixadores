@@ -71,8 +71,10 @@ export default function ZApiAdmin() {
         { headers: config.zapi_client_token ? { "Client-Token": config.zapi_client_token } : {} }
       );
       const data = await res.json();
-      if (data.value) {
-        setQrCode(data.value);
+      const qrValue = data.value || data.image;
+      if (qrValue) {
+        // Remove prefix if already included (data:image/png;base64,)
+        setQrCode(qrValue.replace(/^data:image\/\w+;base64,/, ""));
       } else {
         toast.error("Não foi possível gerar o QR Code. Verifique se já está conectado.");
       }
