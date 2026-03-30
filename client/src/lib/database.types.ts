@@ -76,6 +76,7 @@ export type Database = {
         Row: {
           id: number;
           embaixadorId: number;
+          tipo: "welcome" | "renovacao" | "aniversario";
           patchEntregue: boolean;
           pinBoneEntregue: boolean;
           anelEntregue: boolean;

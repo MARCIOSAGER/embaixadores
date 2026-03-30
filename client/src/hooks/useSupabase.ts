@@ -216,9 +216,10 @@ export function useUpdateWelcomeKit() {
 export function useCreateWelcomeKit() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { embaixadorId: number; observacoes?: string }) => {
+    mutationFn: async (data: { embaixadorId: number; tipo?: "welcome" | "renovacao" | "aniversario"; observacoes?: string }) => {
       const { data: result, error } = await supabase.from("welcomeKits").insert({
         embaixadorId: data.embaixadorId,
+        tipo: data.tipo ?? "welcome",
         patchEntregue: false,
         pinBoneEntregue: false,
         anelEntregue: false,

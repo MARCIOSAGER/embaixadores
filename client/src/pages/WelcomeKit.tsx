@@ -5,10 +5,14 @@ import { useI18n } from "@/lib/i18n";
 import { exportKitsPdf } from "@/lib/exportPdf";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, FileDown, Clock } from "lucide-react";
+import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, FileDown, Clock, RefreshCw, Cake } from "lucide-react";
 
 type KitItemKey = "patchEntregue" | "pinBoneEntregue" | "anelEntregue" | "espadaEntregue" | "mochilaBalacEntregue";
 const KIT_KEYS: KitItemKey[] = ["patchEntregue", "pinBoneEntregue", "anelEntregue", "espadaEntregue", "mochilaBalacEntregue"];
+
+type KitType = "welcome" | "renovacao" | "aniversario";
+const KIT_TYPE_COLORS: Record<KitType, string> = { welcome: "#FF6B00", renovacao: "#5E5CE6", aniversario: "#FF375F" };
+const KIT_TYPE_ICONS: Record<KitType, typeof Gift> = { welcome: Gift, renovacao: RefreshCw, aniversario: Cake };
 
 function kitLabel(key: KitItemKey, t: (k: string) => string): string {
   const map: Record<KitItemKey, string> = { patchEntregue: t("kit.patch"), pinBoneEntregue: t("kit.pin"), anelEntregue: t("kit.anel"), espadaEntregue: t("kit.espada"), mochilaBalacEntregue: t("kit.mochila") };
@@ -26,6 +30,8 @@ export default function WelcomeKit() {
   const [selectedKit, setSelectedKit] = useState<any>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEmbId, setSelectedEmbId] = useState<number | "">("");
+  const [selectedType, setSelectedType] = useState<KitType>("welcome");
+  const [typeFilter, setTypeFilter] = useState<KitType | "all">("all");
 
   const { userName, user: authUser } = useAuth();
   const currentUserName = userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Sistema";
@@ -38,16 +44,16 @@ export default function WelcomeKit() {
   const addHistoryMut = useAddKitHistory();
   const { data: kitHistory, isLoading: historyLoading } = useKitHistory(selectedKit?.id ?? null);
 
-  // Embaixadores that don't have a kit yet
+  // Embaixadores that don't have a kit of the selected type yet
   const availableEmb = useMemo(() => {
     if (!embaixadores || !kits) return [];
-    const kitEmbIds = new Set(kits.map((k: any) => k.embaixadorId));
+    const kitEmbIds = new Set(kits.filter((k: any) => (k.tipo || "welcome") === selectedType).map((k: any) => k.embaixadorId));
     return embaixadores.filter((e: any) => !kitEmbIds.has(e.id));
-  }, [embaixadores, kits]);
+  }, [embaixadores, kits, selectedType]);
 
   const handleCreateKit = () => {
     if (!selectedEmbId) return;
-    createMut.mutate({ embaixadorId: Number(selectedEmbId) }, {
+    createMut.mutate({ embaixadorId: Number(selectedEmbId), tipo: selectedType }, {
       onSuccess: () => {
         toast.success("Kit criado com sucesso!");
         setShowCreate(false);
@@ -87,6 +93,7 @@ export default function WelcomeKit() {
   const filtered = useMemo(() => {
     if (!kits) return [];
     let list = kits;
+    if (typeFilter !== "all") list = list.filter((k: any) => (k.tipo || "welcome") === typeFilter);
     if (search) {
       const s = search.toLowerCase();
       list = list.filter((k: any) => getEmbName(k.embaixadorId).toLowerCase().includes(s));
@@ -95,7 +102,7 @@ export default function WelcomeKit() {
     else if (filter === "parcial") list = list.filter((k: any) => { const p = getKitProgress(k); return p > 0 && p < 5; });
     else if (filter === "completo") list = list.filter((k: any) => getKitProgress(k) === 5);
     return list;
-  }, [kits, search, filter, embaixadores]);
+  }, [kits, search, filter, typeFilter, embaixadores]);
 
   const stats = useMemo(() => {
     if (!kits) return { total: 0, pendente: 0, parcial: 0, completo: 0 };
@@ -143,10 +150,27 @@ export default function WelcomeKit() {
           <div className="apple-card p-5 space-y-4 animate-fade-up">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
               <Gift className="w-4 h-4 text-[#FF6B00]" />
-              Criar Kit para Embaixador
+              {t("kit.criarKit")}
             </h3>
+            {/* Kit type selector */}
+            <div className="flex gap-2">
+              {(["welcome", "renovacao", "aniversario"] as KitType[]).map(tipo => {
+                const Icon = KIT_TYPE_ICONS[tipo];
+                return (
+                  <button
+                    key={tipo}
+                    onClick={() => setSelectedType(tipo)}
+                    className={`apple-btn text-[0.75rem] py-1.5 px-3.5 flex items-center gap-1.5 ${selectedType === tipo ? "apple-btn-filled" : "apple-btn-gray"}`}
+                    style={selectedType === tipo ? { background: KIT_TYPE_COLORS[tipo] } : undefined}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {t(`kit.tipo.${tipo}`)}
+                  </button>
+                );
+              })}
+            </div>
             {availableEmb.length === 0 ? (
-              <p className="text-sm text-[#86868b]">Todos os embaixadores já possuem kit.</p>
+              <p className="text-sm text-[#86868b]">{t("kit.todosJaTemKit")}</p>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3">
                 <select
@@ -154,7 +178,7 @@ export default function WelcomeKit() {
                   onChange={(e) => setSelectedEmbId(e.target.value ? Number(e.target.value) : "")}
                   className="apple-input flex-1 px-4 py-2.5 text-sm [&>option]:bg-[#1c1c1e] [&>option]:text-white"
                 >
-                  <option value="">Selecione o embaixador...</option>
+                  <option value="">{t("kit.selecioneEmb")}</option>
                   {availableEmb.map((e: any) => (
                     <option key={e.id} value={e.id}>{e.nomeCompleto}</option>
                   ))}
@@ -165,7 +189,7 @@ export default function WelcomeKit() {
                   className="apple-btn apple-btn-filled px-5 py-2.5 text-sm font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 shrink-0"
                 >
                   {createMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Criar Kit
+                  {t("kit.criarKit")}
                 </button>
               </div>
             )}
@@ -193,6 +217,27 @@ export default function WelcomeKit() {
 
         {/* Search + Filters */}
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
+          {/* Kit type tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button onClick={() => setTypeFilter("all")} className={`apple-btn text-[0.75rem] py-1.5 px-3.5 shrink-0 ${typeFilter === "all" ? "apple-btn-filled" : "apple-btn-gray"}`}>
+              {t("common.todos")}
+            </button>
+            {(["welcome", "renovacao", "aniversario"] as KitType[]).map(tipo => {
+              const Icon = KIT_TYPE_ICONS[tipo];
+              return (
+                <button
+                  key={tipo}
+                  onClick={() => setTypeFilter(tipo)}
+                  className={`apple-btn text-[0.75rem] py-1.5 px-3.5 shrink-0 flex items-center gap-1.5 ${typeFilter === tipo ? "apple-btn-filled" : "apple-btn-gray"}`}
+                  style={typeFilter === tipo ? { background: KIT_TYPE_COLORS[tipo] } : undefined}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {t(`kit.tipo.${tipo}`)}
+                </button>
+              );
+            })}
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
             <input placeholder={t("kit.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input pl-10" />
@@ -234,7 +279,14 @@ export default function WelcomeKit() {
                     {name.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[0.875rem] font-medium text-white truncate">{name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[0.875rem] font-medium text-white truncate">{name}</p>
+                      {(() => { const tipo = (kit.tipo || "welcome") as KitType; return tipo !== "welcome" ? (
+                        <span className="text-[0.625rem] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: `${KIT_TYPE_COLORS[tipo]}20`, color: KIT_TYPE_COLORS[tipo] }}>
+                          {t(`kit.tipo.${tipo}`)}
+                        </span>
+                      ) : null; })()}
+                    </div>
                     <div className="flex items-center gap-3 mt-1.5">
                       <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
@@ -262,7 +314,10 @@ export default function WelcomeKit() {
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-white tracking-[-0.02em]">{getEmbName(selectedKit.embaixadorId)}</h2>
-                      <p className="text-[0.75rem] text-[#6e6e73]">{getKitProgress(selectedKit)}/5 {t("kit.itensEntregues")}</p>
+                      <p className="text-[0.75rem] text-[#6e6e73]">
+                        <span style={{ color: KIT_TYPE_COLORS[(selectedKit.tipo || "welcome") as KitType] }}>{t(`kit.tipo.${selectedKit.tipo || "welcome"}`)}</span>
+                        {" · "}{getKitProgress(selectedKit)}/5 {t("kit.itensEntregues")}
+                      </p>
                     </div>
                   </div>
                   <button onClick={() => setSelectedKit(null)} className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b]">

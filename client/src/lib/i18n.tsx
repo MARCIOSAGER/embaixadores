@@ -203,6 +203,12 @@ const translations: Record<Locale, Record<string, string>> = {
     "kit.buscar": "Buscar kit...",
     "kit.itensEntregues": "itens entregues",
     "kit.semNome": "Sem nome",
+    "kit.tipo.welcome": "Welcome",
+    "kit.tipo.renovacao": "Renovacao",
+    "kit.tipo.aniversario": "Aniversario",
+    "kit.criarKit": "Criar Kit",
+    "kit.todosJaTemKit": "Todos os embaixadores ja possuem este tipo de kit.",
+    "kit.selecioneEmb": "Selecione o embaixador...",
 
     // Eventos
     "ev.title": "Eventos",
@@ -611,6 +617,12 @@ const translations: Record<Locale, Record<string, string>> = {
     "kit.buscar": "Buscar kit...",
     "kit.itensEntregues": "ítems entregados",
     "kit.semNome": "Sin nombre",
+    "kit.tipo.welcome": "Bienvenida",
+    "kit.tipo.renovacao": "Renovacion",
+    "kit.tipo.aniversario": "Aniversario",
+    "kit.criarKit": "Crear Kit",
+    "kit.todosJaTemKit": "Todos los embajadores ya tienen este tipo de kit.",
+    "kit.selecioneEmb": "Seleccione el embajador...",
 
     // Eventos
     "ev.title": "Eventos",
@@ -1019,6 +1031,12 @@ const translations: Record<Locale, Record<string, string>> = {
     "kit.buscar": "Search kit...",
     "kit.itensEntregues": "items delivered",
     "kit.semNome": "No name",
+    "kit.tipo.welcome": "Welcome",
+    "kit.tipo.renovacao": "Renewal",
+    "kit.tipo.aniversario": "Anniversary",
+    "kit.criarKit": "Create Kit",
+    "kit.todosJaTemKit": "All ambassadors already have this type of kit.",
+    "kit.selecioneEmb": "Select ambassador...",
 
     // Eventos
     "ev.title": "Events",

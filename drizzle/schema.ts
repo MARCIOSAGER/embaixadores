@@ -6,6 +6,7 @@ export const embaixadorStatusEnum = pgEnum("embaixador_status", ["ativo", "inati
 export const pagamentoStatusEnum = pgEnum("pagamento_status", ["pendente", "pago", "atrasado"]);
 export const tercaGloriaStatusEnum = pgEnum("terca_gloria_status", ["planejada", "realizada", "cancelada"]);
 export const welcomeKitStatusEnum = pgEnum("welcome_kit_status", ["pendente", "parcial", "completo"]);
+export const kitTypeEnum = pgEnum("kit_type", ["welcome", "renovacao", "aniversario"]);
 export const eventoTipoEnum = pgEnum("evento_tipo", ["encontro", "conferencia", "retiro", "treinamento", "outro"]);
 export const eventoStatusEnum = pgEnum("evento_status", ["agendado", "realizado", "cancelado"]);
 export const entrevistaStatusEnum = pgEnum("entrevista_status", ["agendada", "realizada", "aprovada", "reprovada", "cancelada"]);
@@ -87,6 +88,7 @@ export type InsertTercaGloria = typeof tercaGloria.$inferInsert;
 export const welcomeKits = pgTable("welcomeKits", {
   id: serial("id").primaryKey(),
   embaixadorId: serial("embaixadorId").notNull(),
+  tipo: kitTypeEnum("tipo").default("welcome").notNull(),
   patchEntregue: boolean("patchEntregue").default(false).notNull(),
   pinBoneEntregue: boolean("pinBoneEntregue").default(false).notNull(),
   anelEntregue: boolean("anelEntregue").default(false).notNull(),
