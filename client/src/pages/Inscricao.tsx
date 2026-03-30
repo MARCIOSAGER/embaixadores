@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Check, Loader2, ArrowRight, ArrowLeft, Send, UserCheck, Camera, Upload } from "lucide-react";
+import { Check, Loader2, ArrowRight, ArrowLeft, Send, UserCheck, Camera, Upload, Globe } from "lucide-react";
+import { useI18n, type Locale, localeFlags } from "@/lib/i18n";
 
 const LOGO = "/logo-legendarios.png";
 
@@ -81,111 +82,93 @@ type Question = {
   sectionIndex: number;
 };
 
-const ESTADOS_BR = [
-  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
-  "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
-];
-
-const questions: Question[] = [
-  // --- Foto ---
-  { key: "fotoFile", question: "Envie uma foto sua", subtitle: "Uma foto de rosto, bem iluminada. Pode tirar agora pela câmera ou enviar da galeria.", type: "photo", required: true, section: "Sua Foto", sectionIndex: 1 },
-
-  // --- Dados Pessoais ---
-  { key: "nomeCompleto", question: "Qual é o seu nome completo?", type: "text", required: true, placeholder: "Digite seu nome completo", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "dataNascimento", question: "Qual é a sua data de nascimento?", type: "date", required: true, section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "email", question: "Qual é o seu email profissional?", type: "email", required: true, placeholder: "seu@email.com", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "telefone", question: "Qual é o seu WhatsApp?", subtitle: "Usaremos para contato direto.", type: "tel", required: true, placeholder: "(11) 99999-9999", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "instagram", question: "Qual é o seu Instagram?", type: "text", required: true, placeholder: "@seu.perfil", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "cidade", question: "Em qual cidade você mora?", type: "text", required: true, placeholder: "Ex: São Paulo", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "estado", question: "Qual o seu estado?", type: "text", required: true, placeholder: "Ex: SP", section: "Dados Pessoais", sectionIndex: 1 },
-
-  // --- Legendarios ---
-  { key: "numeroLegendario", question: "Qual é o seu número de Legendário?", type: "text", required: true, placeholder: "Ex: L#91105", section: "Legendários", sectionIndex: 2 },
-  { key: "topSede", question: "Qual é o seu TOP Sede?", type: "text", required: true, placeholder: "Nome do seu TOP Sede", section: "Legendários", sectionIndex: 2 },
-  { key: "qtdTopsServidos", question: "Quantos TOPs você já serviu?", type: "text", required: true, placeholder: "Ex: 3", section: "Legendários", sectionIndex: 2 },
-  { key: "areaServico", question: "Em qual área você serve ou serviu?", type: "textarea", required: true, placeholder: "Descreva sua área de serviço...", section: "Legendários", sectionIndex: 2 },
-  { key: "conhecimentoPrevio", question: "O que você sabe sobre os Embaixadores?", type: "textarea", required: true, placeholder: "Conte o que você conhece do programa...", section: "Legendários", sectionIndex: 2 },
-
-  // --- Indicação ---
-  { key: "indicadoPorEmb", question: "Você foi indicado por algum embaixador?", type: "yesno", required: true, section: "Indicação", sectionIndex: 3 },
-  { key: "nomeIndicador", question: "Quem indicou você?", type: "text", showIf: (d) => d.indicadoPorEmb, placeholder: "Nome do embaixador", section: "Indicação", sectionIndex: 3 },
-  { key: "sedeInternacional", question: "Você participa de alguma sede internacional?", type: "yesno", required: true, section: "Indicação", sectionIndex: 3 },
-  { key: "nomeSedeInternacional", question: "Qual sede internacional?", type: "text", showIf: (d) => d.sedeInternacional, placeholder: "Nome da sede", section: "Indicação", sectionIndex: 3 },
-  { key: "cargoLideranca", question: "Ocupa algum cargo de liderança?", subtitle: "Na igreja, no movimento ou na comunidade.", type: "text", required: true, placeholder: "Ex: Líder de célula, Diácono...", section: "Indicação", sectionIndex: 3 },
-
-  // --- Familia ---
-  {
-    key: "estadoCivil", question: "Qual é o seu estado civil?", type: "radio", required: true, section: "Família", sectionIndex: 4,
-    options: [
-      { label: "Solteiro(a)", value: "solteiro", icon: "A" },
-      { label: "Casado(a)", value: "casado", icon: "B" },
-      { label: "Divorciado(a)", value: "divorciado", icon: "C" },
-      { label: "Viúvo(a)", value: "viuvo", icon: "D" },
-    ],
-  },
-  { key: "nomeEsposa", question: "Qual é o nome da sua esposa?", type: "text", showIf: (d) => d.estadoCivil === "casado", placeholder: "Nome completo", section: "Família", sectionIndex: 4 },
-  { key: "dataNascimentoEsposa", question: "Qual é a data de nascimento da sua esposa?", type: "date", showIf: (d) => d.estadoCivil === "casado", section: "Família", sectionIndex: 4 },
-  { key: "qtdFilhos", question: "Quantos filhos você tem?", type: "number", required: true, section: "Família", sectionIndex: 4 },
-  { key: "idadesFilhos", question: "Quais as idades dos seus filhos?", type: "text", showIf: (d) => d.qtdFilhos > 0, placeholder: "Ex: 5, 8 e 12 anos", section: "Família", sectionIndex: 4 },
-
-  // --- Profissional ---
-  { key: "profissao", question: "Qual é a sua profissão?", type: "text", required: true, placeholder: "Sua profissão principal", section: "Profissional", sectionIndex: 5 },
-  { key: "areaAtuacao", question: "Qual a sua área de atuação?", type: "text", required: true, placeholder: "Ex: Tecnologia, Saúde, Educação...", section: "Profissional", sectionIndex: 5 },
-  { key: "possuiEmpresa", question: "Possui empresa?", subtitle: "Se sim, qual o nome?", type: "text", required: true, placeholder: "Nome da empresa ou 'Não'", section: "Profissional", sectionIndex: 5 },
-  { key: "instagramEmpresa", question: "Qual o Instagram da empresa?", type: "text", placeholder: "@empresa (opcional)", section: "Profissional", sectionIndex: 5 },
-
-  // --- Mercado ---
-  {
-    key: "segmentoMercado", question: "Qual o seu segmento de mercado?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
-    options: [
-      { label: "Serviços", value: "servicos", icon: "A" },
-      { label: "Varejo e comércio", value: "varejo", icon: "B" },
-      { label: "Indústria", value: "industria", icon: "C" },
-      { label: "Infoprodutos / digitais", value: "digital", icon: "D" },
-      { label: "Saúde", value: "saude", icon: "E" },
-      { label: "Outro", value: "outro", icon: "F" },
-    ],
-  },
-  {
-    key: "tempoEmpreendedorismo", question: "Há quanto tempo você empreende?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
-    options: [
-      { label: "Menos de 1 ano", value: "<1", icon: "A" },
-      { label: "1 a 3 anos", value: "1-3", icon: "B" },
-      { label: "4 a 7 anos", value: "4-7", icon: "C" },
-      { label: "Mais de 7 anos", value: "7+", icon: "D" },
-    ],
-  },
-  {
-    key: "estruturaEquipe", question: "Como é a estrutura da sua equipe?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
-    options: [
-      { label: "Trabalho sozinho(a)", value: "solo", icon: "A" },
-      { label: "Equipe interna", value: "interna", icon: "B" },
-      { label: "Terceirizada / parceiros", value: "terceirizada", icon: "C" },
-    ],
-  },
-
-  // --- Investimento ---
-  {
-    key: "investeClubePrivado", question: "Você investiria em um clube privado de desenvolvimento?", type: "radio", required: true, section: "Investimento", sectionIndex: 7,
-    options: [
-      { label: "Sim, acredito no valor", value: "sim", icon: "A" },
-      { label: "Sim, mas ainda estou avaliando", value: "avaliando", icon: "B" },
-      { label: "Não, prefiro conteúdo gratuito", value: "nao", icon: "C" },
-    ],
-  },
-  { key: "participaMentoria", question: "Participa de alguma mentoria atualmente?", type: "text", required: true, placeholder: "Sim/Não - qual?", section: "Investimento", sectionIndex: 7 },
-  {
-    key: "valorInvestimento", question: "Quanto já investiu em desenvolvimento pessoal e profissional?", type: "radio", required: true, section: "Investimento", sectionIndex: 7,
-    options: [
-      { label: "Até R$ 10 mil", value: "10k", icon: "A" },
-      { label: "R$ 20 a 30 mil", value: "20-30k", icon: "B" },
-      { label: "R$ 40 a 60 mil", value: "40-60k", icon: "C" },
-      { label: "R$ 80 a 100 mil", value: "80-100k", icon: "D" },
-      { label: "Mais de R$ 100 mil", value: "100k+", icon: "E" },
-    ],
-  },
-  { key: "disponibilidadeReuniao", question: "Qual a sua disponibilidade para reuniões?", type: "text", required: true, placeholder: "Ex: Quartas à noite, Sábados pela manhã...", section: "Investimento", sectionIndex: 7 },
-];
+function buildQuestions(t: (k: string) => string): Question[] {
+  return [
+    { key: "fotoFile", question: t("insc.foto.titulo"), subtitle: t("insc.foto.desc"), type: "photo", required: true, section: t("insc.sec.foto"), sectionIndex: 1 },
+    { key: "nomeCompleto", question: t("insc.q.nome"), type: "text", required: true, placeholder: "...", section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "dataNascimento", question: t("insc.q.nascimento"), type: "date", required: true, section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "email", question: t("insc.q.email"), type: "email", required: true, placeholder: "seu@email.com", section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "telefone", question: t("insc.q.whatsapp"), subtitle: t("insc.q.whatsapp.sub"), type: "tel", required: true, placeholder: "(11) 99999-9999", section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "instagram", question: t("insc.q.instagram"), type: "text", required: true, placeholder: "@seu.perfil", section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "cidade", question: t("insc.q.cidade"), type: "text", required: true, placeholder: "Ex: São Paulo", section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "estado", question: t("insc.q.estado"), type: "text", required: true, placeholder: "Ex: SP", section: t("insc.sec.pessoal"), sectionIndex: 1 },
+    { key: "numeroLegendario", question: t("insc.q.numLeg"), type: "text", required: true, placeholder: "Ex: L#91105", section: t("insc.sec.legendarios"), sectionIndex: 2 },
+    { key: "topSede", question: t("insc.q.topSede"), type: "text", required: true, section: t("insc.sec.legendarios"), sectionIndex: 2 },
+    { key: "qtdTopsServidos", question: t("insc.q.qtdTops"), type: "text", required: true, placeholder: "Ex: 3", section: t("insc.sec.legendarios"), sectionIndex: 2 },
+    { key: "areaServico", question: t("insc.q.areaServico"), type: "textarea", required: true, section: t("insc.sec.legendarios"), sectionIndex: 2 },
+    { key: "conhecimentoPrevio", question: t("insc.q.conhecimento"), type: "textarea", required: true, section: t("insc.sec.legendarios"), sectionIndex: 2 },
+    { key: "indicadoPorEmb", question: t("insc.q.indicado"), type: "yesno", required: true, section: t("insc.sec.indicacao"), sectionIndex: 3 },
+    { key: "nomeIndicador", question: t("insc.q.quemIndicou"), type: "text", showIf: (d) => d.indicadoPorEmb, section: t("insc.sec.indicacao"), sectionIndex: 3 },
+    { key: "sedeInternacional", question: t("insc.q.sedeInternacional"), type: "yesno", required: true, section: t("insc.sec.indicacao"), sectionIndex: 3 },
+    { key: "nomeSedeInternacional", question: t("insc.q.qualSede"), type: "text", showIf: (d) => d.sedeInternacional, section: t("insc.sec.indicacao"), sectionIndex: 3 },
+    { key: "cargoLideranca", question: t("insc.q.cargoLideranca"), subtitle: t("insc.q.cargoLideranca.sub"), type: "text", required: true, section: t("insc.sec.indicacao"), sectionIndex: 3 },
+    {
+      key: "estadoCivil", question: t("insc.q.estadoCivil"), type: "radio", required: true, section: t("insc.sec.familia"), sectionIndex: 4,
+      options: [
+        { label: t("insc.opt.solteiro"), value: "solteiro", icon: "A" },
+        { label: t("insc.opt.casado"), value: "casado", icon: "B" },
+        { label: t("insc.opt.divorciado"), value: "divorciado", icon: "C" },
+        { label: t("insc.opt.viuvo"), value: "viuvo", icon: "D" },
+      ],
+    },
+    { key: "nomeEsposa", question: t("insc.q.nomeEsposa"), type: "text", showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4 },
+    { key: "dataNascimentoEsposa", question: t("insc.q.nascEsposa"), type: "date", showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4 },
+    { key: "qtdFilhos", question: t("insc.q.filhos"), type: "number", required: true, section: t("insc.sec.familia"), sectionIndex: 4 },
+    { key: "idadesFilhos", question: t("insc.q.idadesFilhos"), type: "text", showIf: (d) => d.qtdFilhos > 0, section: t("insc.sec.familia"), sectionIndex: 4 },
+    { key: "profissao", question: t("insc.q.profissao"), type: "text", required: true, section: t("insc.sec.profissional"), sectionIndex: 5 },
+    { key: "areaAtuacao", question: t("insc.q.areaAtuacao"), type: "text", required: true, section: t("insc.sec.profissional"), sectionIndex: 5 },
+    { key: "possuiEmpresa", question: t("insc.q.empresa"), subtitle: t("insc.q.empresa.sub"), type: "text", required: true, section: t("insc.sec.profissional"), sectionIndex: 5 },
+    { key: "instagramEmpresa", question: t("insc.q.instEmpresa"), type: "text", placeholder: "@empresa", section: t("insc.sec.profissional"), sectionIndex: 5 },
+    {
+      key: "segmentoMercado", question: t("insc.q.segmento"), type: "radio", required: true, section: t("insc.sec.mercado"), sectionIndex: 6,
+      options: [
+        { label: t("insc.opt.servicos"), value: "servicos", icon: "A" },
+        { label: t("insc.opt.varejo"), value: "varejo", icon: "B" },
+        { label: t("insc.opt.industria"), value: "industria", icon: "C" },
+        { label: t("insc.opt.digital"), value: "digital", icon: "D" },
+        { label: t("insc.opt.saude"), value: "saude", icon: "E" },
+        { label: t("insc.opt.outro"), value: "outro", icon: "F" },
+      ],
+    },
+    {
+      key: "tempoEmpreendedorismo", question: t("insc.q.tempoEmpreend"), type: "radio", required: true, section: t("insc.sec.mercado"), sectionIndex: 6,
+      options: [
+        { label: t("insc.opt.menos1"), value: "<1", icon: "A" },
+        { label: t("insc.opt.1a3"), value: "1-3", icon: "B" },
+        { label: t("insc.opt.4a7"), value: "4-7", icon: "C" },
+        { label: t("insc.opt.mais7"), value: "7+", icon: "D" },
+      ],
+    },
+    {
+      key: "estruturaEquipe", question: t("insc.q.equipe"), type: "radio", required: true, section: t("insc.sec.mercado"), sectionIndex: 6,
+      options: [
+        { label: t("insc.opt.solo"), value: "solo", icon: "A" },
+        { label: t("insc.opt.interna"), value: "interna", icon: "B" },
+        { label: t("insc.opt.terceirizada"), value: "terceirizada", icon: "C" },
+      ],
+    },
+    {
+      key: "investeClubePrivado", question: t("insc.q.clubePrivado"), type: "radio", required: true, section: t("insc.sec.investimento"), sectionIndex: 7,
+      options: [
+        { label: t("insc.opt.simValor"), value: "sim", icon: "A" },
+        { label: t("insc.opt.avaliando"), value: "avaliando", icon: "B" },
+        { label: t("insc.opt.naoGratuito"), value: "nao", icon: "C" },
+      ],
+    },
+    { key: "participaMentoria", question: t("insc.q.mentoria"), type: "text", required: true, section: t("insc.sec.investimento"), sectionIndex: 7 },
+    {
+      key: "valorInvestimento", question: t("insc.q.valorInvest"), type: "radio", required: true, section: t("insc.sec.investimento"), sectionIndex: 7,
+      options: [
+        { label: t("insc.opt.ate10k"), value: "10k", icon: "A" },
+        { label: t("insc.opt.20a30k"), value: "20-30k", icon: "B" },
+        { label: t("insc.opt.40a60k"), value: "40-60k", icon: "C" },
+        { label: t("insc.opt.80a100k"), value: "80-100k", icon: "D" },
+        { label: t("insc.opt.mais100k"), value: "100k+", icon: "E" },
+      ],
+    },
+    { key: "disponibilidadeReuniao", question: t("insc.q.disponibilidade"), type: "text", required: true, section: t("insc.sec.investimento"), sectionIndex: 7 },
+  ];
+}
 
 /* ============================================================
    COMPONENTS
@@ -222,10 +205,10 @@ function OptionButton({
   );
 }
 
-function YesNoButtons({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function YesNoButtons({ value, onChange, t }: { value: boolean; onChange: (v: boolean) => void; t: (k: string) => string }) {
   return (
     <div className="flex gap-4">
-      {[{ label: "Sim", val: true }, { label: "Não", val: false }].map((opt) => (
+      {[{ label: t("insc.sim"), val: true }, { label: t("insc.nao"), val: false }].map((opt) => (
         <button
           key={String(opt.val)}
           type="button"
@@ -244,8 +227,8 @@ function YesNoButtons({ value, onChange }: { value: boolean; onChange: (v: boole
 }
 
 function PhotoUpload({
-  preview, onChange,
-}: { preview: string; onChange: (file: File, preview: string) => void }) {
+  preview, onChange, t,
+}: { preview: string; onChange: (file: File, preview: string) => void; t: (k: string) => string }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(file: File) {
@@ -279,7 +262,7 @@ function PhotoUpload({
           className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-white/10 bg-white/5 text-white/80 text-sm font-medium hover:border-white/25 hover:bg-white/8 transition-all cursor-pointer"
         >
           <Camera className="w-4 h-4" />
-          Câmera
+          {t("insc.foto.camera")}
         </button>
         <button
           type="button"
@@ -287,7 +270,7 @@ function PhotoUpload({
           className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-[#FF6B00]/50 bg-[#FF6B00]/10 text-white text-sm font-medium hover:bg-[#FF6B00]/20 transition-all cursor-pointer"
         >
           <Upload className="w-4 h-4" />
-          Galeria
+          {t("insc.foto.galeria")}
         </button>
       </div>
 
@@ -306,7 +289,27 @@ function PhotoUpload({
    MAIN COMPONENT
    ============================================================ */
 
+function LangSelector() {
+  const { locale, setLocale } = useI18n();
+  const langs: Locale[] = ["pt", "es", "en"];
+  return (
+    <div className="flex items-center gap-1 bg-white/5 rounded-full p-1">
+      {langs.map((l) => (
+        <button
+          key={l}
+          onClick={() => setLocale(l)}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer
+            ${locale === l ? "bg-[#FF6B00] text-white" : "text-white/50 hover:text-white/80"}`}
+        >
+          {localeFlags[l]} {l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Inscricao() {
+  const { t } = useI18n();
   const [qIdx, setQIdx] = useState(-1);
   const [form, setForm] = useState<FormData>(initial);
   const [submitting, setSubmitting] = useState(false);
@@ -319,6 +322,7 @@ export default function Inscricao() {
   const [refEmbId, setRefEmbId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
+  const questions = buildQuestions(t);
   const visibleQuestions = questions.filter((q) => !q.showIf || q.showIf(form));
   const current = qIdx >= 0 ? visibleQuestions[qIdx] : null;
   const totalVisible = visibleQuestions.length;
@@ -360,7 +364,7 @@ export default function Inscricao() {
     if (!current) return true;
     if (current.type === "photo") {
       if (current.required && !form.fotoFile) {
-        setFieldError("Por favor, envie uma foto");
+        setFieldError(t("insc.erro.foto"));
         return false;
       }
       return true;
@@ -368,11 +372,11 @@ export default function Inscricao() {
     if (!current.required) return true;
     const v = form[current.key];
     if (v === "" || v === null || v === undefined) {
-      setFieldError("Por favor, preencha este campo");
+      setFieldError(t("insc.erro.campo"));
       return false;
     }
     if (current.type === "email" && typeof v === "string" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-      setFieldError("Digite um email válido");
+      setFieldError(t("insc.erro.email"));
       return false;
     }
     return true;
@@ -476,17 +480,17 @@ export default function Inscricao() {
               <Check className="w-12 h-12 text-white" strokeWidth={3} />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-4">Inscrição enviada!</h1>
+          <h1 className="text-3xl font-bold text-white mb-4">{t("insc.sucesso.titulo")}</h1>
           <p className="text-white/60 text-base leading-relaxed mb-2">
-            Recebemos seus dados com sucesso.
+            {t("insc.sucesso.msg1")}
           </p>
           <p className="text-white/60 text-base leading-relaxed">
-            Nossa equipe analisará sua candidatura e entrará em contato em breve pelo WhatsApp.
+            {t("insc.sucesso.msg2")}
           </p>
           {referrer && (
             <div className="mt-8 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10">
               <UserCheck className="w-4 h-4 text-[#FF6B00]" />
-              <span className="text-sm text-white/70">Indicado por <span className="text-white font-medium">{referrer.nomeCompleto}</span></span>
+              <span className="text-sm text-white/70">{t("insc.sucesso.indicado")} <span className="text-white font-medium">{referrer.nomeCompleto}</span></span>
             </div>
           )}
         </div>
@@ -504,15 +508,16 @@ export default function Inscricao() {
         </div>
 
         <div className="relative z-10 text-center px-6 max-w-lg slide-up">
+          <div className="flex justify-center mb-6"><LangSelector /></div>
           <img src={LOGO} alt="Legendários" className="h-16 mx-auto mb-10 drop-shadow-2xl" />
 
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-5 leading-tight tracking-tight">
-            Embaixadores dos<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#ff9a44]">Legendários</span>
+            {t("insc.welcome.title1")}<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#ff9a44]">{t("insc.welcome.title2")}</span>
           </h1>
 
           <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-md mx-auto">
-            Faça parte deste seleto grupo de líderes que representam o movimento Legendários.
+            {t("insc.welcome.desc")}
           </p>
 
           {referrer && (
@@ -521,7 +526,7 @@ export default function Inscricao() {
                 {referrer.nomeCompleto.charAt(0)}
               </div>
               <span className="text-sm text-white/80">
-                Você foi convidado por <span className="text-white font-semibold">{referrer.nomeCompleto}</span>
+                {t("insc.welcome.convidado")} <span className="text-white font-semibold">{referrer.nomeCompleto}</span>
               </span>
             </div>
           )}
@@ -531,11 +536,11 @@ export default function Inscricao() {
             onClick={() => { setDirection("next"); setQIdx(0); }}
             className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] hover:from-[#e55f00] hover:to-[#FF6B00] text-white font-bold px-10 py-4 rounded-full text-lg transition-all duration-300 shadow-[0_8px_40px_rgba(255,107,0,0.35)] hover:shadow-[0_12px_50px_rgba(255,107,0,0.5)] hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
           >
-            Começar inscrição
+            {t("insc.welcome.comecar")}
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
           </button>
 
-          <p className="text-white/40 text-xs mt-6">Leva cerca de 5 minutos</p>
+          <p className="text-white/40 text-xs mt-6">{t("insc.welcome.tempo")}</p>
         </div>
       </div>
     );
@@ -600,6 +605,7 @@ export default function Inscricao() {
             {current.type === "photo" && (
               <PhotoUpload
                 preview={form.fotoPreview}
+                t={t}
                 onChange={(file, preview) => {
                   setForm((p) => ({ ...p, fotoFile: file, fotoPreview: preview }));
                   setFieldError("");
@@ -680,6 +686,7 @@ export default function Inscricao() {
             {current.type === "yesno" && (
               <YesNoButtons
                 value={form[current.key] as boolean}
+                t={t}
                 onChange={(v) => {
                   set(current.key, v as any);
                   setTimeout(() => {
@@ -696,7 +703,7 @@ export default function Inscricao() {
 
           {(current.type === "text" || current.type === "email" || current.type === "tel" || current.type === "textarea" || current.type === "number" || current.type === "date") && (
             <p className="mt-6 text-white/25 text-xs">
-              Pressione <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/40 font-mono text-[10px]">Enter</kbd> para continuar
+              {t("insc.nav.enter")} <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/40 font-mono text-[10px]">Enter</kbd> {t("insc.nav.continuar")}
             </p>
           )}
         </div>
@@ -712,7 +719,7 @@ export default function Inscricao() {
             className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar
+            {t("insc.nav.voltar")}
           </button>
 
           {isLast ? (
@@ -723,7 +730,7 @@ export default function Inscricao() {
               className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] text-white font-bold px-8 py-3 rounded-full text-sm transition-all duration-200 shadow-[0_4px_24px_rgba(255,107,0,0.3)] hover:shadow-[0_8px_32px_rgba(255,107,0,0.45)] hover:scale-[1.03] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Enviar inscrição
+              {t("insc.nav.enviar")}
             </button>
           ) : (
             <button
