@@ -1,7 +1,7 @@
 export function formatDate(ts: number | null | undefined, locale: string): string {
   if (!ts) return "\u2014";
   const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
-  return new Date(ts).toLocaleDateString(loc, { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(ts).toLocaleDateString(loc, { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 export function formatDateTime(ts: number | null | undefined, locale: string): string {

@@ -276,11 +276,11 @@ export default function Embaixadores() {
                     onClick={() => {
                       const url = `${window.location.origin}/inscricao?ref=${selected.codigoIndicacao}`;
                       navigator.clipboard.writeText(url);
-                      toast.success("Link de indicacao copiado!");
+                      toast.success("Link de indicação copiado!");
                     }}
                     className="apple-btn apple-btn-filled w-full py-2.5 mb-1"
                   >
-                    <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link de Indicacao
+                    <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link de Indicação
                   </button>
                 )}
 
