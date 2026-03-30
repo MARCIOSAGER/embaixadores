@@ -367,6 +367,7 @@ export default function Entrevistas() {
           type="entrevista"
           id={notifyTarget?.id || null}
           title={`Entrevista: ${notifyTarget?.nomeCandidato || ""}`}
+          entrevistadorId={notifyTarget?.entrevistadorId}
         />
         <ConfirmDialog
           open={confirmDelete !== null}

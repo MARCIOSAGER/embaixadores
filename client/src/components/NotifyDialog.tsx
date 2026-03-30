@@ -15,9 +15,10 @@ interface NotifyDialogProps {
   type: "evento" | "terca" | "entrevista";
   id: number | null;
   title: string;
+  entrevistadorId?: number | null;
 }
 
-export default function NotifyDialog({ open, onOpenChange, type, id, title }: NotifyDialogProps) {
+export default function NotifyDialog({ open, onOpenChange, type, id, title, entrevistadorId }: NotifyDialogProps) {
   const { session } = useAuth();
   const { t, locale } = useI18n();
   const { data: embaixadores } = useEmbaixadores();
@@ -57,6 +58,7 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title }: No
           channel,
           recipients: recipientMode === "all" ? "all" : selectedIds,
           includeCandidato: type === "entrevista" ? includeCandidato : undefined,
+          entrevistadorId: type === "entrevista" ? entrevistadorId : undefined,
           locale,
         }),
       });
