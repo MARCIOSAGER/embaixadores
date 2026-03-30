@@ -578,7 +578,7 @@ export default function Inscricao() {
       </header>
 
       {/* Main content */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-6 pb-28">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-6 pb-36">
         <div
           className={`w-full max-w-xl ${direction === "next" ? "slide-up" : "slide-down"}`}
           key={`q-${qIdx}`}
@@ -588,7 +588,7 @@ export default function Inscricao() {
             <ArrowRight className="w-3 h-3 text-[#FF6B00]/60" />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-3 break-words">
             {current.question}
           </h2>
           {current.subtitle && (
@@ -613,7 +613,7 @@ export default function Inscricao() {
                 type="date"
                 value={form[current.key] as string}
                 onChange={(e) => set(current.key, e.target.value as any)}
-                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-xl sm:text-2xl text-white focus:outline-none transition-colors duration-300 caret-[#FF6B00] [color-scheme:dark]"
+                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-[16px] sm:text-2xl text-white focus:outline-none transition-colors duration-300 caret-[#FF6B00] [color-scheme:dark]"
                 autoFocus
               />
             )}
@@ -626,7 +626,7 @@ export default function Inscricao() {
                 value={form[current.key] as string}
                 onChange={(e) => set(current.key, e.target.value as any)}
                 placeholder={current.placeholder}
-                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-xl sm:text-2xl text-white placeholder:text-white/25 focus:outline-none transition-colors duration-300 caret-[#FF6B00]"
+                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-[16px] sm:text-2xl text-white placeholder:text-white/25 focus:outline-none transition-colors duration-300 caret-[#FF6B00]"
                 autoFocus
               />
             )}
@@ -638,7 +638,7 @@ export default function Inscricao() {
                 onChange={(e) => set(current.key, e.target.value as any)}
                 placeholder={current.placeholder}
                 rows={3}
-                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-xl text-white placeholder:text-white/25 focus:outline-none transition-colors duration-300 resize-none caret-[#FF6B00]"
+                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-[16px] sm:text-xl text-white placeholder:text-white/25 focus:outline-none transition-colors duration-300 resize-none caret-[#FF6B00]"
                 autoFocus
               />
             )}
@@ -650,7 +650,7 @@ export default function Inscricao() {
                 min={0}
                 value={form[current.key] as number}
                 onChange={(e) => set(current.key, Number(e.target.value) as any)}
-                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-3xl text-white focus:outline-none transition-colors duration-300 caret-[#FF6B00]"
+                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-2xl sm:text-3xl text-white focus:outline-none transition-colors duration-300 caret-[#FF6B00]"
                 autoFocus
               />
             )}
@@ -705,7 +705,7 @@ export default function Inscricao() {
       {/* Bottom navigation */}
       <div className="fixed bottom-0 left-0 right-0 z-40">
         <div className="bg-gradient-to-t from-black/90 to-transparent h-20 pointer-events-none" />
-        <div className="bg-black/60 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+        <div className="bg-black/60 backdrop-blur-xl px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex items-center justify-between">
           <button
             type="button"
             onClick={prev}
