@@ -21,6 +21,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Inscricao from "./pages/Inscricao";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
@@ -109,6 +110,7 @@ function App() {
           <Switch>
             <Route path="/privacidade" component={Privacy} />
             <Route path="/termos" component={Terms} />
+            <Route path="/inscricao" component={Inscricao} />
             <Route>{isAuthenticated ? <Router /> : <Login />}</Route>
           </Switch>
         </TooltipProvider>
