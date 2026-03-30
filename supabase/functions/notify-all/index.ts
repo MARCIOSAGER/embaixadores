@@ -100,7 +100,7 @@ function buildCalendarLink(title: string, ts: number, tsEnd?: number, location?:
 
 interface EventoData { titulo: string; data: number; dataFim?: number; local?: string; linkMeet?: string; tipo?: string; descricao?: string; }
 interface TercaData { tema: string; data: number; pregador?: string; linkMeet?: string; versiculoBase?: string; }
-interface EntrevistaData { nomeCandidato: string; dataEntrevista: number; linkMeet?: string; indicadoPor?: string; emailCandidato?: string; telefoneCandidato?: string; }
+interface EntrevistaData { nomeCandidato: string; dataEntrevista: number; linkMeet?: string; indicadoPor?: string; emailCandidato?: string; telefoneCandidato?: string; entrevistadorId?: number; }
 
 function buildEventoMsg(ev: EventoData, locale: Locale) {
   const dateStr = formatDate(ev.data, locale);
@@ -126,6 +126,78 @@ function buildEntrevistaMsg(ent: EntrevistaData, locale: Locale) {
   const whatsapp = `*${t("entrevistaTitle", locale)}*\n${t("candidato", locale)}: ${ent.nomeCandidato}\n${t("date", locale)}: ${dateStr}\n${t("indicadoPor", locale)}: ${ent.indicadoPor || "—"}${ent.linkMeet ? `\nMeet: ${ent.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
   const emailBody = `<strong>${t("candidato", locale)}:</strong> ${ent.nomeCandidato}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("indicadoPor", locale)}:</strong> ${ent.indicadoPor || "—"}${ent.linkMeet ? `<br><br><a href="${ent.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
   return { whatsapp, emailSubject: `${t("entrevista", locale)}: ${ent.nomeCandidato}`, emailTitle: title, emailBody };
+}
+
+function formatDateOnly(ts: number): string {
+  return new Date(ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
+}
+
+function formatTimeOnly(ts: number): string {
+  return new Date(ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+}
+
+function buildEntrevistaCandidatoMsg(ent: EntrevistaData, entrevistadorNome: string) {
+  const dataStr = formatDateOnly(ent.dataEntrevista);
+  const horaStr = formatTimeOnly(ent.dataEntrevista);
+  const title = `Entrevista - ${ent.nomeCandidato}`;
+  const calLink = buildCalendarLink(title, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
+
+  const text = `Prezado ${ent.nomeCandidato},
+
+AHU!
+
+Informamos que recebemos e analisamos seu formulário de candidatura ao corpo de Embaixadores dos Legendários.
+
+Temos a satisfação de comunicar que sua candidatura foi aprovada para a próxima fase do processo.
+
+Você se encontra a dois passos de integrar um ambiente de homens de corações ensináveis, um ambiente espiritual de aliança, onde fé, propósito e excelência caminham juntos. Um lugar preparado por Deus que te levará a um novo nível na sua vida Relacional, Emocional e Espiritual.
+
+O próximo passo consiste em uma conversa com o Embaixador ${entrevistadorNome}, responsável por esses homens Enviados ao Mundo para Baixar Dores. Trata-se de um momento de alinhamento de visão e conhecimento mútuo.
+
+A agenda segue abaixo:
+Dia ${dataStr} às ${horaStr}${ent.linkMeet ? `\nGoogle Meet: ${ent.linkMeet}` : ""}
+
+Adicione ao seu calendário: ${calLink}
+
+Permanecemos à disposição.
+
+Respeitosamente,
+Embaixadores Legendários`;
+
+  const emailBody = text.replace(/\n/g, "<br>");
+
+  return {
+    whatsapp: text,
+    emailSubject: `Entrevista - Embaixadores dos Legendários`,
+    emailTitle: `Entrevista Agendada`,
+    emailBody,
+  };
+}
+
+function buildEntrevistaEntrevistadorMsg(ent: EntrevistaData) {
+  const dataStr = formatDateOnly(ent.dataEntrevista);
+  const horaStr = formatTimeOnly(ent.dataEntrevista);
+  const title = `Entrevista - ${ent.nomeCandidato}`;
+  const calLink = buildCalendarLink(title, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
+
+  const text = `Nova Entrevista Agendada
+
+Candidato: ${ent.nomeCandidato}
+Email: ${ent.emailCandidato || "—"}
+Telefone: ${ent.telefoneCandidato || "—"}
+Indicado por: ${ent.indicadoPor || "—"}
+Data: ${dataStr} às ${horaStr}${ent.linkMeet ? `\nGoogle Meet: ${ent.linkMeet}` : ""}
+
+Adicione ao seu calendário: ${calLink}`;
+
+  const emailBody = text.replace(/\n/g, "<br>");
+
+  return {
+    whatsapp: text,
+    emailSubject: `Nova Entrevista: ${ent.nomeCandidato}`,
+    emailTitle: `Nova Entrevista Agendada`,
+    emailBody,
+  };
 }
 
 /**
@@ -169,7 +241,7 @@ Deno.serve(async (req) => {
       return json({ error: "Apenas administradores podem enviar notificacoes" }, 403);
     }
 
-    const { type, id, channel, recipients = "all", includeCandidato = true, locale: reqLocale = "pt" } = await req.json();
+    const { type, id, channel, recipients = "all", includeCandidato = true, entrevistadorId: reqEntrevistadorId, locale: reqLocale = "pt" } = await req.json();
     const locale: Locale = ["pt", "es", "en"].includes(reqLocale) ? reqLocale : "pt";
 
     if (!type || !id || !channel) {
@@ -203,6 +275,20 @@ Deno.serve(async (req) => {
       candidateEmail = data.emailCandidato || null;
     }
 
+    // Fetch entrevistador details
+    let entrevistadorRecord: { id: number; nomeCompleto: string; email: string | null; telefone: string | null } | null = null;
+    if (type === "entrevista") {
+      const entIdToUse = reqEntrevistadorId || eventRecord.entrevistadorId;
+      if (entIdToUse) {
+        const { data: entData } = await supabaseAdmin
+          .from("embaixadores")
+          .select("id, nomeCompleto, email, telefone")
+          .eq("id", entIdToUse)
+          .single();
+        entrevistadorRecord = entData || null;
+      }
+    }
+
     // Build messages per locale (cache to avoid rebuilding)
     const msgCache = new Map<Locale, ReturnType<typeof buildEventoMsg>>();
     function getMsgForLocale(loc: Locale) {
@@ -233,6 +319,11 @@ Deno.serve(async (req) => {
       embaixadores = (data || []).map((e: any) => ({ ...e, idioma: e.idioma || "pt" }));
     } else {
       embaixadores = [];
+    }
+
+    // Dedup: remove entrevistador from generic list (they get their own template)
+    if (type === "entrevista" && entrevistadorRecord) {
+      embaixadores = embaixadores.filter(e => e.id !== entrevistadorRecord!.id);
     }
 
     const results = {
@@ -278,10 +369,21 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Send to candidate (entrevistas only, uses admin locale)
+        // Send to entrevistador (entrevistas only, informational template)
+        if (type === "entrevista" && entrevistadorRecord?.telefone) {
+          const entrevistadorMsg = buildEntrevistaEntrevistadorMsg(eventRecord);
+          await sendWa(entrevistadorRecord.telefone, entrevistadorRecord.nomeCompleto, entrevistadorMsg.whatsapp);
+        }
+
+        // Send to candidate (entrevistas only, inspirational template)
         if (type === "entrevista" && includeCandidato && candidatePhone) {
-          const msg = getMsgForLocale(locale);
-          await sendWa(candidatePhone, "Candidato", msg.whatsapp);
+          if (entrevistadorRecord) {
+            const candidatoMsg = buildEntrevistaCandidatoMsg(eventRecord, entrevistadorRecord.nomeCompleto);
+            await sendWa(candidatePhone, "Candidato", candidatoMsg.whatsapp);
+          } else {
+            const msg = getMsgForLocale(locale);
+            await sendWa(candidatePhone, "Candidato", msg.whatsapp);
+          }
         }
       }
     }
@@ -329,9 +431,38 @@ Deno.serve(async (req) => {
             );
           }
 
-          // Send to candidate (entrevistas only, uses admin locale)
+          // Send to entrevistador (entrevistas only, informational template)
+          if (type === "entrevista" && entrevistadorRecord?.email) {
+            const entrevistadorMsg = buildEntrevistaEntrevistadorMsg(eventRecord);
+            try {
+              await transporter.sendMail({
+                from: smtpFrom,
+                to: entrevistadorRecord.email,
+                subject: entrevistadorMsg.emailSubject,
+                text: entrevistadorMsg.whatsapp,
+                html: buildEmailHtml(entrevistadorMsg.emailTitle, entrevistadorMsg.emailBody),
+              });
+              results.email.sent++;
+            } catch (err: any) { results.email.failed++; results.email.errors.push(`Entrevistador: ${err.message}`); }
+          }
+
+          // Send to candidate (entrevistas only, inspirational template)
           if (type === "entrevista" && includeCandidato && candidateEmail) {
-            await sendEmail(candidateEmail, "Candidato", locale);
+            if (entrevistadorRecord) {
+              const candidatoMsg = buildEntrevistaCandidatoMsg(eventRecord, entrevistadorRecord.nomeCompleto);
+              try {
+                await transporter.sendMail({
+                  from: smtpFrom,
+                  to: candidateEmail,
+                  subject: candidatoMsg.emailSubject,
+                  text: candidatoMsg.whatsapp,
+                  html: buildEmailHtml(candidatoMsg.emailTitle, candidatoMsg.emailBody),
+                });
+                results.email.sent++;
+              } catch (err: any) { results.email.failed++; results.email.errors.push(`Candidato: ${err.message}`); }
+            } else {
+              await sendEmail(candidateEmail, "Candidato", locale);
+            }
           }
         } catch (err) {
           results.email.errors.push(`SMTP connection: ${err.message}`);
@@ -341,7 +472,7 @@ Deno.serve(async (req) => {
 
     return json({
       success: true,
-      total: embaixadores.length + (type === "entrevista" && includeCandidato ? 1 : 0),
+      total: embaixadores.length + (type === "entrevista" && includeCandidato ? 1 : 0) + (type === "entrevista" && entrevistadorRecord ? 1 : 0),
       results,
     });
 
