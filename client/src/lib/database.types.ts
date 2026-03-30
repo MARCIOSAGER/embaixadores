@@ -35,6 +35,7 @@ export type Database = {
           idioma: "pt" | "es" | "en";
           observacoes: string | null;
           fotoUrl: string | null;
+          codigoIndicacao: string | null;
           createdAt: string;
           updatedAt: string;
         };
@@ -158,6 +159,8 @@ export type Database = {
           participaMentoria: string | null;
           valorInvestimento: string | null;
           disponibilidadeReuniao: string | null;
+          embaixadorIndicadorId: number | null;
+          codigoIndicacao: string | null;
           status: string;
           createdAt: string;
         };

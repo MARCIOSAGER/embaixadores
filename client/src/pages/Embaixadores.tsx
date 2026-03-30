@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2 } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
@@ -66,6 +66,7 @@ export default function Embaixadores() {
       dataNascimento: dateToTs(form.dataNascimento), dataIngresso: dateToTs(form.dataIngresso) || Date.now(),
       dataRenovacao: dateToTs(form.dataRenovacao), status: form.status as "ativo" | "inativo" | "pendente_renovacao",
       idioma: form.idioma as "pt" | "es" | "en", observacoes: form.observacoes || null,
+      ...(!editingId ? { codigoIndicacao: Math.random().toString(36).substring(2, 8) } : {}),
     };
     const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
     const onError = (e: any) => toast.error(e.message);
@@ -268,6 +269,19 @@ export default function Embaixadores() {
                     <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.observacoes")}</p>
                     <p className="text-[0.8125rem] text-[#d2d2d7] leading-relaxed">{selected.observacoes}</p>
                   </div>
+                )}
+
+                {selected.codigoIndicacao && (
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/inscricao?ref=${selected.codigoIndicacao}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Link de indicacao copiado!");
+                    }}
+                    className="apple-btn apple-btn-filled w-full py-2.5 mb-1"
+                  >
+                    <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link de Indicacao
+                  </button>
                 )}
 
                 <div className="flex gap-2">
