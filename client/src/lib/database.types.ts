@@ -161,6 +161,7 @@ export type Database = {
           disponibilidadeReuniao: string | null;
           fotoUrl: string | null;
           nomeEsposa: string | null;
+          dataNascimentoEsposa: string | null;
           dataNascimento: string | null;
           cidade: string | null;
           estado: string | null;

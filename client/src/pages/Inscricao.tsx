@@ -38,6 +38,7 @@ type FormData = {
   cargoLideranca: string;
   estadoCivil: string;
   nomeEsposa: string;
+  dataNascimentoEsposa: string;
   qtdFilhos: number;
   idadesFilhos: string;
   profissao: string;
@@ -59,7 +60,7 @@ const initial: FormData = {
   numeroLegendario: "", topSede: "", qtdTopsServidos: "", areaServico: "",
   conhecimentoPrevio: "", indicadoPorEmb: false, nomeIndicador: "",
   sedeInternacional: false, nomeSedeInternacional: "", cargoLideranca: "",
-  estadoCivil: "", nomeEsposa: "", qtdFilhos: 0, idadesFilhos: "",
+  estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "",
   profissao: "", areaAtuacao: "", possuiEmpresa: "", instagramEmpresa: "",
   segmentoMercado: "", tempoEmpreendedorismo: "", estruturaEquipe: "",
   investeClubePrivado: "", participaMentoria: "", valorInvestimento: "",
@@ -123,6 +124,7 @@ const questions: Question[] = [
     ],
   },
   { key: "nomeEsposa", question: "Qual \u00e9 o nome da sua esposa?", type: "text", showIf: (d) => d.estadoCivil === "casado", placeholder: "Nome completo", section: "Fam\u00edlia", sectionIndex: 4 },
+  { key: "dataNascimentoEsposa", question: "Qual \u00e9 a data de nascimento da sua esposa?", type: "date", showIf: (d) => d.estadoCivil === "casado", section: "Fam\u00edlia", sectionIndex: 4 },
   { key: "qtdFilhos", question: "Quantos filhos voc\u00ea tem?", type: "number", required: true, section: "Fam\u00edlia", sectionIndex: 4 },
   { key: "idadesFilhos", question: "Quais as idades dos seus filhos?", type: "text", showIf: (d) => d.qtdFilhos > 0, placeholder: "Ex: 5, 8 e 12 anos", section: "Fam\u00edlia", sectionIndex: 4 },
 
@@ -425,6 +427,7 @@ export default function Inscricao() {
         estado: form.estado || null,
         fotoUrl,
         nomeEsposa: form.nomeEsposa || null,
+        dataNascimentoEsposa: form.dataNascimentoEsposa || null,
         numeroLegendario: form.numeroLegendario || null,
         topSede: form.topSede || null,
         qtdTopsServidos: form.qtdTopsServidos || null,
