@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Camera, Loader2, Save, Mail } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { Camera, Loader2, Save, Mail, Download, Trash2 } from "lucide-react";
 
 export default function Profile() {
   const { user: authUser, userName } = useAuth();
@@ -29,6 +30,8 @@ export default function Profile() {
   });
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (embaixador) {
@@ -134,6 +137,62 @@ export default function Profile() {
       toast.error(err.message || t("profile.erroFoto"));
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleExportData() {
+    if (!embaixador) return;
+    try {
+      const { data: pagamentos } = await supabase.from("pagamentos").select("*").eq("embaixadorId", embaixador.id);
+      const { data: welcomeKits } = await supabase.from("welcomeKits").select("*").eq("embaixadorId", embaixador.id);
+
+      const exportData = {
+        exportadoEm: new Date().toISOString(),
+        perfil: embaixador,
+        pagamentos: pagamentos || [],
+        welcomeKits: welcomeKits || [],
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `meus-dados-${embaixador.nomeCompleto.replace(/\s+/g, "-").toLowerCase()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(t("profile.exportarDados"));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (!embaixador || !authUser) return;
+    setDeleting(true);
+    try {
+      // Delete related data first
+      await supabase.from("pagamentos").delete().eq("embaixadorId", embaixador.id);
+      await supabase.from("welcomeKits").delete().eq("embaixadorId", embaixador.id);
+
+      // Delete avatar from storage
+      if (embaixador.fotoUrl) {
+        const path = embaixador.fotoUrl.split("/avatars/")[1];
+        if (path) await supabase.storage.from("avatars").remove([decodeURIComponent(path)]);
+      }
+
+      // Delete embaixador record
+      await supabase.from("embaixadores").delete().eq("id", embaixador.id);
+
+      // Delete user record
+      await supabase.from("users").delete().eq("openId", authUser.id);
+
+      // Sign out
+      toast.success(t("profile.excluirSucesso"));
+      await supabase.auth.signOut();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -298,6 +357,43 @@ export default function Profile() {
                 {t("profile.salvar")}
               </button>
             </div>
+
+            {/* LGPD Section */}
+            <div className="pt-6 mt-6 border-t border-white/[0.06] space-y-4">
+              <h2 className="text-[1rem] font-semibold text-white tracking-[-0.02em]">{t("profile.lgpd")}</h2>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleExportData}
+                  disabled={!embaixador}
+                  className="apple-btn apple-btn-gray text-[0.8125rem] py-2.5 px-5 flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" strokeWidth={2} />
+                  {t("profile.exportarDados")}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={!embaixador || deleting}
+                  className="apple-btn apple-btn-destructive text-[0.8125rem] py-2.5 px-5 flex items-center gap-2"
+                >
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" strokeWidth={2} />}
+                  {t("profile.excluirConta")}
+                </button>
+              </div>
+
+              <p className="text-[0.6875rem] text-[#48484a] leading-relaxed">
+                {t("profile.exportarDesc")}. {t("profile.excluirDesc")}.
+              </p>
+            </div>
+
+            <ConfirmDialog
+              open={showDeleteConfirm}
+              onOpenChange={setShowDeleteConfirm}
+              onConfirm={handleDeleteAccount}
+              title={t("profile.excluirConta")}
+              description={t("profile.excluirConfirm")}
+              confirmLabel={t("profile.excluirConta")}
+            />
           </div>
         )}
       </div>

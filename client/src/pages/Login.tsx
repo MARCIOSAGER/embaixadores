@@ -28,6 +28,7 @@ export default function Login() {
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetId = useRef<string | null>(null);
 
@@ -49,6 +50,10 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!accepted) {
+      setError(t("auth.aceiteObrigatorio"));
+      return;
+    }
     if (!turnstileToken) {
       setError("Verificacao de seguranca necessaria. Aguarde o carregamento.");
       return;
@@ -197,7 +202,7 @@ export default function Login() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={loading || !turnstileToken}
+                  disabled={loading || !turnstileToken || !accepted}
                   className="w-full py-3 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] hover:from-[#FF7A1A] hover:to-[#FF6B00] text-white font-bold text-[0.875rem] tracking-wide rounded-xl transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,107,0,0.3)]"
                 >
                   {loading && <Loader2 className="w-5 h-5 animate-spin" />}
@@ -220,6 +225,10 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={async () => {
+                        if (!accepted) {
+                          setError(t("auth.aceiteObrigatorio"));
+                          return;
+                        }
                         setError("");
                         try {
                           await signInWithGoogle();
@@ -239,12 +248,20 @@ export default function Login() {
                       {t("auth.entrarGoogle")}
                     </button>
 
-                    <p className="text-[0.6875rem] text-[#48484a] text-center leading-relaxed">
-                      {t("auth.consentimento")}{" "}
-                      <a href="/privacidade" className="text-[#86868b] underline hover:text-white">{t("auth.privacidade")}</a>
-                      {" "}&{" "}
-                      <a href="/termos" className="text-[#86868b] underline hover:text-white">{t("auth.termos")}</a>.
-                    </p>
+                    <label className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={accepted}
+                        onChange={(e) => setAccepted(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded border-white/20 bg-white/[0.06] accent-[#FF6B00] cursor-pointer"
+                      />
+                      <span className="text-[0.6875rem] text-[#48484a] leading-relaxed">
+                        {t("auth.aceite")}{" "}
+                        <a href="/privacidade" className="text-[#86868b] underline hover:text-white">{t("auth.privacidade")}</a>
+                        {" "}&{" "}
+                        <a href="/termos" className="text-[#86868b] underline hover:text-white">{t("auth.termos")}</a>.
+                      </span>
+                    </label>
                   </>
                 )}
 

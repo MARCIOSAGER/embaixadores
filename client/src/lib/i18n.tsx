@@ -37,6 +37,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "auth.termos": "Termos de Servico",
     "auth.descricao": "Sistema de gestao do programa de embaixadores do movimento Legendarios.",
     "auth.erroCredenciais": "Email ou senha incorretos",
+    "auth.aceite": "Li e aceito a",
+    "auth.aceiteObrigatorio": "Voce precisa aceitar a Politica de Privacidade para continuar.",
+    "profile.exportarDados": "Exportar Meus Dados",
+    "profile.exportarDesc": "Baixar todos os seus dados pessoais em formato JSON",
+    "profile.excluirConta": "Excluir Minha Conta",
+    "profile.excluirDesc": "Remover permanentemente sua conta e todos os dados associados",
+    "profile.excluirConfirm": "Tem certeza que deseja excluir sua conta? Esta acao e irreversivel e todos os seus dados serao removidos permanentemente.",
+    "profile.excluirSucesso": "Conta excluida com sucesso.",
+    "profile.lgpd": "Seus Dados (LGPD)",
 
     // Dashboard
     "dash.bomDia": "Bom Dia",
@@ -436,6 +445,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "auth.termos": "Terminos de Servicio",
     "auth.descricao": "Sistema de gestion del programa de embajadores del movimiento Legendarios.",
     "auth.erroCredenciais": "Correo o contrasena incorrectos",
+    "auth.aceite": "He leido y acepto la",
+    "auth.aceiteObrigatorio": "Debes aceptar la Politica de Privacidad para continuar.",
+    "profile.exportarDados": "Exportar Mis Datos",
+    "profile.exportarDesc": "Descargar todos tus datos personales en formato JSON",
+    "profile.excluirConta": "Eliminar Mi Cuenta",
+    "profile.excluirDesc": "Eliminar permanentemente tu cuenta y todos los datos asociados",
+    "profile.excluirConfirm": "Estas seguro de que deseas eliminar tu cuenta? Esta accion es irreversible y todos tus datos seran eliminados permanentemente.",
+    "profile.excluirSucesso": "Cuenta eliminada con exito.",
+    "profile.lgpd": "Tus Datos (LGPD)",
 
     // Dashboard
     "dash.bomDia": "Buenos Días",
@@ -835,6 +853,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "auth.termos": "Terms of Service",
     "auth.descricao": "Management system for the ambassadors program of the Legendarios movement.",
     "auth.erroCredenciais": "Incorrect email or password",
+    "auth.aceite": "I have read and accept the",
+    "auth.aceiteObrigatorio": "You must accept the Privacy Policy to continue.",
+    "profile.exportarDados": "Export My Data",
+    "profile.exportarDesc": "Download all your personal data in JSON format",
+    "profile.excluirConta": "Delete My Account",
+    "profile.excluirDesc": "Permanently remove your account and all associated data",
+    "profile.excluirConfirm": "Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.",
+    "profile.excluirSucesso": "Account deleted successfully.",
+    "profile.lgpd": "Your Data (LGPD)",
 
     // Dashboard
     "dash.bomDia": "Good Morning",
