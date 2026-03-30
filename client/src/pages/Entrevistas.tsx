@@ -41,7 +41,7 @@ export default function Entrevistas() {
   function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "", notificar: "both" }); setEditingId(null); }
   function openEdit(ent: any) {
     setEditingId(ent.id);
-    setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "", entrevistadorId: String(ent.entrevistadorId || "") });
+    setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "", entrevistadorId: String(ent.entrevistadorId || ""), notificar: "both" });
     setDialogOpen(true);
   }
   function handleSubmit() {
