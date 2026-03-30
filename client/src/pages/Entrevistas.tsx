@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useEntrevistas, useCreateEntrevista, useUpdateEntrevista, useDeleteEntrevista } from "@/hooks/useSupabase";
+import { useEntrevistas, useCreateEntrevista, useUpdateEntrevista, useDeleteEntrevista, useEmbaixadores } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -29,22 +29,25 @@ export default function Entrevistas() {
   const [selected, setSelected] = useState<any>(null);
   const [notifyTarget, setNotifyTarget] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", notificar: "both" as "both" | "whatsapp" | "email" | "none" });
+  const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: entrevistas, isLoading } = useEntrevistas();
+  const { data: embaixadores } = useEmbaixadores();
+  const activeEmbaixadores = (embaixadores || []).filter((e: any) => e.status === "ativo");
   const createMut = useCreateEntrevista();
   const updateMut = useUpdateEntrevista();
   const deleteMut = useDeleteEntrevista();
 
-  function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", notificar: "both" }); setEditingId(null); }
+  function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "", notificar: "both" }); setEditingId(null); }
   function openEdit(ent: any) {
     setEditingId(ent.id);
-    setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "" });
+    setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "", entrevistadorId: String(ent.entrevistadorId || "") });
     setDialogOpen(true);
   }
   function handleSubmit() {
     if (!form.nomeCandidato.trim() || !form.dataEntrevista) return toast.error(t("ent.nomeObrigatorio"));
-    const d = { nomeCandidato: form.nomeCandidato, emailCandidato: form.emailCandidato || null, telefoneCandidato: form.telefoneCandidato || null, dataEntrevista: dateToTimestamp(form.dataEntrevista), linkMeet: form.linkMeet || null, status: form.status as any, observacoes: form.observacoes || null, indicadoPor: form.indicadoPor || null };
+    if (!form.entrevistadorId && !editingId) return toast.error(t("ent.entrevistadorObrigatorio"));
+    const d = { nomeCandidato: form.nomeCandidato, emailCandidato: form.emailCandidato || null, telefoneCandidato: form.telefoneCandidato || null, dataEntrevista: dateToTimestamp(form.dataEntrevista), linkMeet: form.linkMeet || null, status: form.status as any, observacoes: form.observacoes || null, indicadoPor: form.indicadoPor || null, entrevistadorId: form.entrevistadorId ? Number(form.entrevistadorId) : null };
     const onSuccess = () => {
       toast.success(t("common.sucesso"));
       setDialogOpen(false); resetForm();
@@ -68,6 +71,7 @@ export default function Entrevistas() {
       "Data Entrevista": ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
       "Status": statusPt[ent.status] || ent.status || "",
       "Indicado Por": ent.indicadoPor || "",
+      "Entrevistador": (() => { const e = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return e?.nomeCompleto || ""; })(),
     }));
     exportToXlsx(data, `entrevistas-${new Date().toISOString().split("T")[0]}`);
   }
@@ -80,11 +84,12 @@ export default function Entrevistas() {
       ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
       statusPt[ent.status] || ent.status || "",
       ent.indicadoPor || "",
+      (() => { const e = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return e?.nomeCompleto || ""; })(),
     ]);
     exportGenericPdf(
       "Lista de Entrevistas",
       "Embaixadores dos Legendários",
-      ["Candidato", "Email", "Data", "Status", "Indicado Por"],
+      ["Candidato", "Email", "Data", "Status", "Indicado Por", "Entrevistador"],
       rows,
       "entrevistas"
     );
@@ -167,6 +172,7 @@ export default function Entrevistas() {
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-[#6e6e73]">
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ent.dataEntrevista, locale)}</span>
                         {ent.indicadoPor && <span className="flex items-center gap-1"><User className="w-3 h-3" strokeWidth={1.5} />{ent.indicadoPor}</span>}
+                        {(() => { const entrevistador = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return entrevistador ? <span className="flex items-center gap-1"><UserPlus className="w-3 h-3" strokeWidth={1.5} />{entrevistador.nomeCompleto}</span> : null; })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -215,6 +221,7 @@ export default function Entrevistas() {
                   {selected.emailCandidato && <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{selected.emailCandidato}</span></div>}
                   {selected.telefoneCandidato && <div className="flex items-center gap-3"><Phone className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{selected.telefoneCandidato}</span></div>}
                   {selected.indicadoPor && <div className="flex items-center gap-3"><User className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{t("ent.indicadoPor")}: {selected.indicadoPor}</span></div>}
+                  {(() => { const entrevistador = activeEmbaixadores.find((e: any) => e.id === selected.entrevistadorId); return entrevistador ? <div className="flex items-center gap-3"><UserPlus className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{t("ent.entrevistador")}: {entrevistador.nomeCompleto}</span></div> : null; })()}
                 </div>
 
                 {selected.linkMeet && (
@@ -304,6 +311,15 @@ export default function Entrevistas() {
                   </select>
                 </div>
                 <div><label className="apple-input-label">{t("ent.indicadoPor")}</label><input value={form.indicadoPor} onChange={e => setForm({ ...form, indicadoPor: e.target.value })} className="apple-input" /></div>
+                <div>
+                  <label className="apple-input-label">{t("ent.entrevistador")} *</label>
+                  <select value={form.entrevistadorId} onChange={e => setForm({ ...form, entrevistadorId: e.target.value })} className="apple-input">
+                    <option value="">{t("ent.selecioneEntrevistador")}</option>
+                    {activeEmbaixadores.map((e: any) => (
+                      <option key={e.id} value={e.id}>{e.nomeCompleto}</option>
+                    ))}
+                  </select>
+                </div>
                 <div><label className="apple-input-label">{t("ent.observacoes")}</label><textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3} className="apple-input resize-none" /></div>
 
                 {!editingId && (
