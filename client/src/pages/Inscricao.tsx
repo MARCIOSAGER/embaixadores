@@ -1,30 +1,31 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Check, Loader2, ArrowRight, ArrowLeft, Send, UserCheck } from "lucide-react";
+import { Check, Loader2, ArrowRight, ArrowLeft, Send, UserCheck, Camera, Upload } from "lucide-react";
 
 const LOGO = "/logo-legendarios.png";
 
-/* ============================================================
-   Background images — one per section for visual variety.
-   Using Unsplash source for high-quality free images.
-   ============================================================ */
 const BG_IMAGES = [
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80", // welcome — epic landscape
-  "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1920&q=80", // pessoal — people teamwork
-  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1920&q=80", // legendarios — tech collaboration
-  "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80", // indicacao — leadership meeting
-  "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1920&q=80", // familia — warm family
-  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80", // profissional — workspace
-  "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80", // mercado — analytics
-  "https://images.unsplash.com/photo-1553729459-uj1ef-01-t?w=1920&q=80",       // investimento — growth
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80",
+  "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1920&q=80",
+  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1920&q=80",
+  "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80",
+  "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1920&q=80",
+  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80",
+  "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80",
+  "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=1920&q=80",
 ];
 
 /* ============================================================ */
 type FormData = {
   nomeCompleto: string;
+  dataNascimento: string;
   email: string;
   telefone: string;
   instagram: string;
+  cidade: string;
+  estado: string;
+  fotoFile: File | null;
+  fotoPreview: string;
   numeroLegendario: string;
   topSede: string;
   qtdTopsServidos: string;
@@ -36,6 +37,7 @@ type FormData = {
   nomeSedeInternacional: string;
   cargoLideranca: string;
   estadoCivil: string;
+  nomeEsposa: string;
   qtdFilhos: number;
   idadesFilhos: string;
   profissao: string;
@@ -52,11 +54,12 @@ type FormData = {
 };
 
 const initial: FormData = {
-  nomeCompleto: "", email: "", telefone: "", instagram: "",
+  nomeCompleto: "", dataNascimento: "", email: "", telefone: "", instagram: "",
+  cidade: "", estado: "", fotoFile: null, fotoPreview: "",
   numeroLegendario: "", topSede: "", qtdTopsServidos: "", areaServico: "",
   conhecimentoPrevio: "", indicadoPorEmb: false, nomeIndicador: "",
   sedeInternacional: false, nomeSedeInternacional: "", cargoLideranca: "",
-  estadoCivil: "", qtdFilhos: 0, idadesFilhos: "",
+  estadoCivil: "", nomeEsposa: "", qtdFilhos: 0, idadesFilhos: "",
   profissao: "", areaAtuacao: "", possuiEmpresa: "", instagramEmpresa: "",
   segmentoMercado: "", tempoEmpreendedorismo: "", estruturaEquipe: "",
   investeClubePrivado: "", participaMentoria: "", valorInvestimento: "",
@@ -68,7 +71,7 @@ type Question = {
   key: keyof FormData;
   question: string;
   subtitle?: string;
-  type: "text" | "email" | "tel" | "textarea" | "select" | "radio" | "yesno" | "number";
+  type: "text" | "email" | "tel" | "textarea" | "radio" | "yesno" | "number" | "photo" | "date";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: string; icon?: string }[];
@@ -77,60 +80,72 @@ type Question = {
   sectionIndex: number;
 };
 
+const ESTADOS_BR = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+  "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+];
+
 const questions: Question[] = [
-  // --- Pessoal ---
-  { key: "nomeCompleto", question: "Qual e o seu nome completo?", type: "text", required: true, placeholder: "Digite seu nome completo", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "email", question: "Qual e o seu email profissional?", type: "email", required: true, placeholder: "seu@email.com", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "telefone", question: "Qual e o seu WhatsApp?", subtitle: "Usaremos para contato direto.", type: "tel", required: true, placeholder: "(11) 99999-9999", section: "Dados Pessoais", sectionIndex: 1 },
-  { key: "instagram", question: "Qual e o seu Instagram?", type: "text", required: true, placeholder: "@seu.perfil", section: "Dados Pessoais", sectionIndex: 1 },
+  // --- Foto ---
+  { key: "fotoFile", question: "Envie uma foto sua", subtitle: "Uma foto de rosto, bem iluminada. Pode tirar agora pela c\u00e2mera ou enviar da galeria.", type: "photo", required: true, section: "Sua Foto", sectionIndex: 1 },
+
+  // --- Dados Pessoais ---
+  { key: "nomeCompleto", question: "Qual \u00e9 o seu nome completo?", type: "text", required: true, placeholder: "Digite seu nome completo", section: "Dados Pessoais", sectionIndex: 1 },
+  { key: "dataNascimento", question: "Qual \u00e9 a sua data de nascimento?", type: "date", required: true, section: "Dados Pessoais", sectionIndex: 1 },
+  { key: "email", question: "Qual \u00e9 o seu email profissional?", type: "email", required: true, placeholder: "seu@email.com", section: "Dados Pessoais", sectionIndex: 1 },
+  { key: "telefone", question: "Qual \u00e9 o seu WhatsApp?", subtitle: "Usaremos para contato direto.", type: "tel", required: true, placeholder: "(11) 99999-9999", section: "Dados Pessoais", sectionIndex: 1 },
+  { key: "instagram", question: "Qual \u00e9 o seu Instagram?", type: "text", required: true, placeholder: "@seu.perfil", section: "Dados Pessoais", sectionIndex: 1 },
+  { key: "cidade", question: "Em qual cidade voc\u00ea mora?", type: "text", required: true, placeholder: "Ex: S\u00e3o Paulo", section: "Dados Pessoais", sectionIndex: 1 },
+  { key: "estado", question: "Qual o seu estado?", type: "text", required: true, placeholder: "Ex: SP", section: "Dados Pessoais", sectionIndex: 1 },
 
   // --- Legendarios ---
-  { key: "numeroLegendario", question: "Qual e o seu numero de Legendario?", type: "text", required: true, placeholder: "Ex: L#91105", section: "Legendarios", sectionIndex: 2 },
-  { key: "topSede", question: "Qual e o seu TOP Sede?", type: "text", required: true, placeholder: "Nome do seu TOP Sede", section: "Legendarios", sectionIndex: 2 },
-  { key: "qtdTopsServidos", question: "Quantos TOPs voce ja serviu?", type: "text", required: true, placeholder: "Ex: 3", section: "Legendarios", sectionIndex: 2 },
-  { key: "areaServico", question: "Em qual area voce serve ou serviu?", type: "textarea", required: true, placeholder: "Descreva sua area de servico...", section: "Legendarios", sectionIndex: 2 },
-  { key: "conhecimentoPrevio", question: "O que voce sabe sobre os Embaixadores?", type: "textarea", required: true, placeholder: "Conte o que voce conhece do programa...", section: "Legendarios", sectionIndex: 2 },
+  { key: "numeroLegendario", question: "Qual \u00e9 o seu n\u00famero de Legend\u00e1rio?", type: "text", required: true, placeholder: "Ex: L#91105", section: "Legend\u00e1rios", sectionIndex: 2 },
+  { key: "topSede", question: "Qual \u00e9 o seu TOP Sede?", type: "text", required: true, placeholder: "Nome do seu TOP Sede", section: "Legend\u00e1rios", sectionIndex: 2 },
+  { key: "qtdTopsServidos", question: "Quantos TOPs voc\u00ea j\u00e1 serviu?", type: "text", required: true, placeholder: "Ex: 3", section: "Legend\u00e1rios", sectionIndex: 2 },
+  { key: "areaServico", question: "Em qual \u00e1rea voc\u00ea serve ou serviu?", type: "textarea", required: true, placeholder: "Descreva sua \u00e1rea de servi\u00e7o...", section: "Legend\u00e1rios", sectionIndex: 2 },
+  { key: "conhecimentoPrevio", question: "O que voc\u00ea sabe sobre os Embaixadores?", type: "textarea", required: true, placeholder: "Conte o que voc\u00ea conhece do programa...", section: "Legend\u00e1rios", sectionIndex: 2 },
 
-  // --- Indicacao ---
-  { key: "indicadoPorEmb", question: "Voce foi indicado por algum embaixador?", type: "yesno", required: true, section: "Indicacao", sectionIndex: 3 },
-  { key: "nomeIndicador", question: "Quem indicou voce?", type: "text", showIf: (d) => d.indicadoPorEmb, placeholder: "Nome do embaixador", section: "Indicacao", sectionIndex: 3 },
-  { key: "sedeInternacional", question: "Voce participa de alguma sede internacional?", type: "yesno", required: true, section: "Indicacao", sectionIndex: 3 },
-  { key: "nomeSedeInternacional", question: "Qual sede internacional?", type: "text", showIf: (d) => d.sedeInternacional, placeholder: "Nome da sede", section: "Indicacao", sectionIndex: 3 },
-  { key: "cargoLideranca", question: "Ocupa algum cargo de lideranca?", subtitle: "Na igreja, no movimento ou na comunidade.", type: "text", required: true, placeholder: "Ex: Lider de celula, Diacono...", section: "Indicacao", sectionIndex: 3 },
+  // --- Indica\u00e7\u00e3o ---
+  { key: "indicadoPorEmb", question: "Voc\u00ea foi indicado por algum embaixador?", type: "yesno", required: true, section: "Indica\u00e7\u00e3o", sectionIndex: 3 },
+  { key: "nomeIndicador", question: "Quem indicou voc\u00ea?", type: "text", showIf: (d) => d.indicadoPorEmb, placeholder: "Nome do embaixador", section: "Indica\u00e7\u00e3o", sectionIndex: 3 },
+  { key: "sedeInternacional", question: "Voc\u00ea participa de alguma sede internacional?", type: "yesno", required: true, section: "Indica\u00e7\u00e3o", sectionIndex: 3 },
+  { key: "nomeSedeInternacional", question: "Qual sede internacional?", type: "text", showIf: (d) => d.sedeInternacional, placeholder: "Nome da sede", section: "Indica\u00e7\u00e3o", sectionIndex: 3 },
+  { key: "cargoLideranca", question: "Ocupa algum cargo de lideran\u00e7a?", subtitle: "Na igreja, no movimento ou na comunidade.", type: "text", required: true, placeholder: "Ex: L\u00edder de c\u00e9lula, Di\u00e1cono...", section: "Indica\u00e7\u00e3o", sectionIndex: 3 },
 
   // --- Familia ---
   {
-    key: "estadoCivil", question: "Qual e o seu estado civil?", type: "radio", required: true, section: "Familia", sectionIndex: 4,
+    key: "estadoCivil", question: "Qual \u00e9 o seu estado civil?", type: "radio", required: true, section: "Fam\u00edlia", sectionIndex: 4,
     options: [
-      { label: "Solteiro(a)", value: "solteiro", icon: "1" },
-      { label: "Casado(a)", value: "casado", icon: "2" },
-      { label: "Divorciado(a)", value: "divorciado", icon: "3" },
-      { label: "Viuvo(a)", value: "viuvo", icon: "4" },
+      { label: "Solteiro(a)", value: "solteiro", icon: "A" },
+      { label: "Casado(a)", value: "casado", icon: "B" },
+      { label: "Divorciado(a)", value: "divorciado", icon: "C" },
+      { label: "Vi\u00favo(a)", value: "viuvo", icon: "D" },
     ],
   },
-  { key: "qtdFilhos", question: "Quantos filhos voce tem?", type: "number", required: true, section: "Familia", sectionIndex: 4 },
-  { key: "idadesFilhos", question: "Quais as idades dos seus filhos?", type: "text", showIf: (d) => d.qtdFilhos > 0, placeholder: "Ex: 5, 8 e 12 anos", section: "Familia", sectionIndex: 4 },
+  { key: "nomeEsposa", question: "Qual \u00e9 o nome da sua esposa?", type: "text", showIf: (d) => d.estadoCivil === "casado", placeholder: "Nome completo", section: "Fam\u00edlia", sectionIndex: 4 },
+  { key: "qtdFilhos", question: "Quantos filhos voc\u00ea tem?", type: "number", required: true, section: "Fam\u00edlia", sectionIndex: 4 },
+  { key: "idadesFilhos", question: "Quais as idades dos seus filhos?", type: "text", showIf: (d) => d.qtdFilhos > 0, placeholder: "Ex: 5, 8 e 12 anos", section: "Fam\u00edlia", sectionIndex: 4 },
 
   // --- Profissional ---
-  { key: "profissao", question: "Qual e a sua profissao?", type: "text", required: true, placeholder: "Sua profissao principal", section: "Profissional", sectionIndex: 5 },
-  { key: "areaAtuacao", question: "Qual a sua area de atuacao?", type: "text", required: true, placeholder: "Ex: Tecnologia, Saude, Educacao...", section: "Profissional", sectionIndex: 5 },
-  { key: "possuiEmpresa", question: "Possui empresa?", subtitle: "Se sim, qual o nome?", type: "text", required: true, placeholder: "Nome da empresa ou 'Nao'", section: "Profissional", sectionIndex: 5 },
+  { key: "profissao", question: "Qual \u00e9 a sua profiss\u00e3o?", type: "text", required: true, placeholder: "Sua profiss\u00e3o principal", section: "Profissional", sectionIndex: 5 },
+  { key: "areaAtuacao", question: "Qual a sua \u00e1rea de atua\u00e7\u00e3o?", type: "text", required: true, placeholder: "Ex: Tecnologia, Sa\u00fade, Educa\u00e7\u00e3o...", section: "Profissional", sectionIndex: 5 },
+  { key: "possuiEmpresa", question: "Possui empresa?", subtitle: "Se sim, qual o nome?", type: "text", required: true, placeholder: "Nome da empresa ou 'N\u00e3o'", section: "Profissional", sectionIndex: 5 },
   { key: "instagramEmpresa", question: "Qual o Instagram da empresa?", type: "text", placeholder: "@empresa (opcional)", section: "Profissional", sectionIndex: 5 },
 
   // --- Mercado ---
   {
     key: "segmentoMercado", question: "Qual o seu segmento de mercado?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
     options: [
-      { label: "Servicos", value: "servicos", icon: "A" },
-      { label: "Varejo e comercio", value: "varejo", icon: "B" },
-      { label: "Industria", value: "industria", icon: "C" },
+      { label: "Servi\u00e7os", value: "servicos", icon: "A" },
+      { label: "Varejo e com\u00e9rcio", value: "varejo", icon: "B" },
+      { label: "Ind\u00fastria", value: "industria", icon: "C" },
       { label: "Infoprodutos / digitais", value: "digital", icon: "D" },
-      { label: "Saude", value: "saude", icon: "E" },
+      { label: "Sa\u00fade", value: "saude", icon: "E" },
       { label: "Outro", value: "outro", icon: "F" },
     ],
   },
   {
-    key: "tempoEmpreendedorismo", question: "Ha quanto tempo voce empreende?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
+    key: "tempoEmpreendedorismo", question: "H\u00e1 quanto tempo voc\u00ea empreende?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
     options: [
       { label: "Menos de 1 ano", value: "<1", icon: "A" },
       { label: "1 a 3 anos", value: "1-3", icon: "B" },
@@ -139,7 +154,7 @@ const questions: Question[] = [
     ],
   },
   {
-    key: "estruturaEquipe", question: "Como e a estrutura da sua equipe?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
+    key: "estruturaEquipe", question: "Como \u00e9 a estrutura da sua equipe?", type: "radio", required: true, section: "Mercado", sectionIndex: 6,
     options: [
       { label: "Trabalho sozinho(a)", value: "solo", icon: "A" },
       { label: "Equipe interna", value: "interna", icon: "B" },
@@ -149,25 +164,25 @@ const questions: Question[] = [
 
   // --- Investimento ---
   {
-    key: "investeClubePrivado", question: "Voce investiria em um clube privado de desenvolvimento?", type: "radio", required: true, section: "Investimento", sectionIndex: 7,
+    key: "investeClubePrivado", question: "Voc\u00ea investiria em um clube privado de desenvolvimento?", type: "radio", required: true, section: "Investimento", sectionIndex: 7,
     options: [
       { label: "Sim, acredito no valor", value: "sim", icon: "A" },
       { label: "Sim, mas ainda estou avaliando", value: "avaliando", icon: "B" },
-      { label: "Nao, prefiro conteudo gratuito", value: "nao", icon: "C" },
+      { label: "N\u00e3o, prefiro conte\u00fado gratuito", value: "nao", icon: "C" },
     ],
   },
-  { key: "participaMentoria", question: "Participa de alguma mentoria atualmente?", type: "text", required: true, placeholder: "Sim/Nao - qual?", section: "Investimento", sectionIndex: 7 },
+  { key: "participaMentoria", question: "Participa de alguma mentoria atualmente?", type: "text", required: true, placeholder: "Sim/N\u00e3o - qual?", section: "Investimento", sectionIndex: 7 },
   {
-    key: "valorInvestimento", question: "Quanto ja investiu em desenvolvimento pessoal e profissional?", type: "radio", required: true, section: "Investimento", sectionIndex: 7,
+    key: "valorInvestimento", question: "Quanto j\u00e1 investiu em desenvolvimento pessoal e profissional?", type: "radio", required: true, section: "Investimento", sectionIndex: 7,
     options: [
-      { label: "Ate R$ 10 mil", value: "10k", icon: "A" },
+      { label: "At\u00e9 R$ 10 mil", value: "10k", icon: "A" },
       { label: "R$ 20 a 30 mil", value: "20-30k", icon: "B" },
       { label: "R$ 40 a 60 mil", value: "40-60k", icon: "C" },
       { label: "R$ 80 a 100 mil", value: "80-100k", icon: "D" },
       { label: "Mais de R$ 100 mil", value: "100k+", icon: "E" },
     ],
   },
-  { key: "disponibilidadeReuniao", question: "Qual a sua disponibilidade para reunioes?", type: "text", required: true, placeholder: "Ex: Quartas a noite, Sabados pela manha...", section: "Investimento", sectionIndex: 7 },
+  { key: "disponibilidadeReuniao", question: "Qual a sua disponibilidade para reuni\u00f5es?", type: "text", required: true, placeholder: "Ex: Quartas \u00e0 noite, S\u00e1bados pela manh\u00e3...", section: "Investimento", sectionIndex: 7 },
 ];
 
 /* ============================================================
@@ -208,7 +223,7 @@ function OptionButton({
 function YesNoButtons({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex gap-4">
-      {[{ label: "Sim", val: true }, { label: "Nao", val: false }].map((opt) => (
+      {[{ label: "Sim", val: true }, { label: "N\u00e3o", val: false }].map((opt) => (
         <button
           key={String(opt.val)}
           type="button"
@@ -226,12 +241,71 @@ function YesNoButtons({ value, onChange }: { value: boolean; onChange: (v: boole
   );
 }
 
+function PhotoUpload({
+  preview, onChange,
+}: { preview: string; onChange: (file: File, preview: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    const url = URL.createObjectURL(file);
+    onChange(file, url);
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      {/* Preview circle */}
+      <div
+        className={`w-40 h-40 rounded-full border-4 overflow-hidden flex items-center justify-center transition-all duration-300
+          ${preview
+            ? "border-[#FF6B00] shadow-[0_0_40px_rgba(255,107,0,0.25)]"
+            : "border-white/20 border-dashed"
+          }`}
+      >
+        {preview ? (
+          <img src={preview} alt="Foto" className="w-full h-full object-cover" />
+        ) : (
+          <Camera className="w-12 h-12 text-white/30" />
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => { if (fileRef.current) { fileRef.current.setAttribute("capture", "user"); fileRef.current.click(); } }}
+          className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-white/10 bg-white/5 text-white/80 text-sm font-medium hover:border-white/25 hover:bg-white/8 transition-all cursor-pointer"
+        >
+          <Camera className="w-4 h-4" />
+          C\u00e2mera
+        </button>
+        <button
+          type="button"
+          onClick={() => { if (fileRef.current) { fileRef.current.removeAttribute("capture"); fileRef.current.click(); } }}
+          className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-[#FF6B00]/50 bg-[#FF6B00]/10 text-white text-sm font-medium hover:bg-[#FF6B00]/20 transition-all cursor-pointer"
+        >
+          <Upload className="w-4 h-4" />
+          Galeria
+        </button>
+      </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+      />
+    </div>
+  );
+}
+
 /* ============================================================
    MAIN COMPONENT
    ============================================================ */
 
 export default function Inscricao() {
-  const [qIdx, setQIdx] = useState(-1); // -1 = welcome screen
+  const [qIdx, setQIdx] = useState(-1);
   const [form, setForm] = useState<FormData>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -243,7 +317,6 @@ export default function Inscricao() {
   const [refEmbId, setRefEmbId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
-  // Filter visible questions
   const visibleQuestions = questions.filter((q) => !q.showIf || q.showIf(form));
   const current = qIdx >= 0 ? visibleQuestions[qIdx] : null;
   const totalVisible = visibleQuestions.length;
@@ -251,7 +324,6 @@ export default function Inscricao() {
   const isLast = qIdx === totalVisible - 1;
   const bgIdx = current ? current.sectionIndex : 0;
 
-  // Read referral code from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("ref");
@@ -271,9 +343,8 @@ export default function Inscricao() {
       });
   }, []);
 
-  // Auto-focus text inputs
   useEffect(() => {
-    if (current && (current.type === "text" || current.type === "email" || current.type === "tel" || current.type === "textarea" || current.type === "number")) {
+    if (current && (current.type === "text" || current.type === "email" || current.type === "tel" || current.type === "textarea" || current.type === "number" || current.type === "date")) {
       setTimeout(() => inputRef.current?.focus(), 350);
     }
   }, [qIdx]);
@@ -285,6 +356,13 @@ export default function Inscricao() {
 
   function validate(): boolean {
     if (!current) return true;
+    if (current.type === "photo") {
+      if (current.required && !form.fotoFile) {
+        setFieldError("Por favor, envie uma foto");
+        return false;
+      }
+      return true;
+    }
     if (!current.required) return true;
     const v = form[current.key];
     if (v === "" || v === null || v === undefined) {
@@ -292,7 +370,7 @@ export default function Inscricao() {
       return false;
     }
     if (current.type === "email" && typeof v === "string" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-      setFieldError("Digite um email valido");
+      setFieldError("Digite um email v\u00e1lido");
       return false;
     }
     return true;
@@ -319,16 +397,34 @@ export default function Inscricao() {
     }
   }
 
+  async function uploadPhoto(): Promise<string | null> {
+    if (!form.fotoFile) return null;
+    const ext = form.fotoFile.name.split(".").pop() || "jpg";
+    const path = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from("inscricoes")
+      .upload(path, form.fotoFile, { upsert: true });
+    if (uploadErr) throw uploadErr;
+    const { data: urlData } = supabase.storage.from("inscricoes").getPublicUrl(path);
+    return urlData.publicUrl;
+  }
+
   async function submit() {
     if (!validate()) return;
     setSubmitting(true);
     setError("");
     try {
+      const fotoUrl = await uploadPhoto();
       const { error: err } = await supabase.from("inscricoes").insert({
         nomeCompleto: form.nomeCompleto,
+        dataNascimento: form.dataNascimento || null,
         email: form.email,
         telefone: form.telefone,
         instagram: form.instagram || null,
+        cidade: form.cidade || null,
+        estado: form.estado || null,
+        fotoUrl,
+        nomeEsposa: form.nomeEsposa || null,
         numeroLegendario: form.numeroLegendario || null,
         topSede: form.topSede || null,
         qtdTopsServidos: form.qtdTopsServidos || null,
@@ -377,12 +473,12 @@ export default function Inscricao() {
               <Check className="w-12 h-12 text-white" strokeWidth={3} />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-4">Inscricao enviada!</h1>
+          <h1 className="text-3xl font-bold text-white mb-4">Inscri\u00e7\u00e3o enviada!</h1>
           <p className="text-white/60 text-base leading-relaxed mb-2">
             Recebemos seus dados com sucesso.
           </p>
           <p className="text-white/60 text-base leading-relaxed">
-            Nossa equipe analisara sua candidatura e entrara em contato em breve pelo WhatsApp.
+            Nossa equipe analisar\u00e1 sua candidatura e entrar\u00e1 em contato em breve pelo WhatsApp.
           </p>
           {referrer && (
             <div className="mt-8 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10">
@@ -399,22 +495,21 @@ export default function Inscricao() {
   if (isWelcome) {
     return (
       <div className="min-h-dvh relative overflow-hidden flex items-center justify-center">
-        {/* Background */}
         <div className="absolute inset-0">
           <img src={BG_IMAGES[0]} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
         </div>
 
         <div className="relative z-10 text-center px-6 max-w-lg slide-up">
-          <img src={LOGO} alt="Legendarios" className="h-16 mx-auto mb-10 drop-shadow-2xl" />
+          <img src={LOGO} alt="Legend\u00e1rios" className="h-16 mx-auto mb-10 drop-shadow-2xl" />
 
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-5 leading-tight tracking-tight">
             Embaixadores dos<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#ff9a44]">Legendarios</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-[#ff9a44]">Legend\u00e1rios</span>
           </h1>
 
           <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-md mx-auto">
-            Faca parte deste seleto grupo de lideres que representam o movimento Legendarios.
+            Fa\u00e7a parte deste seleto grupo de l\u00edderes que representam o movimento Legend\u00e1rios.
           </p>
 
           {referrer && (
@@ -423,7 +518,7 @@ export default function Inscricao() {
                 {referrer.nomeCompleto.charAt(0)}
               </div>
               <span className="text-sm text-white/80">
-                Voce foi convidado por <span className="text-white font-semibold">{referrer.nomeCompleto}</span>
+                Voc\u00ea foi convidado por <span className="text-white font-semibold">{referrer.nomeCompleto}</span>
               </span>
             </div>
           )}
@@ -433,7 +528,7 @@ export default function Inscricao() {
             onClick={() => { setDirection("next"); setQIdx(0); }}
             className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] hover:from-[#e55f00] hover:to-[#FF6B00] text-white font-bold px-10 py-4 rounded-full text-lg transition-all duration-300 shadow-[0_8px_40px_rgba(255,107,0,0.35)] hover:shadow-[0_12px_50px_rgba(255,107,0,0.5)] hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
           >
-            Comecar inscricao
+            Come\u00e7ar inscri\u00e7\u00e3o
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
           </button>
 
@@ -448,7 +543,6 @@ export default function Inscricao() {
 
   return (
     <div className="min-h-dvh relative overflow-hidden flex flex-col" onKeyDown={handleKeyDown}>
-      {/* Background image with overlay */}
       <div className="absolute inset-0 transition-opacity duration-700">
         <img
           src={BG_IMAGES[bgIdx] || BG_IMAGES[0]}
@@ -469,7 +563,7 @@ export default function Inscricao() {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-2">
-        <img src={LOGO} alt="Legendarios" className="h-8 opacity-70" />
+        <img src={LOGO} alt="Legend\u00e1rios" className="h-8 opacity-70" />
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/40 font-medium tracking-wider uppercase">
             {current.section}
@@ -480,19 +574,17 @@ export default function Inscricao() {
         </div>
       </header>
 
-      {/* Main content — centered question */}
+      {/* Main content */}
       <div className="relative z-10 flex-1 flex items-center justify-center px-6 pb-28">
         <div
           className={`w-full max-w-xl ${direction === "next" ? "slide-up" : "slide-down"}`}
           key={`q-${qIdx}`}
         >
-          {/* Question number */}
           <div className="flex items-center gap-3 mb-4">
             <span className="text-[#FF6B00] font-mono text-sm font-bold">{qIdx + 1}</span>
             <ArrowRight className="w-3 h-3 text-[#FF6B00]/60" />
           </div>
 
-          {/* Question text */}
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-3">
             {current.question}
           </h2>
@@ -502,6 +594,27 @@ export default function Inscricao() {
 
           {/* Input area */}
           <div className="mt-8">
+            {current.type === "photo" && (
+              <PhotoUpload
+                preview={form.fotoPreview}
+                onChange={(file, preview) => {
+                  setForm((p) => ({ ...p, fotoFile: file, fotoPreview: preview }));
+                  setFieldError("");
+                }}
+              />
+            )}
+
+            {current.type === "date" && (
+              <input
+                ref={inputRef as React.RefObject<HTMLInputElement>}
+                type="date"
+                value={form[current.key] as string}
+                onChange={(e) => set(current.key, e.target.value as any)}
+                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-xl sm:text-2xl text-white focus:outline-none transition-colors duration-300 caret-[#FF6B00] [color-scheme:dark]"
+                autoFocus
+              />
+            )}
+
             {(current.type === "text" || current.type === "email" || current.type === "tel") && (
               <input
                 ref={inputRef as React.RefObject<HTMLInputElement>}
@@ -549,7 +662,6 @@ export default function Inscricao() {
                     selected={form[current.key] === opt.value}
                     onClick={() => {
                       set(current.key, opt.value as any);
-                      // Auto-advance on radio selection after brief delay
                       setTimeout(() => {
                         if (!isLast) {
                           setDirection("next");
@@ -576,16 +688,10 @@ export default function Inscricao() {
             )}
           </div>
 
-          {/* Error */}
-          {fieldError && (
-            <p className="mt-4 text-red-400 text-sm font-medium">{fieldError}</p>
-          )}
-          {error && (
-            <p className="mt-4 text-red-400 text-sm font-medium">{error}</p>
-          )}
+          {fieldError && <p className="mt-4 text-red-400 text-sm font-medium">{fieldError}</p>}
+          {error && <p className="mt-4 text-red-400 text-sm font-medium">{error}</p>}
 
-          {/* Enter hint for text fields */}
-          {(current.type === "text" || current.type === "email" || current.type === "tel" || current.type === "textarea" || current.type === "number") && (
+          {(current.type === "text" || current.type === "email" || current.type === "tel" || current.type === "textarea" || current.type === "number" || current.type === "date") && (
             <p className="mt-6 text-white/25 text-xs">
               Pressione <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/40 font-mono text-[10px]">Enter</kbd> para continuar
             </p>
@@ -614,7 +720,7 @@ export default function Inscricao() {
               className="flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] text-white font-bold px-8 py-3 rounded-full text-sm transition-all duration-200 shadow-[0_4px_24px_rgba(255,107,0,0.3)] hover:shadow-[0_8px_32px_rgba(255,107,0,0.45)] hover:scale-[1.03] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Enviar inscricao
+              Enviar inscri\u00e7\u00e3o
             </button>
           ) : (
             <button
@@ -629,7 +735,6 @@ export default function Inscricao() {
         </div>
       </div>
 
-      {/* Animations */}
       <style>{`
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(30px); }

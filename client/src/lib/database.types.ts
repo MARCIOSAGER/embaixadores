@@ -159,6 +159,11 @@ export type Database = {
           participaMentoria: string | null;
           valorInvestimento: string | null;
           disponibilidadeReuniao: string | null;
+          fotoUrl: string | null;
+          nomeEsposa: string | null;
+          dataNascimento: string | null;
+          cidade: string | null;
+          estado: string | null;
           embaixadorIndicadorId: number | null;
           codigoIndicacao: string | null;
           status: string;
