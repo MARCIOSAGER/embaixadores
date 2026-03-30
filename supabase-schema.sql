@@ -113,6 +113,7 @@ CREATE TABLE entrevistas (
   status entrevista_status NOT NULL DEFAULT 'agendada',
   observacoes TEXT,
   "indicadoPor" VARCHAR(255),
+  "entrevistadorId" INTEGER REFERENCES embaixadores(id),
   "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
 );

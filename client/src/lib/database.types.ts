@@ -119,6 +119,7 @@ export type Database = {
           status: "agendada" | "realizada" | "aprovada" | "reprovada" | "cancelada";
           observacoes: string | null;
           indicadoPor: string | null;
+          entrevistadorId: number | null;
           createdAt: string;
           updatedAt: string;
         };

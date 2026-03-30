@@ -1,4 +1,4 @@
-import { serial, pgTable, pgEnum, text, timestamp, varchar, boolean, bigint } from "drizzle-orm/pg-core";
+import { serial, pgTable, pgEnum, text, timestamp, varchar, boolean, bigint, integer } from "drizzle-orm/pg-core";
 
 // Enums
 export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
@@ -132,6 +132,7 @@ export const entrevistas = pgTable("entrevistas", {
   status: entrevistaStatusEnum("status").default("agendada").notNull(),
   observacoes: text("observacoes"),
   indicadoPor: varchar("indicadoPor", { length: 255 }),
+  entrevistadorId: integer("entrevistadorId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
