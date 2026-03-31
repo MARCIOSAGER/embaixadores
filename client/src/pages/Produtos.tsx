@@ -6,10 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import {
   Plus, Search, Edit2, Trash2, ShoppingBag, Package, PackageX,
-  DollarSign, Loader2, Download, FileDown, ImageIcon, Upload, X,
+  DollarSign, Loader2, Download, FileDown, ImageIcon, Upload, X, Mail,
 } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 
@@ -50,6 +53,7 @@ export default function Produtos() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,6 +231,36 @@ export default function Produtos() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const statusPt: Record<string, string> = {
+      disponivel: "Disponivel",
+      esgotado: "Esgotado",
+      pre_venda: "Pre-venda",
+    };
+    const rows = filtered.map((p: any) => [
+      p.nome || "",
+      p.sku || "\u2014",
+      p.categoria || "",
+      formatBRL(p.preco),
+      String(p.estoque ?? 0),
+      statusPt[p.status] || p.status || "",
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Catalogo de Produtos",
+      "Embaixadores dos Legendarios",
+      ["Nome", "SKU", "Categoria", "Preco", "Estoque", "Status"],
+      rows,
+    );
+    const filename = `produtos-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   const filters = [
     { key: "all", label: t("common.todos") },
     ...CATEGORIAS.map((c) => ({ key: c, label: t(CATEGORIA_I18N[c]) })),
@@ -242,6 +276,14 @@ export default function Produtos() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("prod.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -269,19 +311,11 @@ export default function Produtos() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { icon: ShoppingBag, val: stats.total, label: t("prod.total"), color: "#FF6B00" },
-            { icon: Package, val: stats.emEstoque, label: t("prod.emEstoque"), color: "#30D158" },
-            { icon: PackageX, val: stats.esgotados, label: t("prod.esgotados"), color: "#FF453A" },
-            { icon: DollarSign, val: formatBRL(stats.valorTotal), label: t("prod.valorEstoque"), color: "#FF9F0A" },
-          ].map(({ icon: Icon, val, label, color }) => (
-            <div key={label} className="apple-card p-3 text-center">
-              <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} strokeWidth={1.5} />
-              <p className="text-lg font-bold text-white">{val}</p>
-              <p className="text-[0.625rem] text-[#6e6e73]">{label}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatsCard icon={ShoppingBag} value={stats.total} label={t("prod.total")} color="#FF6B00" delay={50} />
+          <StatsCard icon={Package} value={stats.emEstoque} label={t("prod.emEstoque")} color="#30D158" delay={100} />
+          <StatsCard icon={PackageX} value={stats.esgotados} label={t("prod.esgotados")} color="#FF453A" delay={150} />
+          <StatsCard icon={DollarSign} value={formatBRL(stats.valorTotal)} label={t("prod.valorEstoque")} color="#FF9F0A" delay={200} />
         </div>
 
         {/* Search + Filter tabs */}
@@ -587,6 +621,13 @@ export default function Produtos() {
               setConfirmDelete(null);
             }
           }}
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
       </div>
     </DashboardLayout>

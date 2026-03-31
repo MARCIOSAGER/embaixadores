@@ -4,9 +4,13 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, DollarSign, Search, Loader2, Download, Clock, CheckCircle, AlertTriangle, FileDown } from "lucide-react";
+import { Plus, Edit2, Trash2, DollarSign, Search, Loader2, Download, Clock, CheckCircle, AlertTriangle, FileDown, Mail } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 function formatDate(ts: number | null | undefined, locale: string) {
@@ -40,6 +44,7 @@ export default function Pagamentos() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [form, setForm] = useState({ embaixadorId: "", valor: "", dataVencimento: "", dataPagamento: "", status: "pendente", observacoes: "" });
 
   const { data: pagamentos, isLoading } = usePagamentos();
@@ -134,6 +139,31 @@ export default function Pagamentos() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const statusPt: Record<string, string> = { pendente: "Pendente", pago: "Pago", atrasado: "Atrasado" };
+    const rows = filtered.map((p: any) => [
+      embMap[p.embaixadorId] || `ID ${p.embaixadorId}`,
+      formatCurrency(p.valor),
+      p.dataVencimento ? new Date(p.dataVencimento).toLocaleDateString("pt-BR") : "",
+      p.dataPagamento ? new Date(p.dataPagamento).toLocaleDateString("pt-BR") : "",
+      statusPt[p.status] || p.status || "",
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Relatorio de Pagamentos",
+      "Embaixadores dos Legendarios",
+      ["Embaixador", "Valor", "Vencimento", "Pagamento", "Status"],
+      rows,
+    );
+    const filename = `pagamentos-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -144,6 +174,14 @@ export default function Pagamentos() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("pag.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -167,25 +205,11 @@ export default function Pagamentos() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { label: t("pag.totalPendente"), value: formatCurrency(String(stats.pendente)), color: "#FF9F0A", bg: "rgba(255,159,10,0.14)", icon: Clock },
-            { label: t("pag.totalPago"), value: formatCurrency(String(stats.pago)), color: "#30D158", bg: "rgba(48,209,88,0.14)", icon: CheckCircle },
-            { label: t("pag.totalAtrasado"), value: formatCurrency(String(stats.atrasado)), color: "#FF453A", bg: "rgba(255,69,58,0.14)", icon: AlertTriangle },
-          ].map((stat) => (
-            <div key={stat.label} className="apple-card p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: stat.bg }}>
-                  <stat.icon className="w-5 h-5" style={{ color: stat.color }} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-[0.6875rem] text-[#86868b] uppercase tracking-wide">{stat.label}</p>
-                  <p className="text-[1.125rem] font-bold text-white tracking-[-0.02em]">{stat.value}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <StatsCard icon={Clock} value={formatCurrency(String(stats.pendente))} label={t("pag.totalPendente")} color="#FF9F0A" delay={50} />
+          <StatsCard icon={CheckCircle} value={formatCurrency(String(stats.pago))} label={t("pag.totalPago")} color="#30D158" delay={100} />
+          <StatsCard icon={AlertTriangle} value={formatCurrency(String(stats.atrasado))} label={t("pag.totalAtrasado")} color="#FF453A" delay={150} />
         </div>
 
         {/* Search */}
@@ -311,6 +335,13 @@ export default function Pagamentos() {
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
           onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
       </div>
     </DashboardLayout>

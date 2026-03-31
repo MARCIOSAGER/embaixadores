@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle, FileDown, Send, Search, Users, Clock, CheckCircle2, XCircle } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
 import { sendReportByEmail } from "@/lib/sendReportByEmail";
@@ -206,20 +207,12 @@ export default function Entrevistas() {
           </div>
         </div>
 
-        {/* Mini Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { icon: Users, val: stats.total, label: t("ent.total"), color: "#FF6B00" },
-            { icon: Clock, val: stats.agendadas, label: t("ent.agendadas"), color: "#FF6B00" },
-            { icon: CheckCircle2, val: stats.aprovadas, label: t("ent.aprovadas"), color: "#30D158" },
-            { icon: XCircle, val: stats.reprovadas, label: t("ent.reprovadas"), color: "#FF453A" },
-          ].map(({ icon: Icon, val, label, color }) => (
-            <div key={label} className="apple-card p-3 text-center">
-              <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} strokeWidth={1.5} />
-              <p className="text-lg font-bold text-white">{val}</p>
-              <p className="text-[0.625rem] text-[#6e6e73]">{label}</p>
-            </div>
-          ))}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatsCard icon={Users} value={stats.total} label={t("ent.total")} color="#FF6B00" delay={50} />
+          <StatsCard icon={Clock} value={stats.agendadas} label={t("ent.agendadas")} color="#FF6B00" delay={100} />
+          <StatsCard icon={CheckCircle2} value={stats.aprovadas} label={t("ent.aprovadas")} color="#30D158" delay={150} />
+          <StatsCard icon={XCircle} value={stats.reprovadas} label={t("ent.reprovadas")} color="#FF453A" delay={200} />
         </div>
 
         {/* Search + Filters */}

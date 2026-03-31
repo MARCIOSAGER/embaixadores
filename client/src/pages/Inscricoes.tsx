@@ -9,6 +9,7 @@ import {
   Mail, Phone, MapPin, Download, FileDown, Loader2, UserCheck, Instagram,
   Briefcase, Building2, Heart, Globe, DollarSign, Calendar, Video
 } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
 import { sendReportByEmail } from "@/lib/sendReportByEmail";
@@ -221,20 +222,12 @@ export default function Inscricoes() {
           </div>
         </div>
 
-        {/* Mini Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { icon: ClipboardList, val: stats.total, label: t("insc.mgmt.total"), color: "#FF6B00" },
-            { icon: Clock, val: stats.pendentes, label: t("insc.mgmt.pendentes"), color: "#FF9F0A" },
-            { icon: Video, val: stats.entrevistando, label: t("insc.mgmt.entrevistando"), color: "#0A84FF" },
-            { icon: CheckCircle2, val: stats.aprovados, label: t("insc.mgmt.aprovados"), color: "#30D158" },
-          ].map(({ icon: Icon, val, label, color }) => (
-            <div key={label} className="apple-card p-3 text-center">
-              <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} strokeWidth={1.5} />
-              <p className="text-lg font-bold text-white">{val}</p>
-              <p className="text-[0.625rem] text-[#6e6e73]">{label}</p>
-            </div>
-          ))}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatsCard icon={ClipboardList} value={stats.total} label={t("insc.mgmt.total")} color="#FF6B00" delay={50} />
+          <StatsCard icon={Clock} value={stats.pendentes} label={t("insc.mgmt.pendentes")} color="#FF9F0A" delay={100} />
+          <StatsCard icon={Video} value={stats.entrevistando} label={t("insc.mgmt.entrevistando")} color="#0A84FF" delay={150} />
+          <StatsCard icon={CheckCircle2} value={stats.aprovados} label={t("insc.mgmt.aprovados")} color="#30D158" delay={200} />
         </div>
 
         {/* Search + Filters */}

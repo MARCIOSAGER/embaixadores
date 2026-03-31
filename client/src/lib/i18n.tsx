@@ -285,6 +285,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "tg.semResumo": "Nenhum resumo ou testemunho registrado ainda.",
     "tg.status": "Status",
     "tg.temaObrigatorio": "Tema é obrigatório",
+    "tg.buscar": "Buscar por tema, pregador ou resumo...",
 
     // Terça de Glória (terca prefix - legacy)
     "terca.title": "Terça de Glória",
@@ -893,6 +894,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "tg.semResumo": "Ningún resumen o testimonio registrado aún.",
     "tg.status": "Estado",
     "tg.temaObrigatorio": "Tema es obligatorio",
+    "tg.buscar": "Buscar por tema, predicador o resumen...",
 
     // Terça de Glória (terca prefix - legacy)
     "terca.title": "Martes de Gloria",
@@ -1501,6 +1503,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "tg.semResumo": "No summary or testimony recorded yet.",
     "tg.status": "Status",
     "tg.temaObrigatorio": "Topic is required",
+    "tg.buscar": "Search by topic, preacher or summary...",
 
     // Terça de Glória (terca prefix - legacy)
     "terca.title": "Tuesday of Glory",

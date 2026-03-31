@@ -5,7 +5,13 @@ import { useI18n } from "@/lib/i18n";
 import { exportKitsPdf } from "@/lib/exportPdf";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
-import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, FileDown, Clock, RefreshCw, Cake } from "lucide-react";
+import { Gift, Package, PackageCheck, Check, X, Search, ChevronRight, Plus, Loader2, FileDown, Clock, RefreshCw, Cake, Box, Download, Mail } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
+import { exportToXlsx } from "@/lib/exportXlsx";
+import { buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 
 type KitItemKey = "patchEntregue" | "pinBoneEntregue" | "anelEntregue" | "espadaEntregue" | "mochilaBalacEntregue";
 const KIT_KEYS: KitItemKey[] = ["patchEntregue", "pinBoneEntregue", "anelEntregue", "espadaEntregue", "mochilaBalacEntregue"];
@@ -32,6 +38,7 @@ export default function WelcomeKit() {
   const [selectedEmbId, setSelectedEmbId] = useState<number | "">("");
   const [selectedType, setSelectedType] = useState<KitType>("welcome");
   const [typeFilter, setTypeFilter] = useState<KitType | "all">("all");
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
 
   const { userName, user: authUser } = useAuth();
   const currentUserName = userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Sistema";
@@ -112,6 +119,51 @@ export default function WelcomeKit() {
     return { total, pendente, parcial: total - completo - pendente, completo };
   }, [kits]);
 
+  const TIPO_LABELS: Record<string, string> = { welcome: "Welcome", renovacao: "Renovacao", aniversario: "Aniversario" };
+
+  function handleExportXlsx() {
+    if (!filtered.length) { toast.error("Nenhum kit para exportar"); return; }
+    const data = filtered.map((kit: any) => ({
+      "Embaixador": getEmbName(kit.embaixadorId),
+      "Tipo": TIPO_LABELS[(kit.tipo || "welcome")] || kit.tipo || "",
+      "Patch": kit.patchEntregue ? "Sim" : "Nao",
+      "Pin/Bone": kit.pinBoneEntregue ? "Sim" : "Nao",
+      "Anel": kit.anelEntregue ? "Sim" : "Nao",
+      "Espada": kit.espadaEntregue ? "Sim" : "Nao",
+      "Mochila/Balac": kit.mochilaBalacEntregue ? "Sim" : "Nao",
+      "Progresso": `${getKitProgress(kit)}/5`,
+    }));
+    exportToXlsx(data, `welcome-kits-${new Date().toISOString().split("T")[0]}`);
+  }
+
+  async function handleSendEmail(email: string) {
+    if (!filtered.length) { toast.error("Nenhum kit para exportar"); throw new Error("empty"); }
+    const rows = filtered.map((kit: any) => [
+      getEmbName(kit.embaixadorId),
+      TIPO_LABELS[(kit.tipo || "welcome")] || kit.tipo || "",
+      kit.patchEntregue ? "Sim" : "Nao",
+      kit.pinBoneEntregue ? "Sim" : "Nao",
+      kit.anelEntregue ? "Sim" : "Nao",
+      kit.espadaEntregue ? "Sim" : "Nao",
+      kit.mochilaBalacEntregue ? "Sim" : "Nao",
+      `${getKitProgress(kit)}/5`,
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Welcome Kit - Controle de Entregas",
+      "Embaixadores dos Legendarios",
+      ["Embaixador", "Tipo", "Patch", "Pin", "Anel", "Espada", "Mochila", "Progresso"],
+      rows,
+    );
+    const filename = `welcome-kits-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -123,6 +175,14 @@ export default function WelcomeKit() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
+            <button
               onClick={() => {
                 if (filtered && filtered.length > 0) {
                   exportKitsPdf(filtered, getEmbName);
@@ -130,10 +190,19 @@ export default function WelcomeKit() {
                   toast.error("Nenhum kit para exportar");
                 }
               }}
-              className="apple-btn apple-btn-gray px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2"
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar PDF"
             >
               <FileDown className="w-4 h-4" />
               <span className="hidden sm:inline">PDF</span>
+            </button>
+            <button
+              onClick={handleExportXlsx}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title="Exportar XLSX"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
             </button>
             <button
               onClick={() => setShowCreate(!showCreate)}
@@ -197,26 +266,15 @@ export default function WelcomeKit() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { label: t("kit.pendentes"), val: stats.pendente, color: "#FF9F0A", icon: Package },
-            { label: t("kit.parciais"), val: stats.parcial, color: "#E85D00", icon: Gift },
-            { label: t("kit.completos"), val: stats.completo, color: "#30D158", icon: PackageCheck },
-          ].map(({ label, val, color, icon: Icon }) => (
-            <div key={label} className="apple-card p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${color}14` }}>
-                <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.5} />
-              </div>
-              <div>
-                <p className="text-[1.25rem] font-bold text-white">{val}</p>
-                <p className="text-[0.6875rem] text-[#6e6e73]">{label}</p>
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatsCard icon={Box} value={stats.total} label="Total Kits" color="#FF6B00" delay={50} />
+          <StatsCard icon={Package} value={stats.pendente} label={t("kit.pendentes")} color="#FF9F0A" delay={100} />
+          <StatsCard icon={Gift} value={stats.parcial} label={t("kit.parciais")} color="#E85D00" delay={150} />
+          <StatsCard icon={PackageCheck} value={stats.completo} label={t("kit.completos")} color="#30D158" delay={200} />
         </div>
 
         {/* Search + Filters */}
-        <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
+        <div className="space-y-3 animate-fade-up" style={{ animationDelay: "250ms" }}>
           {/* Kit type tabs */}
           <div className="flex gap-2 overflow-x-auto pb-1">
             <button onClick={() => setTypeFilter("all")} className={`apple-btn text-[0.75rem] py-1.5 px-3.5 shrink-0 ${typeFilter === "all" ? "apple-btn-filled" : "apple-btn-gray"}`}>
@@ -240,7 +298,7 @@ export default function WelcomeKit() {
 
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("kit.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input pl-10" />
+            <input placeholder={t("kit.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {[
@@ -267,7 +325,7 @@ export default function WelcomeKit() {
             <p className="text-[0.875rem] text-[#48484a]">{t("kit.nenhum")}</p>
           </div>
         ) : (
-          <div className="apple-list animate-fade-up" style={{ animationDelay: "150ms" }}>
+          <div className="apple-list animate-fade-up" style={{ animationDelay: "300ms" }}>
             {filtered.map((kit: any) => {
               const progress = getKitProgress(kit);
               const pct = (progress / 5) * 100;
@@ -398,6 +456,13 @@ export default function WelcomeKit() {
             </div>
           </div>
         )}
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
+        />
       </div>
     </DashboardLayout>
   );

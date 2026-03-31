@@ -5,9 +5,13 @@ import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Church, Video, BookOpen, ExternalLink, ChevronDown, ChevronUp, Loader2, X, Download, MessageCircle, FileDown, Send, Mail } from "lucide-react";
+import { Plus, Edit2, Trash2, Church, Video, BookOpen, ChevronDown, ChevronUp, Loader2, Download, MessageCircle, FileDown, Send, Mail, Calendar, CheckCircle2, XCircle, Search } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
 import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
@@ -25,8 +29,10 @@ export default function TercaDeGloria() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [notifyTarget, setNotifyTarget] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [form, setForm] = useState({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: reunioes, isLoading } = useTercaGloria();
@@ -37,7 +43,7 @@ export default function TercaDeGloria() {
   function resetForm() { setForm({ data: "", tema: "", pregador: "", resumo: "", testemunhos: "", linkMeet: "", versiculoBase: "", status: "planejada", notificar: "both" }); setEditingId(null); }
   function openEdit(r: any) {
     setEditingId(r.id);
-    setForm({ data: tsToDate(r.data), tema: r.tema || "", pregador: r.pregador || "", resumo: r.resumo || "", testemunhos: r.testemunhos || "", linkMeet: r.linkMeet || "", versiculoBase: r.versiculoBase || "", status: r.status || "planejada" });
+    setForm({ data: tsToDate(r.data), tema: r.tema || "", pregador: r.pregador || "", resumo: r.resumo || "", testemunhos: r.testemunhos || "", linkMeet: r.linkMeet || "", versiculoBase: r.versiculoBase || "", status: r.status || "planejada", notificar: "both" });
     setDialogOpen(true);
   }
   function handleSubmit() {
@@ -53,9 +59,28 @@ export default function TercaDeGloria() {
 
   const filtered = useMemo(() => {
     if (!reunioes) return [];
-    if (filter === "all") return reunioes;
-    return reunioes.filter((r: any) => r.status === filter);
-  }, [reunioes, filter]);
+    let list = reunioes;
+    if (search.trim()) {
+      const term = search.toLowerCase();
+      list = list.filter((r: any) =>
+        (r.tema || "").toLowerCase().includes(term) ||
+        (r.pregador || "").toLowerCase().includes(term) ||
+        (r.resumo || "").toLowerCase().includes(term)
+      );
+    }
+    if (filter !== "all") list = list.filter((r: any) => r.status === filter);
+    return list;
+  }, [reunioes, filter, search]);
+
+  const stats = useMemo(() => {
+    const all = reunioes || [];
+    return {
+      total: all.length,
+      planejadas: all.filter((r: any) => r.status === "planejada").length,
+      realizadas: all.filter((r: any) => r.status === "realizada").length,
+      canceladas: all.filter((r: any) => r.status === "cancelada").length,
+    };
+  }, [reunioes]);
 
   function handleExport() {
     const statusPt: Record<string, string> = { planejada: "Planejada", realizada: "Realizada", cancelada: "Cancelada" };
@@ -85,6 +110,30 @@ export default function TercaDeGloria() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const statusPt: Record<string, string> = { planejada: "Planejada", realizada: "Realizada", cancelada: "Cancelada" };
+    const rows = filtered.map((r: any) => [
+      r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "",
+      r.tema || "",
+      r.pregador || "",
+      statusPt[r.status] || r.status || "",
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Terca de Gloria - Reunioes",
+      "Embaixadores dos Legendarios",
+      ["Data", "Tema", "Pregador", "Status"],
+      rows,
+    );
+    const filename = `terca-de-gloria-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -95,6 +144,14 @@ export default function TercaDeGloria() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("tg.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -118,23 +175,37 @@ export default function TercaDeGloria() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { key: "all", label: t("common.todos") },
-            { key: "planejada", label: t("tg.planejada") },
-            { key: "realizada", label: t("tg.realizada") },
-            { key: "cancelada", label: t("tg.cancelada") },
-          ].map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key)} className={`apple-btn text-[0.75rem] py-1.5 px-3.5 shrink-0 ${filter === f.key ? "apple-btn-filled" : "apple-btn-gray"}`}>
-              {f.label}
-            </button>
-          ))}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatsCard icon={Church} value={stats.total} label={t("tg.totalReunioes") || "Total"} color="#FF6B00" delay={50} />
+          <StatsCard icon={Calendar} value={stats.planejadas} label={t("tg.planejada")} color="#FF6B00" delay={100} />
+          <StatsCard icon={CheckCircle2} value={stats.realizadas} label={t("tg.realizada")} color="#30D158" delay={150} />
+          <StatsCard icon={XCircle} value={stats.canceladas} label={t("tg.cancelada")} color="#FF453A" delay={200} />
+        </div>
+
+        {/* Search + Filters */}
+        <div className="space-y-3 animate-fade-up" style={{ animationDelay: "250ms" }}>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
+            <input placeholder={t("tg.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[
+              { key: "all", label: t("common.todos") },
+              { key: "planejada", label: t("tg.planejada") },
+              { key: "realizada", label: t("tg.realizada") },
+              { key: "cancelada", label: t("tg.cancelada") },
+            ].map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key)} className={`apple-btn text-[0.75rem] py-1.5 px-3.5 shrink-0 ${filter === f.key ? "apple-btn-filled" : "apple-btn-gray"}`}>
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* List */}
         {isLoading ? (
-          <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="apple-skeleton h-24 rounded-2xl" />)}</div>
+          <div className="space-y-2">{[...Array(3)].map((_, i) => <div key={i} className="apple-skeleton h-[72px] rounded-2xl" />)}</div>
         ) : !filtered.length ? (
           <div className="py-16 text-center animate-fade-up">
             <div className="w-16 h-16 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
@@ -143,29 +214,29 @@ export default function TercaDeGloria() {
             <p className="text-[0.875rem] text-[#48484a]">{t("tg.nenhuma")}</p>
           </div>
         ) : (
-          <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
+          <div className="apple-list animate-fade-up" style={{ animationDelay: "300ms" }}>
             {filtered.map((r: any) => {
               const sc = STATUS_MAP[r.status] || STATUS_MAP.planejada;
               const isExpanded = expandedId === r.id;
               return (
-                <div key={r.id} className="apple-card overflow-hidden">
-                  <div className="p-5 flex items-start gap-4 cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
-                    <div className="w-12 h-12 rounded-2xl bg-[#E85D00]/10 flex items-center justify-center shrink-0">
+                <div key={r.id}>
+                  <div className="apple-list-item group" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
+                    <div className="w-10 h-10 rounded-full bg-[#E85D00]/10 flex items-center justify-center shrink-0">
                       <Church className="w-5 h-5 text-[#E85D00]" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[0.875rem] font-semibold text-white truncate">{r.tema}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[0.875rem] font-medium text-white truncate">{r.tema}</span>
                         <span className="apple-badge text-[0.6875rem]" style={{ background: sc.bg, color: sc.color }}>{t(`tg.${r.status}`)}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-[0.75rem] text-[#6e6e73]">
-                        <span>{formatDate(r.data, locale)}</span>
-                        {r.pregador && <span>• {r.pregador}</span>}
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="text-[0.6875rem] text-[#6e6e73]">{formatDate(r.data, locale)}</span>
+                        {r.pregador && <span className="text-[0.6875rem] text-[#6e6e73]">{r.pregador}</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {r.linkMeet && (
-                        <a href={r.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-11 h-11 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors" aria-label="Abrir Google Meet">
+                        <a href={r.linkMeet} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="w-8 h-8 rounded-full bg-[#30D158]/10 flex items-center justify-center text-[#30D158] hover:bg-[#30D158]/20 transition-colors" aria-label="Abrir Google Meet">
                           <Video className="w-4 h-4" strokeWidth={1.5} />
                         </a>
                       )}
@@ -200,17 +271,19 @@ export default function TercaDeGloria() {
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); setNotifyTarget(r); }}
-                          className="apple-btn apple-btn-gray py-2 px-3 text-[#25D366] hover:text-[#128C7E] min-h-[44px] min-w-[44px] flex items-center justify-center"
+                          className="apple-btn apple-btn-gray py-2.5 px-3 text-[#25D366] hover:text-[#128C7E] min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title="Notificar embaixadores"
                           aria-label="Notificar embaixadores via WhatsApp"
                         >
                           <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                         </button>
-                        <button onClick={() => openEdit(r)} className="apple-btn apple-btn-tinted flex-1 py-2">
-                          <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />Editar Reuniao
+                        <button onClick={() => openEdit(r)} className="apple-btn apple-btn-tinted flex-1 py-2.5 text-[0.8125rem]">
+                          <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                          {t("tg.editar")}
                         </button>
-                        <button onClick={() => setConfirmDelete(r.id)} className="apple-btn apple-btn-destructive flex-1 py-2">
-                          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.excluir")}
+                        <button onClick={() => setConfirmDelete(r.id)} className="apple-btn apple-btn-destructive flex-1 py-2.5 text-[0.8125rem]">
+                          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                          {t("emb.excluir")}
                         </button>
                       </div>
                     </div>
@@ -324,6 +397,13 @@ export default function TercaDeGloria() {
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
           onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
       </div>
     </DashboardLayout>

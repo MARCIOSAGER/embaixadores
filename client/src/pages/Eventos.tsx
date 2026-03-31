@@ -6,9 +6,13 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, CalendarDays, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail, List, ChevronLeft, ChevronRight, Users, Copy } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, CalendarDays, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail, List, ChevronLeft, ChevronRight, Users, Copy, CheckCircle2, XCircle } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
 import EventoParticipantes from "@/components/EventoParticipantes";
@@ -37,6 +41,7 @@ export default function Eventos() {
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [participantesEvento, setParticipantesEvento] = useState<any>(null);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none", capacidade: "" as string, inscricaoAberta: false, imagemUrl: "" });
 
   const { data: eventos, isLoading } = useEventos();
@@ -66,6 +71,16 @@ export default function Eventos() {
     if (filter === "all") return eventos;
     return eventos.filter((e: any) => e.status === filter);
   }, [eventos, filter]);
+
+  const stats = useMemo(() => {
+    const all = eventos || [];
+    return {
+      total: all.length,
+      agendados: all.filter((e: any) => e.status === "agendado").length,
+      realizados: all.filter((e: any) => e.status === "realizado").length,
+      cancelados: all.filter((e: any) => e.status === "cancelado").length,
+    };
+  }, [eventos]);
 
   // Calendar helpers
   const calDays = useMemo(() => {
@@ -174,6 +189,32 @@ export default function Eventos() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const statusPt: Record<string, string> = { agendado: "Agendado", realizado: "Realizado", cancelado: "Cancelado" };
+    const tipoPt: Record<string, string> = { encontro: "Encontro", conferencia: "Conferencia", retiro: "Retiro", treinamento: "Treinamento", outro: "Outro" };
+    const rows = filtered.map((ev: any) => [
+      ev.titulo || "",
+      ev.data ? new Date(ev.data).toLocaleDateString("pt-BR") : "",
+      ev.local || "",
+      tipoPt[ev.tipo] || ev.tipo || "",
+      statusPt[ev.status] || ev.status || "",
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Lista de Eventos",
+      "Embaixadores dos Legendarios",
+      ["Titulo", "Data", "Local", "Tipo", "Status"],
+      rows,
+    );
+    const filename = `eventos-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -184,6 +225,14 @@ export default function Eventos() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("ev.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -207,6 +256,16 @@ export default function Eventos() {
           </div>
         </div>
 
+        {/* Stats (list view only) */}
+        {viewMode === "list" && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatsCard icon={Calendar} value={stats.total} label={t("ev.totalEventos") || "Total Eventos"} color="#FF6B00" delay={50} />
+            <StatsCard icon={Clock} value={stats.agendados} label={t("ev.agendado")} color="#FF6B00" delay={100} />
+            <StatsCard icon={CheckCircle2} value={stats.realizados} label={t("ev.realizado")} color="#30D158" delay={150} />
+            <StatsCard icon={XCircle} value={stats.cancelados} label={t("ev.cancelado")} color="#FF453A" delay={200} />
+          </div>
+        )}
+
         {/* Filters + View Toggle */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: "50ms" }}>
           {[
@@ -219,20 +278,20 @@ export default function Eventos() {
               {f.label}
             </button>
           ))}
-          <div className="ml-auto flex shrink-0 rounded-xl border border-white/[0.08] overflow-hidden">
+          <div className="ml-auto flex items-center bg-white/5 rounded-xl p-1">
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 transition-colors ${viewMode === "list" ? "bg-[#FF6B00]/20 text-[#FF6B00]" : "text-[#86868b] hover:text-white"}`}
-              title={t("ev.lista")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer
+                ${viewMode === "list" ? "bg-[#FF6B00] text-white shadow-lg" : "text-white/50 hover:text-white/80"}`}
             >
-              <List className="w-4 h-4" />
+              <List className="w-3.5 h-3.5" /> {t("ev.lista")}
             </button>
             <button
               onClick={() => setViewMode("calendar")}
-              className={`p-2 transition-colors ${viewMode === "calendar" ? "bg-[#FF6B00]/20 text-[#FF6B00]" : "text-[#86868b] hover:text-white"}`}
-              title={t("ev.calendario")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer
+                ${viewMode === "calendar" ? "bg-[#FF6B00] text-white shadow-lg" : "text-white/50 hover:text-white/80"}`}
             >
-              <CalendarDays className="w-4 h-4" />
+              <CalendarDays className="w-3.5 h-3.5" /> {t("ev.calendario")}
             </button>
           </div>
         </div>
@@ -636,6 +695,13 @@ export default function Eventos() {
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
           onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
 
         {/* Participantes Panel */}

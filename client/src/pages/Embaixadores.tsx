@@ -6,8 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle } from "lucide-react";
+import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -25,6 +29,7 @@ export default function Embaixadores() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selected, setSelected] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [form, setForm] = useState({
     nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "",
     email: "", telefone: "", cidade: "", estado: "",
@@ -117,6 +122,32 @@ export default function Embaixadores() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const statusPt: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", pendente_renovacao: "Pendente Renovacao" };
+    const rows = filtered.map((emb: any) => [
+      emb.numeroLegendario || "\u2014",
+      emb.numeroEmbaixador || "\u2014",
+      emb.nomeCompleto || "",
+      emb.telefone || "",
+      emb.cidade || "",
+      statusPt[emb.status] || emb.status || "",
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Lista de Embaixadores",
+      "Embaixadores dos Legendarios",
+      ["No Leg.", "No Emb.", "Nome", "Telefone", "Cidade", "Status"],
+      rows,
+    );
+    const filename = `embaixadores-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   const filters = [
     { key: "all", label: t("common.todos") },
     { key: "ativo", label: t("emb.ativo") },
@@ -134,6 +165,14 @@ export default function Embaixadores() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("emb.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -157,20 +196,12 @@ export default function Embaixadores() {
           </div>
         </div>
 
-        {/* Mini Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          {[
-            { icon: Users, val: stats?.total || 0, label: t("emb.total"), color: "#FF6B00" },
-            { icon: UserCheck, val: stats?.ativos || 0, label: t("emb.ativo"), color: "#30D158" },
-            { icon: Clock, val: stats?.pendentes || 0, label: t("emb.pendRenov"), color: "#FF9F0A" },
-            { icon: UserX, val: stats?.inativos || 0, label: t("emb.inativo"), color: "#FF453A" },
-          ].map(({ icon: Icon, val, label, color }) => (
-            <div key={label} className="apple-card p-3 text-center">
-              <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} strokeWidth={1.5} />
-              <p className="text-lg font-bold text-white">{val}</p>
-              <p className="text-[0.625rem] text-[#6e6e73]">{label}</p>
-            </div>
-          ))}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatsCard icon={Users} value={stats?.total || 0} label={t("emb.total")} color="#FF6B00" delay={50} />
+          <StatsCard icon={UserCheck} value={stats?.ativos || 0} label={t("emb.ativo")} color="#30D158" delay={100} />
+          <StatsCard icon={Clock} value={stats?.pendentes || 0} label={t("emb.pendRenov")} color="#FF9F0A" delay={150} />
+          <StatsCard icon={UserX} value={stats?.inativos || 0} label={t("emb.inativo")} color="#FF453A" delay={200} />
         </div>
 
         {/* Search + Filters */}
@@ -380,6 +411,13 @@ export default function Embaixadores() {
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
           onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
       </div>
     </DashboardLayout>
