@@ -168,7 +168,7 @@ export default function Inscricoes() {
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("insc.mgmt.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input pl-10" />
+            <input placeholder={t("insc.mgmt.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {filters.map(f => (
