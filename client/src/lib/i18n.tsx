@@ -164,6 +164,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "insc.mgmt.sec.profissional": "Profissional",
     "insc.mgmt.sec.mercado": "Mercado",
     "insc.mgmt.sec.investimento": "Investimento",
+    "insc.mgmt.entrevistando": "Entrevistando",
+    "insc.mgmt.agendarEntrevista": "Agendar Entrevista",
+    "insc.mgmt.verEntrevista": "Ver Entrevista",
+    "insc.mgmt.entrevistaAgendada": "Entrevista agendada com sucesso!",
     "insc.mgmt.semInscricoes": "Nenhuma inscrição encontrada",
     "insc.mgmt.semInscricoesDesc": "Quando candidatos se inscreverem, aparecerão aqui.",
 
@@ -387,7 +391,12 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.total": "Total",
     "ent.agendadas": "Agendadas",
     "ent.aprovadas": "Aprovadas",
+    "ent.reprovadas": "Reprovadas",
     "ent.agendar": "Agendar",
+    "ent.converterEmb": "Converter em Embaixador",
+    "ent.confirmarConverter": "Converter este candidato aprovado em embaixador?",
+    "ent.embCriado": "Embaixador criado com sucesso!",
+    "ent.buscar": "Buscar por nome ou email...",
 
     // Pagamentos
     "pag.title": "Pagamentos",
@@ -698,6 +707,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "insc.mgmt.sec.profissional": "Profesional",
     "insc.mgmt.sec.mercado": "Mercado",
     "insc.mgmt.sec.investimento": "Inversión",
+    "insc.mgmt.entrevistando": "En Entrevista",
+    "insc.mgmt.agendarEntrevista": "Agendar Entrevista",
+    "insc.mgmt.verEntrevista": "Ver Entrevista",
+    "insc.mgmt.entrevistaAgendada": "¡Entrevista agendada con éxito!",
     "insc.mgmt.semInscricoes": "No se encontraron inscripciones",
     "insc.mgmt.semInscricoesDesc": "Cuando los candidatos se inscriban, aparecerán aquí.",
 
@@ -921,7 +934,12 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.total": "Total",
     "ent.agendadas": "Programadas",
     "ent.aprovadas": "Aprobadas",
+    "ent.reprovadas": "Reprobadas",
     "ent.agendar": "Programar",
+    "ent.converterEmb": "Convertir en Embajador",
+    "ent.confirmarConverter": "¿Convertir este candidato aprobado en embajador?",
+    "ent.embCriado": "¡Embajador creado con éxito!",
+    "ent.buscar": "Buscar por nombre o email...",
 
     // Pagamentos
     "pag.title": "Pagos",
@@ -1232,6 +1250,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "insc.mgmt.sec.profissional": "Professional",
     "insc.mgmt.sec.mercado": "Market",
     "insc.mgmt.sec.investimento": "Investment",
+    "insc.mgmt.entrevistando": "Interviewing",
+    "insc.mgmt.agendarEntrevista": "Schedule Interview",
+    "insc.mgmt.verEntrevista": "View Interview",
+    "insc.mgmt.entrevistaAgendada": "Interview scheduled successfully!",
     "insc.mgmt.semInscricoes": "No applications found",
     "insc.mgmt.semInscricoesDesc": "When candidates apply, they will appear here.",
 
@@ -1455,7 +1477,12 @@ const translations: Record<Locale, Record<string, string>> = {
     "ent.total": "Total",
     "ent.agendadas": "Scheduled",
     "ent.aprovadas": "Approved",
+    "ent.reprovadas": "Failed",
     "ent.agendar": "Schedule",
+    "ent.converterEmb": "Convert to Ambassador",
+    "ent.confirmarConverter": "Convert this approved candidate to ambassador?",
+    "ent.embCriado": "Ambassador created successfully!",
+    "ent.buscar": "Search by name or email...",
 
     // Payments
     "pag.title": "Payments",

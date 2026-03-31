@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
-import { useEntrevistas, useCreateEntrevista, useUpdateEntrevista, useDeleteEntrevista, useEmbaixadores } from "@/hooks/useSupabase";
+import { useEntrevistas, useCreateEntrevista, useUpdateEntrevista, useDeleteEntrevista, useEmbaixadores, useCreateEmbaixador } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle, FileDown, Send } from "lucide-react";
+import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle, FileDown, Send, Search, Users, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -29,6 +29,8 @@ export default function Entrevistas() {
   const [selected, setSelected] = useState<any>(null);
   const [notifyTarget, setNotifyTarget] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [confirmConvert, setConfirmConvert] = useState<any>(null);
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: entrevistas, isLoading } = useEntrevistas();
@@ -37,6 +39,7 @@ export default function Entrevistas() {
   const createMut = useCreateEntrevista();
   const updateMut = useUpdateEntrevista();
   const deleteMut = useDeleteEntrevista();
+  const createEmbMut = useCreateEmbaixador();
 
   function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "", notificar: "both" }); setEditingId(null); }
   function openEdit(ent: any) {
@@ -56,11 +59,48 @@ export default function Entrevistas() {
     if (editingId) updateMut.mutate({ id: editingId, ...d }, { onSuccess, onError }); else createMut.mutate(d, { onSuccess, onError });
   }
 
+  const stats = useMemo(() => {
+    const all = entrevistas || [];
+    return {
+      total: all.length,
+      agendadas: all.filter((e: any) => e.status === "agendada").length,
+      aprovadas: all.filter((e: any) => e.status === "aprovada").length,
+      reprovadas: all.filter((e: any) => e.status === "reprovada").length,
+    };
+  }, [entrevistas]);
+
   const filtered = useMemo(() => {
     if (!entrevistas) return [];
-    if (filter === "all") return entrevistas;
-    return entrevistas.filter((e: any) => e.status === filter);
-  }, [entrevistas, filter]);
+    let list = entrevistas;
+    if (search.trim()) {
+      const term = search.toLowerCase();
+      list = list.filter((e: any) =>
+        (e.nomeCandidato || "").toLowerCase().includes(term) ||
+        (e.emailCandidato || "").toLowerCase().includes(term)
+      );
+    }
+    if (filter !== "all") list = list.filter((e: any) => e.status === filter);
+    return list;
+  }, [entrevistas, filter, search]);
+
+  function handleConvertToEmbaixador(ent: any) {
+    const data = {
+      nomeCompleto: ent.nomeCandidato,
+      email: ent.emailCandidato || null,
+      telefone: ent.telefoneCandidato || null,
+      dataIngresso: Date.now(),
+      status: "ativo" as const,
+      codigoIndicacao: Math.random().toString(36).substring(2, 8),
+    };
+    createEmbMut.mutate(data, {
+      onSuccess: () => {
+        toast.success(t("ent.embCriado"));
+        setConfirmConvert(null);
+        setSelected(null);
+      },
+      onError: (e: any) => toast.error(e.message),
+    });
+  }
 
   function handleExport() {
     const statusPt: Record<string, string> = { agendada: "Agendada", realizada: "Realizada", aprovada: "Aprovada", reprovada: "Reprovada", cancelada: "Cancelada" };
@@ -128,8 +168,29 @@ export default function Entrevistas() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: "50ms" }}>
+        {/* Mini Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 animate-fade-up" style={{ animationDelay: "50ms" }}>
+          {[
+            { icon: Users, val: stats.total, label: t("ent.total"), color: "#FF6B00" },
+            { icon: Clock, val: stats.agendadas, label: t("ent.agendadas"), color: "#FF6B00" },
+            { icon: CheckCircle2, val: stats.aprovadas, label: t("ent.aprovadas"), color: "#30D158" },
+            { icon: XCircle, val: stats.reprovadas, label: t("ent.reprovadas"), color: "#FF453A" },
+          ].map(({ icon: Icon, val, label, color }) => (
+            <div key={label} className="apple-card p-3 text-center">
+              <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} strokeWidth={1.5} />
+              <p className="text-lg font-bold text-white">{val}</p>
+              <p className="text-[0.625rem] text-[#6e6e73]">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Search + Filters */}
+        <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
+            <input placeholder={t("ent.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+          </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {[
             { key: "all", label: t("common.todos") },
             { key: "agendada", label: t("ent.agendada") },
@@ -142,6 +203,7 @@ export default function Entrevistas() {
               {f.label}
             </button>
           ))}
+        </div>
         </div>
 
         {/* List */}
@@ -237,6 +299,17 @@ export default function Entrevistas() {
                     <p className="text-[0.625rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("ent.observacoes")}</p>
                     <p className="text-[0.8125rem] text-[#d2d2d7] leading-relaxed">{selected.observacoes}</p>
                   </div>
+                )}
+
+                {selected.status === "aprovada" && (
+                  <button
+                    onClick={() => setConfirmConvert(selected)}
+                    disabled={createEmbMut.isPending}
+                    className="apple-btn w-full py-2.5 bg-[#30D158]/10 text-[#30D158] hover:bg-[#30D158]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
+                  >
+                    {createEmbMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />}
+                    {t("ent.converterEmb")}
+                  </button>
                 )}
 
                 <div className="flex gap-2">
@@ -373,6 +446,15 @@ export default function Entrevistas() {
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
           onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+        />
+        <ConfirmDialog
+          open={confirmConvert !== null}
+          onOpenChange={(o) => { if (!o) setConfirmConvert(null); }}
+          onConfirm={() => { if (confirmConvert) handleConvertToEmbaixador(confirmConvert); }}
+          title={t("ent.converterEmb")}
+          description={t("ent.confirmarConverter")}
+          confirmLabel={t("ent.converterEmb")}
+          variant="warning"
         />
       </div>
     </DashboardLayout>

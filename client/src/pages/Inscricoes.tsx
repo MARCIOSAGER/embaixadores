@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useInscricoes, useUpdateInscricao, useDeleteInscricao, useConvertInscricaoToEmbaixador } from "@/hooks/useSupabase";
+import { useInscricoes, useUpdateInscricao, useDeleteInscricao, useCreateEntrevista } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -7,13 +7,14 @@ import { toast } from "sonner";
 import {
   Search, ClipboardList, Clock, CheckCircle2, XCircle, ChevronRight, X,
   Mail, Phone, MapPin, Download, FileDown, Loader2, UserCheck, Instagram,
-  Briefcase, Building2, Heart, Globe, DollarSign, Calendar
+  Briefcase, Building2, Heart, Globe, DollarSign, Calendar, Video
 } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 
 const STATUS_MAP: Record<string, { color: string; bg: string; label: string }> = {
   pendente: { color: "#FF9F0A", bg: "rgba(255,159,10,0.14)", label: "Pendente" },
+  entrevistando: { color: "#0A84FF", bg: "rgba(10,132,255,0.14)", label: "Entrevistando" },
   aprovado: { color: "#30D158", bg: "rgba(48,209,88,0.14)", label: "Aprovado" },
   rejeitado: { color: "#FF453A", bg: "rgba(255,69,58,0.14)", label: "Rejeitado" },
 };
@@ -25,7 +26,7 @@ export default function Inscricoes() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState<Inscricao | null>(null);
-  const [confirmApprove, setConfirmApprove] = useState<Inscricao | null>(null);
+  const [confirmInterview, setConfirmInterview] = useState<Inscricao | null>(null);
   const [confirmReject, setConfirmReject] = useState<Inscricao | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
@@ -34,15 +35,15 @@ export default function Inscricoes() {
 
   const updateMut = useUpdateInscricao();
   const deleteMut = useDeleteInscricao();
-  const convertMut = useConvertInscricaoToEmbaixador();
+  const createEntrevistaMut = useCreateEntrevista();
 
   const stats = useMemo(() => {
     const all = inscricoes || [];
     return {
       total: all.length,
       pendentes: all.filter((i) => i.status === "pendente").length,
+      entrevistando: all.filter((i) => i.status === "entrevistando").length,
       aprovados: all.filter((i) => i.status === "aprovado").length,
-      rejeitados: all.filter((i) => i.status === "rejeitado").length,
     };
   }, [inscricoes]);
 
@@ -52,15 +53,45 @@ export default function Inscricoes() {
     return inscricoes.filter((i) => i.status === filter);
   }, [inscricoes, filter]);
 
-  function handleApprove(insc: Inscricao) {
-    convertMut.mutate(insc, {
-      onSuccess: () => {
-        toast.success(t("insc.mgmt.aprovadoSucesso"));
-        setSelected(null);
-        setConfirmApprove(null);
+  function handleScheduleInterview(insc: Inscricao) {
+    // Calculate next business day at 19:00
+    const now = new Date();
+    const next = new Date(now);
+    next.setDate(next.getDate() + 1);
+    while (next.getDay() === 0 || next.getDay() === 6) {
+      next.setDate(next.getDate() + 1);
+    }
+    next.setHours(19, 0, 0, 0);
+
+    createEntrevistaMut.mutate(
+      {
+        nomeCandidato: insc.nomeCompleto,
+        emailCandidato: insc.email || null,
+        telefoneCandidato: insc.telefone || null,
+        dataEntrevista: next.getTime(),
+        indicadoPor: insc.nomeIndicador || null,
+        status: "agendada",
+        linkMeet: null,
+        observacoes: null,
+        entrevistadorId: null,
       },
-      onError: (e: any) => toast.error(e.message),
-    });
+      {
+        onSuccess: () => {
+          updateMut.mutate(
+            { id: insc.id, status: "entrevistando" },
+            {
+              onSuccess: () => {
+                toast.success(t("insc.mgmt.entrevistaAgendada"));
+                setSelected(null);
+                setConfirmInterview(null);
+              },
+              onError: (e: any) => toast.error(e.message),
+            }
+          );
+        },
+        onError: (e: any) => toast.error(e.message),
+      }
+    );
   }
 
   function handleReject(insc: Inscricao) {
@@ -115,6 +146,7 @@ export default function Inscricoes() {
   const filters = [
     { key: "all", label: t("common.todos") },
     { key: "pendente", label: t("insc.mgmt.pendentes") },
+    { key: "entrevistando", label: t("insc.mgmt.entrevistando") },
     { key: "aprovado", label: t("insc.mgmt.aprovados") },
     { key: "rejeitado", label: t("insc.mgmt.rejeitados") },
   ];
@@ -153,8 +185,8 @@ export default function Inscricoes() {
           {[
             { icon: ClipboardList, val: stats.total, label: t("insc.mgmt.total"), color: "#FF6B00" },
             { icon: Clock, val: stats.pendentes, label: t("insc.mgmt.pendentes"), color: "#FF9F0A" },
+            { icon: Video, val: stats.entrevistando, label: t("insc.mgmt.entrevistando"), color: "#0A84FF" },
             { icon: CheckCircle2, val: stats.aprovados, label: t("insc.mgmt.aprovados"), color: "#30D158" },
-            { icon: XCircle, val: stats.rejeitados, label: t("insc.mgmt.rejeitados"), color: "#FF453A" },
           ].map(({ icon: Icon, val, label, color }) => (
             <div key={label} className="apple-card p-3 text-center">
               <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} strokeWidth={1.5} />
@@ -318,13 +350,32 @@ export default function Inscricoes() {
                 {selected.status === "pendente" && (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setConfirmApprove(selected)}
-                      disabled={convertMut.isPending}
-                      className="apple-btn flex-1 py-2.5 bg-[#30D158]/10 text-[#30D158] hover:bg-[#30D158]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
+                      onClick={() => setConfirmInterview(selected)}
+                      disabled={createEntrevistaMut.isPending}
+                      className="apple-btn flex-1 py-2.5 bg-[#0A84FF]/10 text-[#0A84FF] hover:bg-[#0A84FF]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
                     >
-                      {convertMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />}
-                      {t("insc.mgmt.aprovar")}
+                      {createEntrevistaMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" strokeWidth={1.5} />}
+                      {t("insc.mgmt.agendarEntrevista")}
                     </button>
+                    <button
+                      onClick={() => setConfirmReject(selected)}
+                      disabled={updateMut.isPending}
+                      className="apple-btn apple-btn-destructive flex-1 py-2.5"
+                    >
+                      <XCircle className="w-4 h-4" strokeWidth={1.5} />
+                      {t("insc.mgmt.rejeitar")}
+                    </button>
+                  </div>
+                )}
+                {selected.status === "entrevistando" && (
+                  <div className="flex gap-2">
+                    <a
+                      href="/entrevistas"
+                      className="apple-btn flex-1 py-2.5 bg-[#0A84FF]/10 text-[#0A84FF] hover:bg-[#0A84FF]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
+                    >
+                      <Video className="w-4 h-4" strokeWidth={1.5} />
+                      {t("insc.mgmt.verEntrevista")}
+                    </a>
                     <button
                       onClick={() => setConfirmReject(selected)}
                       disabled={updateMut.isPending}
@@ -347,14 +398,14 @@ export default function Inscricoes() {
           </div>
         )}
 
-        {/* Confirm Approve Dialog */}
+        {/* Confirm Interview Dialog */}
         <ConfirmDialog
-          open={confirmApprove !== null}
-          onOpenChange={(o) => { if (!o) setConfirmApprove(null); }}
-          onConfirm={() => { if (confirmApprove) handleApprove(confirmApprove); }}
-          title={t("insc.mgmt.aprovar")}
+          open={confirmInterview !== null}
+          onOpenChange={(o) => { if (!o) setConfirmInterview(null); }}
+          onConfirm={() => { if (confirmInterview) handleScheduleInterview(confirmInterview); }}
+          title={t("insc.mgmt.agendarEntrevista")}
           description={t("insc.mgmt.confirmarAprovar")}
-          confirmLabel={t("insc.mgmt.aprovar")}
+          confirmLabel={t("insc.mgmt.agendarEntrevista")}
           variant="warning"
         />
 
