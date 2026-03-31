@@ -30,6 +30,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Inscricao = lazy(() => import("./pages/Inscricao"));
 const EventoInscricao = lazy(() => import("./pages/EventoInscricao"));
 const MeusIndicados = lazy(() => import("./pages/MeusIndicados"));
+import InstallPrompt from "./components/InstallPrompt";
 import { supabase } from "./lib/supabase";
 
 function PageLoader() {
@@ -126,6 +127,7 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
+          <InstallPrompt />
           <Suspense fallback={<PageLoader />}>
             <Switch>
               <Route path="/privacidade" component={Privacy} />

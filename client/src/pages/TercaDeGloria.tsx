@@ -187,7 +187,7 @@ export default function TercaDeGloria() {
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "250ms" }}>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("tg.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+            <input placeholder={t("tg.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} aria-label={t("tg.buscar")} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {[
@@ -220,7 +220,7 @@ export default function TercaDeGloria() {
               const isExpanded = expandedId === r.id;
               return (
                 <div key={r.id}>
-                  <div className="apple-list-item group" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
+                  <div className="apple-list-item group" onClick={() => setExpandedId(isExpanded ? null : r.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isExpanded ? null : r.id); } }} aria-expanded={isExpanded}>
                     <div className="w-10 h-10 rounded-full bg-[#E85D00]/10 flex items-center justify-center shrink-0">
                       <Church className="w-5 h-5 text-[#E85D00]" strokeWidth={1.5} />
                     </div>

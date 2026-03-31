@@ -241,17 +241,113 @@ Deno.serve(async (req) => {
       return json({ error: "Apenas administradores podem enviar notificacoes" }, 403);
     }
 
-    const { type, id, channel, recipients = "all", includeCandidato = true, entrevistadorId: reqEntrevistadorId, locale: reqLocale = "pt" } = await req.json();
+    const body = await req.json();
+    const { type, id, channel, recipients = "all", includeCandidato = true, entrevistadorId: reqEntrevistadorId, locale: reqLocale = "pt" } = body;
     const locale: Locale = ["pt", "es", "en"].includes(reqLocale) ? reqLocale : "pt";
 
-    if (!type || !id || !channel) {
-      return json({ error: "type, id e channel sao obrigatorios" }, 400);
+    if (!type || !channel) {
+      return json({ error: "type e channel sao obrigatorios" }, 400);
     }
-    if (!["evento", "terca", "entrevista"].includes(type)) {
-      return json({ error: "type deve ser: evento, terca, entrevista" }, 400);
+    if (!["evento", "terca", "entrevista", "custom"].includes(type)) {
+      return json({ error: "type deve ser: evento, terca, entrevista, custom" }, 400);
     }
     if (!["whatsapp", "email", "both"].includes(channel)) {
       return json({ error: "channel deve ser: whatsapp, email, both" }, 400);
+    }
+
+    // ---- CUSTOM free-text bulk message mode ----
+    if (type === "custom") {
+      const { subject, message, phones, emails } = body as {
+        subject?: string;
+        message?: string;
+        phones?: string[];
+        emails?: string[];
+      };
+      if (!message) return json({ error: "message e obrigatorio para type=custom" }, 400);
+
+      const results = {
+        whatsapp: { sent: 0, failed: 0, errors: [] as string[] },
+        email: { sent: 0, failed: 0, errors: [] as string[] },
+      };
+
+      // Send WhatsApp
+      if ((channel === "whatsapp" || channel === "both") && phones && phones.length > 0) {
+        const instanceId = (Deno.env.get("ZAPI_INSTANCE_ID") || "").trim();
+        const zapiToken = (Deno.env.get("ZAPI_TOKEN") || "").trim();
+        const clientToken = (Deno.env.get("ZAPI_CLIENT_TOKEN") || "").trim();
+
+        if (!instanceId || !zapiToken) {
+          results.whatsapp.errors.push("Z-API nao configurado");
+        } else {
+          const zapiBaseUrl = `https://api.z-api.io/instances/${instanceId}/token/${zapiToken}`;
+          const zapiHeaders: Record<string, string> = { "Content-Type": "application/json" };
+          if (clientToken) zapiHeaders["Client-Token"] = clientToken;
+
+          for (let i = 0; i < phones.length; i += 10) {
+            const batch = phones.slice(i, i + 10);
+            await Promise.allSettled(
+              batch.map(async (phone) => {
+                try {
+                  const cleanPhone = phone.replace(/\D/g, "");
+                  const res = await fetch(`${zapiBaseUrl}/send-text`, {
+                    method: "POST",
+                    headers: zapiHeaders,
+                    body: JSON.stringify({ phone: cleanPhone, message }),
+                  });
+                  if (res.ok) results.whatsapp.sent++;
+                  else { results.whatsapp.failed++; results.whatsapp.errors.push(`${phone}: ${res.statusText}`); }
+                } catch (err: any) { results.whatsapp.failed++; results.whatsapp.errors.push(`${phone}: ${err.message}`); }
+              })
+            );
+          }
+        }
+      }
+
+      // Send Email
+      if ((channel === "email" || channel === "both") && emails && emails.length > 0) {
+        const smtpHost = (Deno.env.get("SMTP_HOST") || "smtp.hostinger.com").trim();
+        const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());
+        const smtpUser = (Deno.env.get("SMTP_USER") || "").trim();
+        const smtpPass = (Deno.env.get("SMTP_PASSWORD") || "").trim();
+        const smtpFromAddr = (Deno.env.get("SMTP_FROM") || smtpUser).trim();
+        const smtpFrom = `Embaixadores dos Legendarios <${smtpFromAddr}>`;
+
+        if (!smtpUser || !smtpPass) {
+          results.email.errors.push("SMTP nao configurado");
+        } else {
+          try {
+            const transporter = nodemailer.createTransport({
+              host: smtpHost, port: smtpPort, secure: smtpPort === 465,
+              auth: { user: smtpUser, pass: smtpPass },
+            });
+
+            const emailSubject = subject || "Mensagem dos Embaixadores";
+            const emailHtml = buildEmailHtml(emailSubject, message.replace(/\n/g, "<br>"), locale);
+
+            for (let i = 0; i < emails.length; i += 10) {
+              const batch = emails.slice(i, i + 10);
+              await Promise.allSettled(
+                batch.map(async (to) => {
+                  try {
+                    await transporter.sendMail({ from: smtpFrom, to, subject: emailSubject, text: message, html: emailHtml });
+                    results.email.sent++;
+                  } catch (err: any) { results.email.failed++; results.email.errors.push(`${to}: ${err.message}`); }
+                })
+              );
+            }
+          } catch (err: any) {
+            results.email.errors.push(`SMTP connection: ${err.message}`);
+          }
+        }
+      }
+
+      const totalPhones = phones?.length || 0;
+      const totalEmails = emails?.length || 0;
+      return json({ success: true, total: Math.max(totalPhones, totalEmails), results });
+    }
+
+    if (!id) {
+      return json({ error: "id e obrigatorio para type evento/terca/entrevista" }, 400);
     }
 
     // Fetch event data from database

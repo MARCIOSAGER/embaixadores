@@ -298,7 +298,7 @@ export default function WelcomeKit() {
 
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("kit.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+            <input placeholder={t("kit.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} aria-label={t("kit.buscar")} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {[
@@ -332,7 +332,7 @@ export default function WelcomeKit() {
               const name = getEmbName(kit.embaixadorId);
               const color = progress === 5 ? "#30D158" : progress === 0 ? "#FF9F0A" : "#FF6B00";
               return (
-                <div key={kit.id} className="apple-list-item group" onClick={() => setSelectedKit(kit)}>
+                <div key={kit.id} className="apple-list-item group" onClick={() => setSelectedKit(kit)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedKit(kit); } }}>
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
                     {name.charAt(0)?.toUpperCase()}
                   </div>
@@ -361,7 +361,7 @@ export default function WelcomeKit() {
 
         {/* Detail Sheet */}
         {selectedKit && (
-          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelectedKit(null)}>
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelectedKit(null)} onKeyDown={(e) => { if (e.key === "Escape") setSelectedKit(null); }} role="dialog" aria-modal="true" aria-label="Detalhes do kit">
             <div className="apple-sheet-content w-full max-w-md max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">

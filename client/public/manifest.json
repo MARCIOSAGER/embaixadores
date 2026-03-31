@@ -1,0 +1,14 @@
+{
+  "name": "Embaixadores dos Legendários",
+  "short_name": "Embaixadores",
+  "description": "Sistema de Gestão dos Embaixadores dos Legendários",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FF6B00",
+  "orientation": "any",
+  "icons": [
+    { "src": "/logo-legendarios.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/logo-legendarios.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -222,6 +222,7 @@ export default function Pagamentos() {
               placeholder={t("pag.buscar")}
               className="apple-input w-full"
               style={{ paddingLeft: "2.5rem" }}
+              aria-label={t("pag.buscar")}
             />
           </div>
         </div>
@@ -278,7 +279,7 @@ export default function Pagamentos() {
                     <button onClick={() => openEdit(pag)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
                       <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("emb.editar")}
                     </button>
-                    <button onClick={() => setConfirmDelete(pag.id)} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]">
+                    <button onClick={() => setConfirmDelete(pag.id)} className="apple-btn apple-btn-destructive py-2 px-3 text-[0.75rem]" aria-label="Excluir pagamento">
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                   </div>

@@ -234,7 +234,7 @@ export default function Inscricoes() {
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("insc.mgmt.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+            <input placeholder={t("insc.mgmt.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} aria-label={t("insc.mgmt.buscar")} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {filters.map(f => (
@@ -261,9 +261,9 @@ export default function Inscricoes() {
             {filtered.map((insc) => {
               const sc = STATUS_MAP[insc.status] || STATUS_MAP.pendente;
               return (
-                <div key={insc.id} className="apple-list-item group" onClick={() => setSelected(insc)}>
+                <div key={insc.id} className="apple-list-item group" onClick={() => setSelected(insc)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(insc); } }}>
                   {insc.fotoUrl ? (
-                    <img src={insc.fotoUrl} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                    <img src={insc.fotoUrl} alt={`Foto de ${insc.nomeCompleto}`} className="w-10 h-10 rounded-full object-cover shrink-0" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
                       {insc.nomeCompleto?.charAt(0)?.toUpperCase()}
@@ -291,14 +291,14 @@ export default function Inscricoes() {
 
         {/* Detail Sheet */}
         {selected && (
-          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)}>
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)} onKeyDown={(e) => { if (e.key === "Escape") setSelected(null); }} role="dialog" aria-modal="true" aria-label={selected.nomeCompleto}>
             <div className="apple-sheet-content w-full max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">
                 {/* Header */}
                 <div className="flex items-center gap-4">
                   {selected.fotoUrl ? (
-                    <img src={selected.fotoUrl} alt="" className="w-14 h-14 rounded-full object-cover shrink-0" />
+                    <img src={selected.fotoUrl} alt={`Foto de ${selected.nomeCompleto}`} className="w-14 h-14 rounded-full object-cover shrink-0" />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-xl font-bold">
                       {selected.nomeCompleto?.charAt(0)?.toUpperCase()}

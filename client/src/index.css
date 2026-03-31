@@ -223,7 +223,7 @@ body {
 }
 
 .apple-input::placeholder {
-  color: rgba(235, 235, 245, 0.30);
+  color: rgba(235, 235, 245, 0.45);
 }
 
 .apple-input:focus {
@@ -431,6 +431,26 @@ select.apple-input option {
 .flex {
   min-width: 0;
   min-height: 0;
+}
+
+/* ── Accessibility: visible focus rings ── */
+:focus-visible {
+  outline: 2px solid #FF6B00;
+  outline-offset: 2px;
+}
+
+/* Remove default outline only when using mouse */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Reduced motion support ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── iOS Safe Area ── */

@@ -16,6 +16,8 @@ import { supabase } from "@/lib/supabase";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
 import EventoParticipantes from "@/components/EventoParticipantes";
+import BulkMessageDialog from "@/components/BulkMessageDialog";
+import { useEmbaixadores } from "@/hooks/useSupabase";
 import { formatDateTime, dateToTimestamp, tsToInputDT } from "@/lib/dateUtils";
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
@@ -42,9 +44,11 @@ export default function Eventos() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [participantesEvento, setParticipantesEvento] = useState<any>(null);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
+  const [bulkInviteEvento, setBulkInviteEvento] = useState<any>(null);
   const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none", capacidade: "" as string, inscricaoAberta: false, imagemUrl: "" });
 
   const { data: eventos, isLoading } = useEventos();
+  const { data: allEmbaixadores } = useEmbaixadores();
   const createMut = useCreateEvento();
   const updateMut = useUpdateEvento();
   const deleteMut = useDeleteEvento();
@@ -304,10 +308,10 @@ export default function Eventos() {
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
-                <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer">
+                <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer" aria-label="Mês anterior">
                   <ChevronLeft className="w-4 h-4 text-white/60" />
                 </button>
-                <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer">
+                <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer" aria-label="Próximo mês">
                   <ChevronRight className="w-4 h-4 text-white/60" />
                 </button>
                 <h2 className="text-xl font-bold text-white tracking-[-0.02em]">
@@ -445,7 +449,7 @@ export default function Eventos() {
                       const sc = STATUS_MAP[ev.status] || STATUS_MAP.agendado;
                       const typeColor = TYPE_COLORS[ev.tipo] || "#8E8E93";
                       return (
-                        <div key={ev.id} className="apple-card p-4 cursor-pointer hover:bg-white/[0.04] transition-all group" onClick={() => openEdit(ev)}>
+                        <div key={ev.id} className="apple-card p-4 cursor-pointer hover:bg-white/[0.04] transition-all group" onClick={() => openEdit(ev)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEdit(ev); } }}>
                           <div className="flex items-center gap-3">
                             <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
                             <div className="flex-1 min-w-0">
@@ -537,6 +541,15 @@ export default function Eventos() {
                       aria-label="Notificar embaixadores via WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setBulkInviteEvento(ev); }}
+                      className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#FF6B00] hover:text-[#FF8C33] min-h-[44px] flex items-center justify-center gap-1.5"
+                      title={t("bulk.convidar")}
+                      aria-label={t("bulk.convidar")}
+                    >
+                      <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      <span className="hidden sm:inline">{t("bulk.convidar")}</span>
                     </button>
                     <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted flex-1 py-2 text-[0.75rem]">
                       <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />{t("ev.editar") || "Editar Evento"}
@@ -712,6 +725,17 @@ export default function Eventos() {
             onClose={() => setParticipantesEvento(null)}
           />
         )}
+
+        {/* Bulk Invite Dialog */}
+        <BulkMessageDialog
+          open={bulkInviteEvento !== null}
+          onClose={() => setBulkInviteEvento(null)}
+          recipients={(allEmbaixadores || [])
+            .filter((e: any) => e.status === "ativo")
+            .map((e: any) => ({ name: e.nomeCompleto, email: e.email || undefined, phone: e.telefone || undefined }))}
+          defaultSubject={bulkInviteEvento ? `${t("bulk.convidar")}: ${bulkInviteEvento.titulo}` : undefined}
+          context="event"
+        />
       </div>
     </DashboardLayout>
   );

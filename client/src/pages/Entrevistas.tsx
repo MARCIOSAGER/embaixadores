@@ -219,7 +219,7 @@ export default function Entrevistas() {
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("ent.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+            <input placeholder={t("ent.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} aria-label={t("ent.buscar")} />
           </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {[
@@ -252,7 +252,7 @@ export default function Entrevistas() {
             {filtered.map((ent: any) => {
               const sc = STATUS_MAP[ent.status] || STATUS_MAP.agendada;
               return (
-                <div key={ent.id} className="apple-card p-5 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setSelected(ent)}>
+                <div key={ent.id} className="apple-card p-5 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setSelected(ent)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(ent); } }}>
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.875rem] font-bold shrink-0">
                       {ent.nomeCandidato?.charAt(0)?.toUpperCase()}
@@ -292,7 +292,7 @@ export default function Entrevistas() {
 
         {/* Detail Sheet */}
         {selected && (
-          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)}>
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)} onKeyDown={(e) => { if (e.key === "Escape") setSelected(null); }} role="dialog" aria-modal="true" aria-label={selected.nomeCandidato}>
             <div className="apple-sheet-content w-full max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">

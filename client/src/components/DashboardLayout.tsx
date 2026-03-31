@@ -63,8 +63,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-black">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#FF6B00] focus:text-white focus:rounded-lg">
-        Pular para o conteudo
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-[#FF6B00] focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">
+        Pular para o conteúdo
       </a>
       <div className="apple-mesh" />
 
@@ -161,7 +161,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 apple-vibrancy-ultra border-b-[0.5px] border-white/[0.06]">
         <div className="flex items-center justify-between px-4 h-11">
           <div className="flex items-center gap-2.5">
-            <img src={LOGO_LEGENDARIOS} alt="" className="w-6 h-6 object-contain invert" />
+            <img src={LOGO_LEGENDARIOS} alt="Legendários" className="w-6 h-6 object-contain invert" />
             <span className="text-[0.9375rem] font-semibold text-white tracking-[-0.02em]">Embaixadores</span>
           </div>
           <div className="flex items-center gap-1">

@@ -14,6 +14,7 @@ import SendReportDialog from "@/components/SendReportDialog";
 import { supabase } from "@/lib/supabase";
 import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import BulkMessageDialog from "@/components/BulkMessageDialog";
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
   ativo: { color: "#30D158", bg: "rgba(48,209,88,0.14)" },
@@ -30,6 +31,7 @@ export default function Embaixadores() {
   const [selected, setSelected] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
+  const [bulkMsgOpen, setBulkMsgOpen] = useState(false);
   const [form, setForm] = useState({
     nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "",
     email: "", telefone: "", cidade: "", estado: "",
@@ -166,6 +168,14 @@ export default function Embaixadores() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setBulkMsgOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("bulk.enviarMsg")}
+            >
+              <MessageCircle className="w-4 h-4 text-[#25D366]" strokeWidth={1.5} />
+              <span className="hidden sm:inline">{t("bulk.enviarMsg")}</span>
+            </button>
+            <button
               onClick={() => setSendEmailOpen(true)}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
               title={t("report.enviarEmail")}
@@ -208,7 +218,7 @@ export default function Embaixadores() {
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#48484a]" strokeWidth={1.5} />
-            <input placeholder={t("emb.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} />
+            <input placeholder={t("emb.buscar")} value={search} onChange={e => setSearch(e.target.value)} className="apple-input" style={{ paddingLeft: "2.5rem" }} aria-label={t("emb.buscar")} />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {filters.map(f => (
@@ -234,7 +244,7 @@ export default function Embaixadores() {
             {filtered.map((emb: any) => {
               const sc = STATUS_MAP[emb.status] || STATUS_MAP.ativo;
               return (
-                <div key={emb.id} className="apple-list-item group" onClick={() => setSelected(emb)}>
+                <div key={emb.id} className="apple-list-item group" onClick={() => setSelected(emb)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(emb); } }}>
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-[0.8125rem] font-bold shrink-0">
                     {emb.nomeCompleto?.charAt(0)?.toUpperCase()}
                   </div>
@@ -260,7 +270,7 @@ export default function Embaixadores() {
 
         {/* Detail Sheet */}
         {selected && (
-          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)}>
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setSelected(null)} onKeyDown={(e) => { if (e.key === "Escape") setSelected(null); }} role="dialog" aria-modal="true" aria-label={selected.nomeCompleto}>
             <div className="apple-sheet-content w-full max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
               <div className="apple-sheet-handle" />
               <div className="p-6 space-y-5">
@@ -418,6 +428,16 @@ export default function Embaixadores() {
           open={sendEmailOpen}
           onClose={() => setSendEmailOpen(false)}
           onSend={handleSendEmail}
+        />
+
+        {/* Bulk Message Dialog */}
+        <BulkMessageDialog
+          open={bulkMsgOpen}
+          onClose={() => setBulkMsgOpen(false)}
+          recipients={(embaixadores || [])
+            .filter((e: any) => e.status === "ativo")
+            .map((e: any) => ({ name: e.nomeCompleto, email: e.email || undefined, phone: e.telefone || undefined }))}
+          context="general"
         />
       </div>
     </DashboardLayout>
