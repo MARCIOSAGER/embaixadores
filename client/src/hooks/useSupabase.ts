@@ -580,6 +580,64 @@ export function useDeleteInscricao() {
   });
 }
 
+// ========== PRODUTOS ==========
+
+type Produto = Database["public"]["Tables"]["produtos"]["Row"];
+type InsertProduto = Database["public"]["Tables"]["produtos"]["Insert"];
+
+export function useProdutos() {
+  return useQuery({
+    queryKey: ["produtos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("produtos").select("*").order("nome", { ascending: true });
+      if (error) throw error;
+      return data as Produto[];
+    },
+  });
+}
+
+export function useCreateProduto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: InsertProduto) => {
+      const { data: result, error } = await supabase.from("produtos").insert(data).select("id").single();
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["produtos"] });
+    },
+  });
+}
+
+export function useUpdateProduto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<InsertProduto>) => {
+      const { error } = await supabase.from("produtos").update(data).eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["produtos"] });
+    },
+  });
+}
+
+export function useDeleteProduto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from("produtos").delete().eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["produtos"] });
+    },
+  });
+}
+
 export function useConvertInscricaoToEmbaixador() {
   const qc = useQueryClient();
   return useMutation({

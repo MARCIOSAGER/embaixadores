@@ -2,7 +2,7 @@ import { useI18n, type Locale } from "@/lib/i18n";
 import { useLocation, Link } from "wouter";
 import {
   LayoutDashboard, Users, Church, Gift, Calendar, UserPlus, DollarSign,
-  LogOut, Globe, Loader2, Shield, MessageCircle, ClipboardList
+  LogOut, Globe, Loader2, Shield, MessageCircle, ClipboardList, ShoppingBag
 } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   ];
 
   const navItems = isAdmin
-    ? [...baseNavItems, { path: "/admin", icon: Shield, label: t("admin.title") }, { path: "/whatsapp", icon: MessageCircle, label: "WhatsApp" }]
+    ? [...baseNavItems, { path: "/produtos", icon: ShoppingBag, label: t("nav.produtos") }, { path: "/admin", icon: Shield, label: t("admin.title") }, { path: "/whatsapp", icon: MessageCircle, label: "WhatsApp" }]
     : baseNavItems;
 
   useEffect(() => {

@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, CalendarDays, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail, List, ChevronLeft, ChevronRight } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -20,7 +20,7 @@ const STATUS_MAP: Record<string, { color: string; bg: string }> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  encontro: "#E85D00", conferencia: "#BF5AF2", retiro: "#32D74B", treinamento: "#FF9F0A", outro: "#64D2FF",
+  encontro: "#FF6B00", conferencia: "#AF52DE", retiro: "#30D158", treinamento: "#0A84FF", outro: "#8E8E93",
 };
 
 export default function Eventos() {
@@ -31,6 +31,10 @@ export default function Eventos() {
   const [filter, setFilter] = useState("all");
   const [notifyTarget, setNotifyTarget] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: eventos, isLoading } = useEventos();
@@ -60,6 +64,56 @@ export default function Eventos() {
     if (filter === "all") return eventos;
     return eventos.filter((e: any) => e.status === filter);
   }, [eventos, filter]);
+
+  // Calendar helpers
+  const calDays = useMemo(() => {
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+    const days: { day: number; current: boolean }[] = [];
+    for (let i = firstDay - 1; i >= 0; i--) days.push({ day: daysInPrev - i, current: false });
+    for (let i = 1; i <= daysInMonth; i++) days.push({ day: i, current: true });
+    const remaining = 7 - (days.length % 7);
+    if (remaining < 7) for (let i = 1; i <= remaining; i++) days.push({ day: i, current: false });
+    return days;
+  }, [calMonth, calYear]);
+
+  const eventsInMonth = useMemo(() => {
+    if (!filtered) return new Map<number, any[]>();
+    const map = new Map<number, any[]>();
+    filtered.forEach((ev: any) => {
+      if (!ev.data) return;
+      const d = new Date(ev.data);
+      if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
+        const day = d.getDate();
+        if (!map.has(day)) map.set(day, []);
+        map.get(day)!.push(ev);
+      }
+    });
+    return map;
+  }, [filtered, calMonth, calYear]);
+
+  const selectedDayEvents = useMemo(() => {
+    if (selectedDay === null) return [];
+    return eventsInMonth.get(selectedDay) || [];
+  }, [selectedDay, eventsInMonth]);
+
+  const today = new Date();
+  const isToday = (day: number) => day === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+
+  function prevMonth() {
+    setSelectedDay(null);
+    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+    else setCalMonth(m => m - 1);
+  }
+  function nextMonth() {
+    setSelectedDay(null);
+    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+    else setCalMonth(m => m + 1);
+  }
+
+  const weekdays = t("ev.dias").split(",");
+  const months = t("ev.meses").split(",");
 
   function handleExport() {
     const statusPt: Record<string, string> = { agendado: "Agendado", realizado: "Realizado", cancelado: "Cancelado" };
@@ -126,8 +180,8 @@ export default function Eventos() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: "50ms" }}>
+        {/* Filters + View Toggle */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: "50ms" }}>
           {[
             { key: "all", label: t("common.todos") },
             { key: "agendado", label: t("ev.agendado") },
@@ -138,11 +192,139 @@ export default function Eventos() {
               {f.label}
             </button>
           ))}
+          <div className="ml-auto flex shrink-0 rounded-xl border border-white/[0.08] overflow-hidden">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-2 transition-colors ${viewMode === "list" ? "bg-[#FF6B00]/20 text-[#FF6B00]" : "text-[#86868b] hover:text-white"}`}
+              title={t("ev.lista")}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`p-2 transition-colors ${viewMode === "calendar" ? "bg-[#FF6B00]/20 text-[#FF6B00]" : "text-[#86868b] hover:text-white"}`}
+              title={t("ev.calendario")}
+            >
+              <CalendarDays className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* List */}
+        {/* Content: List or Calendar */}
         {isLoading ? (
           <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="apple-skeleton h-28 rounded-2xl" />)}</div>
+        ) : viewMode === "calendar" ? (
+          <div className="animate-fade-up space-y-4" style={{ animationDelay: "100ms" }}>
+            {/* Calendar View */}
+            <div className="apple-card p-4 sm:p-5">
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={prevMonth} className="apple-btn apple-btn-gray p-2 rounded-xl">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <h2 className="text-[1rem] font-semibold text-white tracking-[-0.02em]">
+                  {months[calMonth]} {calYear}
+                </h2>
+                <button onClick={nextMonth} className="apple-btn apple-btn-gray p-2 rounded-xl">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Weekday headers */}
+              <div className="grid grid-cols-7 gap-px mb-1">
+                {weekdays.map(d => (
+                  <div key={d} className="text-center text-[0.6875rem] font-medium text-[#86868b] py-1.5">
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              {/* Days grid */}
+              <div className="grid grid-cols-7 gap-px">
+                {calDays.map((cell, i) => {
+                  const hasEvents = cell.current && eventsInMonth.has(cell.day);
+                  const dayEvents = cell.current ? eventsInMonth.get(cell.day) : undefined;
+                  const isTodayCell = cell.current && isToday(cell.day);
+                  const isSelected = cell.current && selectedDay === cell.day;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => cell.current && setSelectedDay(selectedDay === cell.day ? null : cell.day)}
+                      disabled={!cell.current}
+                      className={`
+                        relative flex flex-col items-center justify-center
+                        aspect-square min-h-[40px] sm:min-h-[48px] rounded-xl transition-all
+                        ${cell.current ? "hover:bg-white/[0.04] cursor-pointer" : "cursor-default"}
+                        ${isSelected ? "bg-[#FF6B00]/20" : ""}
+                        ${isTodayCell ? "border-2 border-[#FF6B00]" : "border border-white/[0.05]"}
+                      `}
+                    >
+                      <span className={`text-[0.8125rem] sm:text-[0.875rem] font-medium ${
+                        !cell.current ? "text-white/20" : isTodayCell ? "text-[#FF6B00]" : "text-white"
+                      }`}>
+                        {cell.day}
+                      </span>
+                      {hasEvents && (
+                        <div className="flex gap-0.5 mt-0.5">
+                          {(dayEvents || []).slice(0, 3).map((ev: any, j: number) => (
+                            <span
+                              key={j}
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: TYPE_COLORS[ev.tipo] || "#8E8E93" }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selected day events */}
+            {selectedDay !== null && (
+              <div className="space-y-3 animate-fade-up">
+                <h3 className="text-[0.875rem] font-semibold text-[#86868b]">
+                  {selectedDay} {months[calMonth]} {calYear}
+                  {isToday(selectedDay) && <span className="ml-2 text-[#FF6B00] text-[0.75rem]">({t("ev.hoje")})</span>}
+                </h3>
+                {selectedDayEvents.length === 0 ? (
+                  <div className="apple-card p-4 text-center">
+                    <p className="text-[0.8125rem] text-[#48484a]">{t("ev.semEventosDia")}</p>
+                  </div>
+                ) : (
+                  selectedDayEvents.map((ev: any) => {
+                    const sc = STATUS_MAP[ev.status] || STATUS_MAP.agendado;
+                    const typeColor = TYPE_COLORS[ev.tipo] || "#8E8E93";
+                    return (
+                      <div key={ev.id} className="apple-card p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${typeColor}14` }}>
+                            <Calendar className="w-4 h-4" style={{ color: typeColor }} strokeWidth={1.5} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[0.8125rem] font-semibold text-white">{ev.titulo}</span>
+                              <span className="apple-badge text-[0.625rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ev.${ev.status}`)}</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.6875rem] text-[#6e6e73] mt-0.5">
+                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ev.data, locale)}</span>
+                              {ev.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" strokeWidth={1.5} />{ev.local}</span>}
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted py-1.5 px-2.5 text-[0.6875rem]">
+                              <Edit2 className="w-3 h-3" strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
         ) : !filtered.length ? (
           <div className="py-16 text-center animate-fade-up">
             <div className="w-16 h-16 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
@@ -154,7 +336,7 @@ export default function Eventos() {
           <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
             {filtered.map((ev: any) => {
               const sc = STATUS_MAP[ev.status] || STATUS_MAP.agendado;
-              const typeColor = TYPE_COLORS[ev.tipo] || "#64D2FF";
+              const typeColor = TYPE_COLORS[ev.tipo] || "#8E8E93";
               return (
                 <div key={ev.id} className="apple-card p-5">
                   <div className="flex items-start gap-4">

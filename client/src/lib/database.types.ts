@@ -173,6 +173,50 @@ export type Database = {
         Insert: Omit<Database["public"]["Tables"]["inscricoes"]["Row"], "id" | "createdAt">;
         Update: Partial<Database["public"]["Tables"]["inscricoes"]["Insert"]>;
       };
+      produtos: {
+        Row: {
+          id: number;
+          nome: string;
+          descricao: string | null;
+          categoria: string;
+          sku: string | null;
+          preco: string;
+          estoque: number;
+          tamanhos: string[] | null;
+          cores: string[] | null;
+          imagemUrl: string | null;
+          status: "disponivel" | "esgotado" | "pre_venda";
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["produtos"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["produtos"]["Insert"]>;
+      };
+      pedidos: {
+        Row: {
+          id: number;
+          embaixadorId: number;
+          status: string;
+          observacoes: string | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["pedidos"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Update: Partial<Database["public"]["Tables"]["pedidos"]["Insert"]>;
+      };
+      pedido_itens: {
+        Row: {
+          id: number;
+          pedidoId: number;
+          produtoId: number;
+          quantidade: number;
+          tamanho: string | null;
+          cor: string | null;
+          precoUnitario: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["pedido_itens"]["Row"], "id">;
+        Update: Partial<Database["public"]["Tables"]["pedido_itens"]["Insert"]>;
+      };
     };
   };
 };
