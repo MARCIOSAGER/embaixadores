@@ -62,7 +62,7 @@ export default function WelcomeKit() {
     if (!selectedEmbId) return;
     createMut.mutate({ embaixadorId: Number(selectedEmbId), tipo: selectedType }, {
       onSuccess: () => {
-        toast.success("Kit criado com sucesso!");
+        toast.success(t("common.sucesso"));
         setShowCreate(false);
         setSelectedEmbId("");
       },
@@ -122,7 +122,7 @@ export default function WelcomeKit() {
   const TIPO_LABELS: Record<string, string> = { welcome: "Welcome", renovacao: "Renovacao", aniversario: "Aniversario" };
 
   function handleExportXlsx() {
-    if (!filtered.length) { toast.error("Nenhum kit para exportar"); return; }
+    if (!filtered.length) { toast.error(t("kit.nenhumExportar")); return; }
     const data = filtered.map((kit: any) => ({
       "Embaixador": getEmbName(kit.embaixadorId),
       "Tipo": TIPO_LABELS[(kit.tipo || "welcome")] || kit.tipo || "",
@@ -137,7 +137,7 @@ export default function WelcomeKit() {
   }
 
   async function handleSendEmail(email: string) {
-    if (!filtered.length) { toast.error("Nenhum kit para exportar"); throw new Error("empty"); }
+    if (!filtered.length) { toast.error(t("kit.nenhumExportar")); throw new Error("empty"); }
     const rows = filtered.map((kit: any) => [
       getEmbName(kit.embaixadorId),
       TIPO_LABELS[(kit.tipo || "welcome")] || kit.tipo || "",
@@ -187,7 +187,7 @@ export default function WelcomeKit() {
                 if (filtered && filtered.length > 0) {
                   exportKitsPdf(filtered, getEmbName);
                 } else {
-                  toast.error("Nenhum kit para exportar");
+                  toast.error(t("kit.nenhumExportar"));
                 }
               }}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -420,14 +420,14 @@ export default function WelcomeKit() {
                 <div className="space-y-3">
                   <h3 className="text-[0.8125rem] font-semibold text-[#86868b] flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5" />
-                    Historico
+                    {t("kit.historico")}
                   </h3>
                   {historyLoading ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="w-4 h-4 animate-spin text-[#48484a]" />
                     </div>
                   ) : !kitHistory || kitHistory.length === 0 ? (
-                    <p className="text-[0.75rem] text-[#48484a] py-2">Nenhum historico</p>
+                    <p className="text-[0.75rem] text-[#48484a] py-2">{t("kit.nenhumHistorico")}</p>
                   ) : (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {kitHistory.map((entry: any) => (

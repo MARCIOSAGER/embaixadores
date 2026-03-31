@@ -707,6 +707,47 @@ const translations: Record<Locale, Record<string, string>> = {
     "adash.proxReunioes": "Proximas Reunioes",
     "adash.nenhumEvento": "Nenhum evento proximo",
     "adash.nenhumReuniao": "Nenhuma reuniao proxima",
+
+    // EventoInscricao (public page)
+    "ev.inscricao.naoEncontrado": "Evento não encontrado",
+    "ev.inscricao.presencaConfirmada": "Sua presença está confirmada. Até lá!",
+    "ev.inscricao.notificadoVaga": "Você será notificado caso uma vaga seja liberada.",
+    "ev.inscricao.vagasEsgotadas": "Vagas esgotadas. Sua inscrição será adicionada à lista de espera.",
+    "ev.inscricao.nomeCompleto": "Nome Completo",
+    "ev.inscricao.emailLabel": "Email",
+    "ev.inscricao.whatsappLabel": "WhatsApp",
+    "ev.inscricao.observacoesLabel": "Observações",
+    "ev.inscricao.confirmar": "Confirmar Inscrição",
+    "ev.inscricao.entrarLista": "Entrar na Lista de Espera",
+    "ev.inscricao.enviando": "Enviando...",
+    "ev.inscricao.footer": "Embaixadores dos Legendários",
+
+    // Produtos toast messages
+    "prod.imagemEnviada": "Imagem enviada!",
+    "prod.erroImagem": "Erro ao enviar imagem",
+    "prod.nomeObrigatorio": "Nome é obrigatório",
+
+    // Google Meet toast messages
+    "meet.loginGoogle": "Faça login com Google para gerar links do Meet",
+    "meet.gerando": "Gerando link do Meet...",
+    "meet.gerado": "Link do Meet gerado!",
+    "meet.erro": "Erro ao gerar link do Meet",
+
+    // MeusIndicados status labels
+    "mi.statusPendente": "Pendente",
+    "mi.statusEntrevistando": "Entrevistando",
+    "mi.statusAprovado": "Aprovado",
+    "mi.statusRejeitado": "Rejeitado",
+
+    // NotFound page
+    "notfound.title": "Página Não Encontrada",
+    "notfound.message": "Desculpe, a página que você procura não existe. Ela pode ter sido movida ou excluída.",
+    "notfound.goHome": "Ir para o Início",
+
+    // WelcomeKit extra
+    "kit.nenhumExportar": "Nenhum kit para exportar",
+    "kit.nenhumHistorico": "Nenhum histórico",
+    "kit.historico": "Histórico",
   },
 
   es: {
@@ -1413,6 +1454,47 @@ const translations: Record<Locale, Record<string, string>> = {
     "adash.proxReunioes": "Proximas Reuniones",
     "adash.nenhumEvento": "Ningun evento proximo",
     "adash.nenhumReuniao": "Ninguna reunion proxima",
+
+    // EventoInscricao (public page)
+    "ev.inscricao.naoEncontrado": "Evento no encontrado",
+    "ev.inscricao.presencaConfirmada": "Su presencia está confirmada. ¡Hasta pronto!",
+    "ev.inscricao.notificadoVaga": "Será notificado si una plaza se libera.",
+    "ev.inscricao.vagasEsgotadas": "Plazas agotadas. Su inscripción será añadida a la lista de espera.",
+    "ev.inscricao.nomeCompleto": "Nombre Completo",
+    "ev.inscricao.emailLabel": "Email",
+    "ev.inscricao.whatsappLabel": "WhatsApp",
+    "ev.inscricao.observacoesLabel": "Observaciones",
+    "ev.inscricao.confirmar": "Confirmar Inscripción",
+    "ev.inscricao.entrarLista": "Entrar en la Lista de Espera",
+    "ev.inscricao.enviando": "Enviando...",
+    "ev.inscricao.footer": "Embajadores de los Legendarios",
+
+    // Productos toast messages
+    "prod.imagemEnviada": "¡Imagen enviada!",
+    "prod.erroImagem": "Error al enviar imagen",
+    "prod.nomeObrigatorio": "Nombre es obligatorio",
+
+    // Google Meet toast messages
+    "meet.loginGoogle": "Inicie sesión con Google para generar enlaces de Meet",
+    "meet.gerando": "Generando enlace de Meet...",
+    "meet.gerado": "¡Enlace de Meet generado!",
+    "meet.erro": "Error al generar enlace de Meet",
+
+    // MeusIndicados status labels
+    "mi.statusPendente": "Pendiente",
+    "mi.statusEntrevistando": "En Entrevista",
+    "mi.statusAprovado": "Aprobado",
+    "mi.statusRejeitado": "Rechazado",
+
+    // NotFound page
+    "notfound.title": "Página No Encontrada",
+    "notfound.message": "Lo sentimos, la página que busca no existe. Puede haber sido movida o eliminada.",
+    "notfound.goHome": "Ir al Inicio",
+
+    // WelcomeKit extra
+    "kit.nenhumExportar": "Ningún kit para exportar",
+    "kit.nenhumHistorico": "Ningún historial",
+    "kit.historico": "Historial",
   },
 
   en: {
@@ -2115,6 +2197,47 @@ const translations: Record<Locale, Record<string, string>> = {
     "adash.proxReunioes": "Upcoming Meetings",
     "adash.nenhumEvento": "No upcoming events",
     "adash.nenhumReuniao": "No upcoming meetings",
+
+    // EventoInscricao (public page)
+    "ev.inscricao.naoEncontrado": "Event not found",
+    "ev.inscricao.presencaConfirmada": "Your attendance is confirmed. See you there!",
+    "ev.inscricao.notificadoVaga": "You will be notified if a spot becomes available.",
+    "ev.inscricao.vagasEsgotadas": "Spots are full. Your registration will be added to the waiting list.",
+    "ev.inscricao.nomeCompleto": "Full Name",
+    "ev.inscricao.emailLabel": "Email",
+    "ev.inscricao.whatsappLabel": "WhatsApp",
+    "ev.inscricao.observacoesLabel": "Notes",
+    "ev.inscricao.confirmar": "Confirm Registration",
+    "ev.inscricao.entrarLista": "Join the Waiting List",
+    "ev.inscricao.enviando": "Sending...",
+    "ev.inscricao.footer": "Ambassadors of the Legendaries",
+
+    // Products toast messages
+    "prod.imagemEnviada": "Image uploaded!",
+    "prod.erroImagem": "Error uploading image",
+    "prod.nomeObrigatorio": "Name is required",
+
+    // Google Meet toast messages
+    "meet.loginGoogle": "Sign in with Google to generate Meet links",
+    "meet.gerando": "Generating Meet link...",
+    "meet.gerado": "Meet link generated!",
+    "meet.erro": "Error generating Meet link",
+
+    // MeusIndicados status labels
+    "mi.statusPendente": "Pending",
+    "mi.statusEntrevistando": "Interviewing",
+    "mi.statusAprovado": "Approved",
+    "mi.statusRejeitado": "Rejected",
+
+    // NotFound page
+    "notfound.title": "Page Not Found",
+    "notfound.message": "Sorry, the page you are looking for doesn't exist. It may have been moved or deleted.",
+    "notfound.goHome": "Go Home",
+
+    // WelcomeKit extra
+    "kit.nenhumExportar": "No kits to export",
+    "kit.nenhumHistorico": "No history",
+    "kit.historico": "History",
 
     // ErrorBoundary
     "error.unexpected": "An unexpected error occurred.",

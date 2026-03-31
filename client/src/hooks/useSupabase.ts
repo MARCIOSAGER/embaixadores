@@ -486,7 +486,7 @@ export function useDashboardStats() {
 
       const funnel = {
         total: allInsc.length,
-        entrevistando: allInsc.filter((i) => i.status === "entrevista").length,
+        entrevistando: allInsc.filter((i) => i.status === "entrevistando").length,
         aprovados: allInsc.filter((i) => i.status === "aprovado").length,
         embaixadores: allEmb.filter((e) => e.status === "ativo").length,
       };
@@ -762,10 +762,26 @@ export function useCreatePedido() {
       const { error: itensError } = await supabase.from("pedido_itens").insert(itensWithPedidoId);
       if (itensError) throw itensError;
 
+      // Decrement stock for each product
+      for (const item of itensWithPedidoId) {
+        const { data: prod } = await supabase
+          .from("produtos")
+          .select("estoque")
+          .eq("id", item.produtoId)
+          .single();
+        if (prod) {
+          await supabase
+            .from("produtos")
+            .update({ estoque: Math.max(0, prod.estoque - item.quantidade) })
+            .eq("id", item.produtoId);
+        }
+      }
+
       return newPedido;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pedidos"] });
+      qc.invalidateQueries({ queryKey: ["produtos"] });
     },
   });
 }

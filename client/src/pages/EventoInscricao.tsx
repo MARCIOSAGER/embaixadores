@@ -95,7 +95,7 @@ export default function EventoInscricao() {
       setResultStatus(status);
       setSubmitted(true);
     } catch (err: any) {
-      alert(err.message || "Erro ao realizar inscrição");
+      alert(err.message || t("ev.inscricao.naoEncontrado"));
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +114,7 @@ export default function EventoInscricao() {
       <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 40%, #0d0d0d 100%)" }}>
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-[#48484a] mx-auto mb-4" />
-          <p className="text-white text-lg font-semibold">Evento não encontrado</p>
+          <p className="text-white text-lg font-semibold">{t("ev.inscricao.naoEncontrado")}</p>
         </div>
       </div>
     );
@@ -233,8 +233,8 @@ export default function EventoInscricao() {
             </h2>
             <p className="text-[0.8125rem] text-[#86868b]">
               {resultStatus === "confirmado"
-                ? "Sua presença está confirmada. Até lá!"
-                : "Você será notificado caso uma vaga seja liberada."
+                ? t("ev.inscricao.presencaConfirmada")
+                : t("ev.inscricao.notificadoVaga")
               }
             </p>
           </div>
@@ -250,13 +250,13 @@ export default function EventoInscricao() {
             {isFull && (
               <div className="flex items-center gap-2 text-[0.75rem] text-[#FF9F0A] bg-[#FF9F0A]/10 rounded-xl p-3 border border-[#FF9F0A]/20">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>Vagas esgotadas. Sua inscrição será adicionada à {t("ev.listaEspera").toLowerCase()}.</span>
+                <span>{t("ev.inscricao.vagasEsgotadas")}</span>
               </div>
             )}
 
             <div>
               <label className="block text-[0.75rem] font-medium text-[#86868b] mb-1.5 uppercase tracking-wider">
-                Nome Completo *
+                {t("ev.inscricao.nomeCompleto")} *
               </label>
               <input
                 value={form.nomeCompleto}
@@ -269,7 +269,7 @@ export default function EventoInscricao() {
 
             <div>
               <label className="block text-[0.75rem] font-medium text-[#86868b] mb-1.5 uppercase tracking-wider">
-                Email *
+                {t("ev.inscricao.emailLabel")} *
               </label>
               <input
                 type="email"
@@ -283,7 +283,7 @@ export default function EventoInscricao() {
 
             <div>
               <label className="block text-[0.75rem] font-medium text-[#86868b] mb-1.5 uppercase tracking-wider">
-                WhatsApp *
+                {t("ev.inscricao.whatsappLabel")} *
               </label>
               <input
                 type="tel"
@@ -297,7 +297,7 @@ export default function EventoInscricao() {
 
             <div>
               <label className="block text-[0.75rem] font-medium text-[#86868b] mb-1.5 uppercase tracking-wider">
-                Observações
+                {t("ev.inscricao.observacoesLabel")}
               </label>
               <textarea
                 value={form.observacoes}
@@ -320,9 +320,9 @@ export default function EventoInscricao() {
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
               ) : isFull ? (
-                `Entrar na ${t("ev.listaEspera")}`
+                t("ev.inscricao.entrarLista")
               ) : (
-                "Confirmar Inscrição"
+                t("ev.inscricao.confirmar")
               )}
             </button>
           </form>
@@ -330,7 +330,7 @@ export default function EventoInscricao() {
 
         {/* Footer */}
         <p className="text-center text-[0.6875rem] text-[#48484a] pb-4">
-          Embaixadores dos Legendários
+          {t("ev.inscricao.footer")}
         </p>
       </div>
     </div>

@@ -94,9 +94,9 @@ Deno.serve(async (req) => {
       return json({ error: "PDF excede o tamanho maximo de 10MB" }, 400);
     }
 
-    // Sanitize subject and body for email
-    const safeSubject = escapeHtml(subject);
-    const safeBody = body ? escapeHtml(body) : safeSubject;
+    // Subject and text body are plain text — no HTML escaping needed
+    const safeSubject = subject;
+    const safeBody = body || subject;
 
     const smtpHost = (Deno.env.get("SMTP_HOST") || "smtp.hostinger.com").trim();
     const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());

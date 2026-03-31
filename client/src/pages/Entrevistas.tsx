@@ -88,17 +88,39 @@ export default function Entrevistas() {
     return list;
   }, [entrevistas, filter, search]);
 
-  function handleConvertToEmbaixador(ent: any) {
-    const data = {
+  async function handleConvertToEmbaixador(ent: any) {
+    // Try to find the original inscription
+    const { data: inscricao } = await supabase
+      .from("inscricoes")
+      .select("*")
+      .eq("email", ent.emailCandidato)
+      .eq("status", "entrevistando")
+      .single();
+
+    const embData = {
       nomeCompleto: ent.nomeCandidato,
       email: ent.emailCandidato || null,
       telefone: ent.telefoneCandidato || null,
       dataIngresso: Date.now(),
       status: "ativo" as const,
       codigoIndicacao: Math.random().toString(36).substring(2, 8),
+      // Map from inscription if available
+      ...(inscricao ? {
+        cidade: inscricao.cidade || null,
+        estado: inscricao.estado || null,
+        profissao: inscricao.profissao || null,
+        empresa: inscricao.possuiEmpresa || null,
+        numeroLegendario: inscricao.numeroLegendario || null,
+        dataNascimento: inscricao.dataNascimento ? new Date(inscricao.dataNascimento + "T12:00:00").getTime() : null,
+        fotoUrl: inscricao.fotoUrl || null,
+      } : {}),
     };
-    createEmbMut.mutate(data, {
-      onSuccess: () => {
+    createEmbMut.mutate(embData, {
+      onSuccess: async () => {
+        // Update inscription status to aprovado
+        if (inscricao) {
+          await supabase.from("inscricoes").update({ status: "aprovado" }).eq("id", inscricao.id);
+        }
         toast.success(t("ent.embCriado"));
         setConfirmConvert(null);
         setSelected(null);
@@ -384,8 +406,8 @@ export default function Entrevistas() {
                       type="button"
                       onClick={async () => {
                         const googleToken = sessionStorage.getItem("google_token");
-                        if (!googleToken) { toast.error("Faça login com Google para gerar links do Meet"); return; }
-                        toast.loading("Gerando link do Meet...");
+                        if (!googleToken) { toast.error(t("meet.loginGoogle")); return; }
+                        toast.loading(t("meet.gerando"));
                         try {
                           const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
                             method: "POST",
@@ -393,9 +415,9 @@ export default function Entrevistas() {
                             body: JSON.stringify({ title: `Entrevista - ${form.nomeCandidato || "Candidato"}`, date: form.dataEntrevista, googleToken }),
                           });
                           const data = await res.json();
-                          if (data.meetLink) { setForm(f => ({ ...f, linkMeet: data.meetLink })); toast.dismiss(); toast.success("Link do Meet gerado!"); }
-                          else { toast.dismiss(); toast.error(data.error || "Erro ao gerar link"); }
-                        } catch { toast.dismiss(); toast.error("Erro ao gerar link do Meet"); }
+                          if (data.meetLink) { setForm(f => ({ ...f, linkMeet: data.meetLink })); toast.dismiss(); toast.success(t("meet.gerado")); }
+                          else { toast.dismiss(); toast.error(data.error || t("meet.erro")); }
+                        } catch { toast.dismiss(); toast.error(t("meet.erro")); }
                       }}
                       className="apple-btn apple-btn-filled px-3 py-2 text-xs rounded-xl shrink-0 flex items-center gap-1.5"
                     >

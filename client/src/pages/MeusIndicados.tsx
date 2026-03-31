@@ -8,11 +8,11 @@ import StatsCard from "@/components/StatsCard";
 import { UsersRound, Clock, UserCheck, Search as SearchIcon, Copy, Share2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-const STATUS_COLORS: Record<string, { color: string; bg: string; label: string }> = {
-  pendente: { color: "#FF9F0A", bg: "rgba(255,159,10,0.14)", label: "Pendente" },
-  entrevistando: { color: "#0A84FF", bg: "rgba(10,132,255,0.14)", label: "Entrevistando" },
-  aprovado: { color: "#30D158", bg: "rgba(48,209,88,0.14)", label: "Aprovado" },
-  rejeitado: { color: "#FF453A", bg: "rgba(255,69,58,0.14)", label: "Rejeitado" },
+const STATUS_COLORS: Record<string, { color: string; bg: string; labelKey: string }> = {
+  pendente: { color: "#FF9F0A", bg: "rgba(255,159,10,0.14)", labelKey: "mi.statusPendente" },
+  entrevistando: { color: "#0A84FF", bg: "rgba(10,132,255,0.14)", labelKey: "mi.statusEntrevistando" },
+  aprovado: { color: "#30D158", bg: "rgba(48,209,88,0.14)", labelKey: "mi.statusAprovado" },
+  rejeitado: { color: "#FF453A", bg: "rgba(255,69,58,0.14)", labelKey: "mi.statusRejeitado" },
 };
 
 export default function MeusIndicados() {
@@ -156,7 +156,7 @@ export default function MeusIndicados() {
                       className="apple-badge text-[0.6875rem] font-medium px-2.5 py-1 shrink-0"
                       style={{ background: sc.bg, color: sc.color }}
                     >
-                      {sc.label}
+                      {t(sc.labelKey)}
                     </span>
                   </div>
                 );

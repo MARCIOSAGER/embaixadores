@@ -605,10 +605,10 @@ export default function Eventos() {
                       onClick={async () => {
                         const googleToken = sessionStorage.getItem("google_token");
                         if (!googleToken) {
-                          toast.error("Faça login com Google para gerar links do Meet");
+                          toast.error(t("meet.loginGoogle"));
                           return;
                         }
-                        toast.loading("Gerando link do Meet...");
+                        toast.loading(t("meet.gerando"));
                         try {
                           const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-meet`, {
                             method: "POST",
@@ -623,14 +623,14 @@ export default function Eventos() {
                           if (data.meetLink) {
                             setForm(f => ({ ...f, linkMeet: data.meetLink }));
                             toast.dismiss();
-                            toast.success("Link do Meet gerado!");
+                            toast.success(t("meet.gerado"));
                           } else {
                             toast.dismiss();
-                            toast.error(data.error || "Erro ao gerar link");
+                            toast.error(data.error || t("meet.erro"));
                           }
                         } catch {
                           toast.dismiss();
-                          toast.error("Erro ao gerar link do Meet");
+                          toast.error(t("meet.erro"));
                         }
                       }}
                       className="apple-btn apple-btn-filled px-3 py-2 text-xs rounded-xl shrink-0 flex items-center gap-1.5"

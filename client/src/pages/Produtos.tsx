@@ -191,7 +191,7 @@ export default function Produtos() {
 
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      toast.error("Imagem muito grande (máx 5MB)");
+      toast.error(t("upload.muitoGrande"));
       return;
     }
 
@@ -208,9 +208,9 @@ export default function Produtos() {
 
       const { data: urlData } = supabase.storage.from("produtos").getPublicUrl(fileName);
       setForm((prev) => ({ ...prev, imagemUrl: urlData.publicUrl }));
-      toast.success("Imagem enviada!");
+      toast.success(t("prod.imagemEnviada"));
     } catch (err: any) {
-      toast.error(err.message || "Erro ao enviar imagem");
+      toast.error(err.message || t("prod.erroImagem"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -218,7 +218,7 @@ export default function Produtos() {
   }
 
   function handleSubmit() {
-    if (!form.nome.trim()) return toast.error("Nome é obrigatório");
+    if (!form.nome.trim()) return toast.error(t("prod.nomeObrigatorio"));
 
     const tamanhos = form.tamanhos
       ? form.tamanhos.split(",").map((s) => s.trim()).filter(Boolean)
@@ -241,7 +241,7 @@ export default function Produtos() {
     };
 
     const onSuccess = () => {
-      toast.success(editingId ? "Produto atualizado!" : "Produto criado!");
+      toast.success(t("common.sucesso"));
       setDialogOpen(false);
       resetForm();
     };
@@ -732,7 +732,7 @@ export default function Produtos() {
           onConfirm={() => {
             if (confirmDelete !== null) {
               deleteMut.mutate(confirmDelete, {
-                onSuccess: () => toast.success("Produto excluído!"),
+                onSuccess: () => toast.success(t("common.sucesso")),
                 onError: (e: any) => toast.error(e.message),
               });
               setConfirmDelete(null);
