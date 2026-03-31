@@ -50,7 +50,7 @@ export default function SetPassword() {
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-[420px] mx-auto px-6">
         <div className="mb-6">
-          <img src={LOGO_LEGENDARIOS} alt="Legendários" className="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)] invert" />
+          <img src={LOGO_LEGENDARIOS} alt="Embaixadores" className="w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)]" />
         </div>
 
         <div className="text-center mb-10">

@@ -73,7 +73,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Brand */}
         <div className="px-5 pt-7 pb-5">
           <div className="flex items-center gap-3">
-            <img src={LOGO_LEGENDARIOS} alt="Legendários" className="h-16 object-contain invert" />
+            <img src={LOGO_LEGENDARIOS} alt="Embaixadores" className="h-16 object-contain" />
           </div>
           <p className="apple-caption mt-4">Sistema de Gestão</p>
         </div>
@@ -161,7 +161,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 apple-vibrancy-ultra border-b-[0.5px] border-white/[0.06]">
         <div className="flex items-center justify-between px-4 h-11">
           <div className="flex items-center gap-2.5">
-            <img src={LOGO_LEGENDARIOS} alt="Legendários" className="w-6 h-6 object-contain invert" />
+            <img src={LOGO_LEGENDARIOS} alt="Embaixadores" className="w-6 h-6 object-contain" />
             <span className="text-[0.9375rem] font-semibold text-white tracking-[-0.02em]">Embaixadores</span>
           </div>
           <div className="flex items-center gap-1">

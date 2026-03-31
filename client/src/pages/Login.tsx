@@ -110,8 +110,8 @@ export default function Login() {
         <div className="mb-3">
           <img
             src={LOGO_LEGENDARIOS}
-            alt="Legendários"
-            className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)] invert"
+            alt="Embaixadores"
+            className="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-[0_0_30px_rgba(255,107,0,0.3)]"
           />
         </div>
 

@@ -5,7 +5,7 @@ export default function Terms() {
     <div className="min-h-screen bg-black text-[#d2d2d7] px-6 py-12">
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="flex items-center gap-4 mb-8">
-          <img src={LOGO} alt="Legendarios" className="h-12 invert" />
+          <img src={LOGO} alt="Embaixadores" className="h-12" />
           <h1 className="text-2xl font-bold text-white">Termos de Servico</h1>
         </div>
 
