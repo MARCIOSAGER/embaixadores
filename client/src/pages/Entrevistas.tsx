@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle, FileDown, Send, Search, Users, Clock, CheckCircle2, XCircle } from "lucide-react";
+import PhoneInput from "@/components/PhoneInput";
 import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
@@ -395,7 +396,7 @@ export default function Entrevistas() {
                 <div><label className="apple-input-label">{t("ent.nomeCandidato")} *</label><input value={form.nomeCandidato} onChange={e => setForm({ ...form, nomeCandidato: e.target.value })} className="apple-input" /></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("ent.emailCandidato")}</label><input type="email" value={form.emailCandidato} onChange={e => setForm({ ...form, emailCandidato: e.target.value })} className="apple-input" /></div>
-                  <div><label className="apple-input-label">{t("ent.telefoneCandidato")}</label><input value={form.telefoneCandidato} onChange={e => setForm({ ...form, telefoneCandidato: e.target.value })} className="apple-input" /></div>
+                  <div><label className="apple-input-label">{t("ent.telefoneCandidato")}</label><PhoneInput value={form.telefoneCandidato} onChange={(val) => setForm({ ...form, telefoneCandidato: val })} /></div>
                 </div>
                 <div><label className="apple-input-label">{t("ent.dataEntrevista")} *</label><input type="datetime-local" value={form.dataEntrevista} onChange={e => setForm({ ...form, dataEntrevista: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                 <div>

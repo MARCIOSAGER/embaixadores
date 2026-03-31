@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle } from "lucide-react";
+import PhoneInput from "@/components/PhoneInput";
 import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
@@ -373,7 +374,7 @@ export default function Embaixadores() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("emb.email")}</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="apple-input" /></div>
-                  <div><label className="apple-input-label">{t("emb.telefone")}</label><input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="apple-input" /></div>
+                  <div><label className="apple-input-label">{t("emb.telefone")}</label><PhoneInput value={form.telefone} onChange={(val) => setForm({ ...form, telefone: val })} /></div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="apple-input-label">{t("emb.cidade")}</label><input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="apple-input" /></div>

@@ -3,6 +3,7 @@ import { useRoute } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { useI18n } from "@/lib/i18n";
 import { Loader2, MapPin, Calendar, Clock, CheckCircle2, Users, AlertCircle } from "lucide-react";
+import PhoneInput from "@/components/PhoneInput";
 import { formatDateTime } from "@/lib/dateUtils";
 
 const LOGO = "/logo-legendarios.png";
@@ -285,13 +286,10 @@ export default function EventoInscricao() {
               <label className="block text-[0.75rem] font-medium text-[#86868b] mb-1.5 uppercase tracking-wider">
                 {t("ev.inscricao.whatsappLabel")} *
               </label>
-              <input
-                type="tel"
+              <PhoneInput
                 value={form.telefone}
-                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+                onChange={(val) => setForm({ ...form, telefone: val })}
                 required
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[0.875rem] text-white placeholder-[#48484a] outline-none focus:border-[#FF6B00]/50 focus:ring-1 focus:ring-[#FF6B00]/30 transition-all"
-                placeholder="(11) 99999-9999"
               />
             </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, Loader2, ArrowRight, ArrowLeft, Send, UserCheck, Camera, Upload, Globe } from "lucide-react";
+import PhoneInput from "@/components/PhoneInput";
 import { useI18n, type Locale } from "@/lib/i18n";
 
 const LOGO = "/logo-legendarios.png";
@@ -726,11 +727,20 @@ export default function Inscricao() {
               />
             )}
 
-            {(current.type === "text" || current.type === "email" || current.type === "tel") && (
+            {current.type === "tel" && (
+              <PhoneInput
+                value={form[current.key] as string}
+                onChange={(val) => set(current.key, val as any)}
+                placeholder={current.placeholder}
+                variant="underline"
+              />
+            )}
+
+            {(current.type === "text" || current.type === "email") && (
               <input
                 ref={inputRef as React.RefObject<HTMLInputElement>}
                 type={current.type}
-                inputMode={current.type === "tel" ? "tel" : current.type === "email" ? "email" : "text"}
+                inputMode={current.type === "email" ? "email" : "text"}
                 value={form[current.key] as string}
                 onChange={(e) => set(current.key, e.target.value as any)}
                 placeholder={current.placeholder}
