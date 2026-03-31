@@ -439,11 +439,13 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard", "stats"],
     queryFn: async () => {
-      const [embRes, kitsRes, eventosRes, reunioesRes] = await Promise.all([
+      const [embRes, kitsRes, eventosRes, reunioesRes, inscRes, pagRes] = await Promise.all([
         supabase.from("embaixadores").select("*"),
         supabase.from("welcomeKits").select("status"),
         supabase.from("eventos").select("*").gte("data", Date.now()).eq("status", "agendado").order("data").limit(5),
         supabase.from("tercaGloria").select("*").gte("data", Date.now()).eq("status", "planejada").order("data").limit(3),
+        supabase.from("inscricoes").select("createdAt, status, embaixadorIndicadorId, nomeIndicador"),
+        supabase.from("pagamentos").select("dataPagamento, valor, status"),
       ]);
 
       const allEmb = embRes.data || [];
@@ -459,6 +461,68 @@ export function useDashboardStats() {
         if (nextBday.getTime() < now) nextBday.setFullYear(nextBday.getFullYear() + 1);
         return nextBday.getTime() <= thirtyDaysFromNow;
       }).slice(0, 5);
+
+      // Process inscricoes for monthly trend and funnel
+      const allInsc = inscRes.data || [];
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+      sixMonthsAgo.setDate(1);
+      sixMonthsAgo.setHours(0, 0, 0, 0);
+
+      const monthlyInscricoes: { month: string; count: number }[] = [];
+      for (let i = 0; i < 6; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const label = monthNames[d.getMonth()];
+        const count = allInsc.filter((ins) => {
+          if (!ins.createdAt) return false;
+          const cd = new Date(ins.createdAt);
+          return `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, "0")}` === key;
+        }).length;
+        monthlyInscricoes.push({ month: label, count });
+      }
+
+      const funnel = {
+        total: allInsc.length,
+        entrevistando: allInsc.filter((i) => i.status === "entrevista").length,
+        aprovados: allInsc.filter((i) => i.status === "aprovado").length,
+        embaixadores: allEmb.filter((e) => e.status === "ativo").length,
+      };
+
+      // Top referrers
+      const referrerMap = new Map<string, number>();
+      allInsc.forEach((ins) => {
+        if (ins.nomeIndicador) {
+          referrerMap.set(ins.nomeIndicador, (referrerMap.get(ins.nomeIndicador) || 0) + 1);
+        }
+      });
+      const topReferrers = [...referrerMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count }));
+
+      // Process pagamentos for revenue trend
+      const allPag = pagRes.data || [];
+      const monthlyRevenue: { month: string; total: number }[] = [];
+      let totalRevenue = 0;
+      for (let i = 0; i < 6; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const label = monthNames[d.getMonth()];
+        const monthTotal = allPag
+          .filter((p) => {
+            if (!p.dataPagamento || p.status !== "pago") return false;
+            const pd = new Date(p.dataPagamento);
+            return `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, "0")}` === key;
+          })
+          .reduce((sum, p) => sum + parseFloat(p.valor || "0"), 0);
+        monthlyRevenue.push({ month: label, total: monthTotal });
+        totalRevenue += monthTotal;
+      }
 
       return {
         embaixadores: {
@@ -476,6 +540,11 @@ export function useDashboardStats() {
           parciais: allKits.filter((k) => k.status === "parcial").length,
           completos: allKits.filter((k) => k.status === "completo").length,
         },
+        monthlyInscricoes,
+        funnel,
+        topReferrers,
+        monthlyRevenue,
+        totalRevenue,
       };
     },
   });
@@ -634,6 +703,100 @@ export function useDeleteProduto() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["produtos"] });
+    },
+  });
+}
+
+// ========== PEDIDOS ==========
+
+type Pedido = Database["public"]["Tables"]["pedidos"]["Row"];
+type InsertPedido = Database["public"]["Tables"]["pedidos"]["Insert"];
+type PedidoItem = Database["public"]["Tables"]["pedido_itens"]["Row"];
+type InsertPedidoItem = Database["public"]["Tables"]["pedido_itens"]["Insert"];
+
+export function usePedidos() {
+  return useQuery({
+    queryKey: ["pedidos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select("*, embaixadores!inner(nomeCompleto)")
+        .order("createdAt", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function usePedidoItens(pedidoId: number | null) {
+  return useQuery({
+    queryKey: ["pedidoItens", pedidoId],
+    queryFn: async () => {
+      if (!pedidoId) return [];
+      const { data, error } = await supabase
+        .from("pedido_itens")
+        .select("*, produtos(nome)")
+        .eq("pedidoId", pedidoId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!pedidoId,
+  });
+}
+
+export function useCreatePedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { pedido: InsertPedido; itens: Omit<InsertPedidoItem, "pedidoId">[] }) => {
+      const { data: newPedido, error: pedidoError } = await supabase
+        .from("pedidos")
+        .insert(data.pedido)
+        .select("id")
+        .single();
+      if (pedidoError) throw pedidoError;
+
+      const itensWithPedidoId = data.itens.map((item) => ({
+        ...item,
+        pedidoId: newPedido.id,
+      }));
+      const { error: itensError } = await supabase.from("pedido_itens").insert(itensWithPedidoId);
+      if (itensError) throw itensError;
+
+      return newPedido;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+  });
+}
+
+export function useUpdatePedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<InsertPedido>) => {
+      const { error } = await supabase.from("pedidos").update(data).eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+  });
+}
+
+export function useDeletePedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error: itemsError } = await supabase.from("pedido_itens").delete().eq("pedidoId", id);
+      if (itemsError) throw itemsError;
+      const { error } = await supabase.from("pedidos").delete().eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pedidos"] });
+      qc.invalidateQueries({ queryKey: ["pedidoItens"] });
     },
   });
 }

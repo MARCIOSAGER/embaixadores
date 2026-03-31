@@ -1,3 +1,4 @@
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -7,47 +8,60 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { useAuth } from "./hooks/useAuth";
 import Login from "./pages/Login";
 import SetPassword from "./pages/SetPassword";
-import Home from "./pages/Home";
-import Embaixadores from "./pages/Embaixadores";
-import TercaDeGloria from "./pages/TercaDeGloria";
-import WelcomeKit from "./pages/WelcomeKit";
-import Eventos from "./pages/Eventos";
-import Entrevistas from "./pages/Entrevistas";
-import Pagamentos from "./pages/Pagamentos";
-import Admin from "./pages/Admin";
-import Produtos from "./pages/Produtos";
-
-import ZApiAdmin from "./pages/ZApiAdmin";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Profile from "./pages/Profile";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Inscricao from "./pages/Inscricao";
-import EventoInscricao from "./pages/EventoInscricao";
-import Inscricoes from "./pages/Inscricoes";
 import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+
+// Lazy-loaded page components
+const Home = lazy(() => import("./pages/Home"));
+const Embaixadores = lazy(() => import("./pages/Embaixadores"));
+const TercaDeGloria = lazy(() => import("./pages/TercaDeGloria"));
+const WelcomeKit = lazy(() => import("./pages/WelcomeKit"));
+const Eventos = lazy(() => import("./pages/Eventos"));
+const Entrevistas = lazy(() => import("./pages/Entrevistas"));
+const Inscricoes = lazy(() => import("./pages/Inscricoes"));
+const Pagamentos = lazy(() => import("./pages/Pagamentos"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Produtos = lazy(() => import("./pages/Produtos"));
+const Pedidos = lazy(() => import("./pages/Pedidos"));
+const ZApiAdmin = lazy(() => import("./pages/ZApiAdmin"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Inscricao = lazy(() => import("./pages/Inscricao"));
+const EventoInscricao = lazy(() => import("./pages/EventoInscricao"));
+const MeusIndicados = lazy(() => import("./pages/MeusIndicados"));
 import { supabase } from "./lib/supabase";
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
+    </div>
+  );
+}
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/embaixadores" component={Embaixadores} />
-      <Route path="/terca-de-gloria" component={TercaDeGloria} />
-      <Route path="/welcome-kit" component={WelcomeKit} />
-      <Route path="/eventos" component={Eventos} />
-      <Route path="/entrevistas" component={Entrevistas} />
-      <Route path="/inscricoes" component={Inscricoes} />
-      <Route path="/pagamentos" component={Pagamentos} />
-      <Route path="/produtos">{() => <ProtectedRoute requireAdmin><Produtos /></ProtectedRoute>}</Route>
-      <Route path="/admin">{() => <ProtectedRoute requireAdmin><Admin /></ProtectedRoute>}</Route>
-
-      <Route path="/whatsapp">{() => <ProtectedRoute requireAdmin><ZApiAdmin /></ProtectedRoute>}</Route>
-      <Route path="/perfil" component={Profile} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/embaixadores" component={Embaixadores} />
+        <Route path="/terca-de-gloria" component={TercaDeGloria} />
+        <Route path="/welcome-kit" component={WelcomeKit} />
+        <Route path="/eventos" component={Eventos} />
+        <Route path="/entrevistas" component={Entrevistas} />
+        <Route path="/inscricoes" component={Inscricoes} />
+        <Route path="/pagamentos" component={Pagamentos} />
+        <Route path="/meus-indicados" component={MeusIndicados} />
+        <Route path="/produtos" component={Produtos} />
+        <Route path="/pedidos">{() => <ProtectedRoute requireAdmin><Pedidos /></ProtectedRoute>}</Route>
+        <Route path="/admin">{() => <ProtectedRoute requireAdmin><Admin /></ProtectedRoute>}</Route>
+        <Route path="/whatsapp">{() => <ProtectedRoute requireAdmin><ZApiAdmin /></ProtectedRoute>}</Route>
+        <Route path="/perfil" component={Profile} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
@@ -112,13 +126,15 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <Switch>
-            <Route path="/privacidade" component={Privacy} />
-            <Route path="/termos" component={Terms} />
-            <Route path="/inscricao" component={Inscricao} />
-            <Route path="/evento/:id" component={EventoInscricao} />
-            <Route>{isAuthenticated ? <Router /> : <Login />}</Route>
-          </Switch>
+          <Suspense fallback={<PageLoader />}>
+            <Switch>
+              <Route path="/privacidade" component={Privacy} />
+              <Route path="/termos" component={Terms} />
+              <Route path="/inscricao" component={Inscricao} />
+              <Route path="/evento/:id" component={EventoInscricao} />
+              <Route>{isAuthenticated ? <Router /> : <Login />}</Route>
+            </Switch>
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

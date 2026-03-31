@@ -2,9 +2,9 @@ import { useI18n, type Locale } from "@/lib/i18n";
 import { useLocation, Link } from "wouter";
 import {
   LayoutDashboard, Users, Church, Gift, Calendar, UserPlus, DollarSign,
-  LogOut, Globe, Loader2, Shield, MessageCircle, ClipboardList, ShoppingBag
+  LogOut, Globe, Loader2, Shield, MessageCircle, ClipboardList, ShoppingBag, ShoppingCart, UserCircle, UsersRound
 } from "lucide-react";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const LOGO_LEGENDARIOS = "/logo-legendarios.png";
@@ -15,6 +15,13 @@ const LANGS: { code: Locale; label: string; flag: string }[] = [
   { code: "en", label: "English", flag: "https://flagcdn.com/w40/us.png" },
 ];
 
+type NavItem = {
+  path: string;
+  icon: any;
+  label: string;
+  adminOnly?: boolean;
+};
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user: authUser, signOut, isAdmin, userName } = useAuth();
   const user = { name: userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User", email: authUser?.email || "" };
@@ -22,20 +29,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { t, locale, setLocale } = useI18n();
   const [showLang, setShowLang] = useState(false);
 
-  const baseNavItems = [
+  const allNavItems: NavItem[] = useMemo(() => [
     { path: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
-    { path: "/embaixadores", icon: Users, label: t("nav.embaixadores") },
+    { path: "/meus-indicados", icon: UsersRound, label: t("nav.meusIndicados"), adminOnly: false },
+    { path: "/embaixadores", icon: Users, label: t("nav.embaixadores"), adminOnly: true },
     { path: "/terca-de-gloria", icon: Church, label: t("nav.tercaGloria") },
-    { path: "/welcome-kit", icon: Gift, label: t("nav.welcomeKit") },
+    { path: "/welcome-kit", icon: Gift, label: t("nav.welcomeKit"), adminOnly: true },
     { path: "/eventos", icon: Calendar, label: t("nav.eventos") },
-    { path: "/entrevistas", icon: UserPlus, label: t("nav.entrevistas") },
-    { path: "/inscricoes", icon: ClipboardList, label: t("nav.inscricoes") },
-    { path: "/pagamentos", icon: DollarSign, label: t("nav.pagamentos") },
-  ];
+    { path: "/entrevistas", icon: UserPlus, label: t("nav.entrevistas"), adminOnly: true },
+    { path: "/inscricoes", icon: ClipboardList, label: t("nav.inscricoes"), adminOnly: true },
+    { path: "/pagamentos", icon: DollarSign, label: t("nav.pagamentos"), adminOnly: true },
+    { path: "/produtos", icon: ShoppingBag, label: t("nav.produtos") },
+    { path: "/pedidos", icon: ShoppingCart, label: t("nav.pedidos"), adminOnly: true },
+    { path: "/admin", icon: Shield, label: t("admin.title"), adminOnly: true },
+    { path: "/whatsapp", icon: MessageCircle, label: "WhatsApp", adminOnly: true },
+  ], [t]);
 
-  const navItems = isAdmin
-    ? [...baseNavItems, { path: "/produtos", icon: ShoppingBag, label: t("nav.produtos") }, { path: "/admin", icon: Shield, label: t("admin.title") }, { path: "/whatsapp", icon: MessageCircle, label: "WhatsApp" }]
-    : baseNavItems;
+  const navItems = useMemo(() => {
+    if (isAdmin) return allNavItems.filter(item => item.path !== "/meus-indicados");
+    return allNavItems.filter(item => !item.adminOnly);
+  }, [isAdmin, allNavItems]);
 
   useEffect(() => {
     if (showLang) {

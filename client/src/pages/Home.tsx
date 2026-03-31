@@ -1,9 +1,14 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/DashboardLayout";
+import StatsCard from "@/components/StatsCard";
 import { useDashboardStats } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
-import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { supabase } from "@/lib/supabase";
+import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church, PieChart as PieChartIcon, BarChart3, TrendingUp, DollarSign, Trophy, UsersRound, Copy, Share2 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, AreaChart, Area, LineChart, Line } from "recharts";
+import { toast } from "sonner";
 
 function ProgressRing({ value, max, color, size = 56 }: { value: number; max: number; color: string; size?: number }) {
   const r = (size - 8) / 2;
@@ -119,11 +124,208 @@ function Skeleton() {
   );
 }
 
+function AmbassadorDashboard() {
+  const { user: authUser, userName, session } = useAuth();
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+  const name = userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User";
+  const firstName = name.split(" ")[0] || "";
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? t("dash.bomDia") : hour < 18 ? t("dash.boaTarde") : t("dash.boaNoite");
+
+  // Find ambassador linked to this auth user
+  const { data: myEmbaixador } = useQuery({
+    queryKey: ["my-embaixador", session?.user?.id],
+    queryFn: async () => {
+      const { data: emb } = await supabase
+        .from("embaixadores")
+        .select("*")
+        .eq("email", session?.user?.email as string)
+        .single();
+      return emb as any;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  // Query referrals
+  const { data: referrals } = useQuery({
+    queryKey: ["my-referrals", myEmbaixador?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("inscricoes")
+        .select("*")
+        .eq("embaixadorIndicadorId", myEmbaixador!.id as number)
+        .order("createdAt", { ascending: false });
+      return (data || []) as any[];
+    },
+    enabled: !!myEmbaixador?.id,
+  });
+
+  // Upcoming events & meetings
+  const { data: upcomingEvents } = useQuery({
+    queryKey: ["ambassador-upcoming-events"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("eventos")
+        .select("*")
+        .gte("data", Date.now())
+        .eq("status", "agendado")
+        .order("data")
+        .limit(3);
+      return (data || []) as any[];
+    },
+  });
+
+  const { data: upcomingMeetings } = useQuery({
+    queryKey: ["ambassador-upcoming-meetings"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tercaGloria")
+        .select("*")
+        .gte("data", Date.now())
+        .eq("status", "planejada")
+        .order("data")
+        .limit(3);
+      return (data || []) as any[];
+    },
+  });
+
+  const referralLink = myEmbaixador?.codigoIndicacao
+    ? `${window.location.origin}/inscricao?ref=${myEmbaixador.codigoIndicacao}`
+    : "";
+
+  const stats = {
+    total: referrals?.length || 0,
+    pendentes: referrals?.filter((r: any) => r.status === "pendente").length || 0,
+    aprovados: referrals?.filter((r: any) => r.status === "aprovado").length || 0,
+  };
+
+  function handleCopy() {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    toast.success(t("mi.copiado"));
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleWhatsAppShare() {
+    if (!referralLink) return;
+    const text = encodeURIComponent(
+      `Venha fazer parte dos Embaixadores dos Legendarios! Use meu link: ${referralLink}`
+    );
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Hero Greeting */}
+        <div className="animate-fade-up">
+          <div className="flex items-center gap-4 mb-1">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E85D00] flex items-center justify-center text-white text-lg font-bold">
+              {firstName.charAt(0)}
+            </div>
+            <div>
+              <h1 className="text-[1.75rem] font-bold tracking-[-0.035em] text-white">
+                {greeting}, {firstName}
+              </h1>
+              <p className="text-[0.875rem] text-[#86868b] tracking-[-0.01em]">{t("adash.welcome")}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Referral Link Card */}
+        {referralLink && (
+          <div className="apple-card p-5 animate-fade-up" style={{ animationDelay: "50ms" }}>
+            <p className="text-[0.75rem] font-semibold uppercase tracking-[0.02em] text-[#86868b] mb-3">
+              {t("adash.seuLink")}
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-white/[0.04] rounded-xl px-4 py-2.5 text-[0.8125rem] text-[#d2d2d7] font-mono truncate border border-white/[0.06]">
+                {referralLink}
+              </div>
+              <button
+                onClick={handleCopy}
+                className={`apple-btn ${copied ? "apple-btn-filled" : "apple-btn-gray"} px-3 py-2.5 text-sm rounded-xl flex items-center gap-2 shrink-0`}
+              >
+                <Copy className="w-4 h-4" strokeWidth={1.5} />
+                <span className="hidden sm:inline">{copied ? t("mi.copiado") : t("mi.copiar")}</span>
+              </button>
+              <button
+                onClick={handleWhatsAppShare}
+                className="apple-btn apple-btn-gray px-3 py-2.5 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                style={{ color: "#25D366" }}
+              >
+                <Share2 className="w-4 h-4" strokeWidth={1.5} />
+                <span className="hidden sm:inline">{t("mi.compartilhar")}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <StatsCard icon={UsersRound} value={stats.total} label={t("mi.total")} color="#FF6B00" delay={100} />
+          <StatsCard icon={Clock} value={stats.pendentes} label={t("mi.pendentes")} color="#FF9F0A" delay={150} />
+          <StatsCard icon={UserCheck} value={stats.aprovados} label={t("mi.aprovados")} color="#30D158" delay={200} />
+        </div>
+
+        {/* Upcoming sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <SectionCard icon={Calendar} title={t("adash.proxEventos")} delay={250}>
+            {!upcomingEvents?.length ? (
+              <EmptyState text={t("adash.nenhumEvento")} />
+            ) : (
+              <div className="space-y-0">
+                {upcomingEvents.map((e: any) => (
+                  <div key={e.id} className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+                    <div className="w-8 h-8 rounded-xl bg-[#BF5AF2]/10 flex items-center justify-center text-[#BF5AF2] text-[0.6875rem] font-bold">
+                      {new Date(e.data).getDate()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[0.8125rem] font-medium text-white truncate">{e.titulo}</p>
+                      <p className="text-[0.6875rem] text-[#6e6e73]">{new Date(e.data).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard icon={Church} title={t("adash.proxReunioes")} delay={300}>
+            {!upcomingMeetings?.length ? (
+              <EmptyState text={t("adash.nenhumReuniao")} />
+            ) : (
+              <div className="space-y-0">
+                {upcomingMeetings.map((r: any) => (
+                  <div key={r.id} className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+                    <div className="w-8 h-8 rounded-xl bg-[#64D2FF]/10 flex items-center justify-center text-[#64D2FF] text-[0.6875rem] font-bold">
+                      {new Date(r.data).getDate()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[0.8125rem] font-medium text-white truncate">{r.tema}</p>
+                      <p className="text-[0.6875rem] text-[#6e6e73]">{new Date(r.data).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
 export default function Home() {
-  const { user: authUser, userName } = useAuth();
+  const { user: authUser, userName, role } = useAuth();
   const user = { name: userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User" };
   const { t } = useI18n();
   const { data, isLoading } = useDashboardStats();
+
+  // Non-admin users see the personalized ambassador dashboard
+  if (role !== "admin") return <AmbassadorDashboard />;
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t("dash.bomDia") : hour < 18 ? t("dash.boaTarde") : t("dash.boaNoite");
@@ -161,6 +363,165 @@ export default function Home() {
             <KitRingCard label={t("dash.kitsPendentes")} value={data.kitsStats.pendentes} total={data.embaixadores.total} color="#FF9F0A" delay={250} />
             <KitRingCard label={t("dash.kitsParciais")} value={data.kitsStats.parciais} total={data.embaixadores.total} color="#E85D00" delay={300} />
             <KitRingCard label={t("dash.kitsCompletos")} value={data.kitsStats.completos} total={data.embaixadores.total} color="#30D158" delay={350} />
+          </div>
+
+          {/* Row 2: Inscriptions Trend + Conversion Funnel */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+            {/* Monthly Inscriptions Trend */}
+            <div className="lg:col-span-3 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "260ms" }}>
+              <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />
+                  </div>
+                  <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">{t("dash.tendenciaInsc")}</h3>
+                </div>
+                <span className="text-[0.6875rem] text-[#6e6e73]">{t("dash.ultimos6")}</span>
+              </div>
+              <div className="apple-separator mx-5" />
+              <div className="p-5">
+                {data.monthlyInscricoes.every((m: any) => m.count === 0) ? (
+                  <EmptyState text={t("dash.semDados")} />
+                ) : (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={data.monthlyInscricoes}>
+                      <defs>
+                        <linearGradient id="colorInsc" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#FF6B00" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#FF6B00" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="month" stroke="#6e6e73" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#6e6e73" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                      <Tooltip contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff' }} />
+                      <Area type="monotone" dataKey="count" stroke="#FF6B00" fill="url(#colorInsc)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
+            {/* Conversion Funnel */}
+            <div className="lg:col-span-2 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "310ms" }}>
+              <div className="px-5 pt-5 pb-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />
+                </div>
+                <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">{t("dash.funil")}</h3>
+              </div>
+              <div className="apple-separator mx-5" />
+              <div className="p-5">
+                {data.funnel.total === 0 ? (
+                  <EmptyState text={t("dash.semDados")} />
+                ) : (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={[
+                        { name: t("dash.totalInsc"), value: data.funnel.total, fill: "#FF6B00" },
+                        { name: t("dash.entrevistando"), value: data.funnel.entrevistando, fill: "#5AC8FA" },
+                        { name: t("dash.aprovados"), value: data.funnel.aprovados, fill: "#30D158" },
+                        { name: t("dash.embaixadoresAtivos"), value: data.funnel.embaixadores, fill: "#FFD60A" },
+                      ]}
+                      layout="vertical"
+                      margin={{ top: 5, right: 40, left: 10, bottom: 5 }}
+                    >
+                      <XAxis type="number" tick={{ fill: "#6e6e73", fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <YAxis type="category" dataKey="name" tick={{ fill: "#86868b", fontSize: 11 }} axisLine={false} tickLine={false} width={90} />
+                      <Tooltip contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff' }} />
+                      <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24} label={{ position: "right", fill: "#fff", fontSize: 12, fontWeight: 600 }}>
+                        {["#FF6B00", "#5AC8FA", "#30D158", "#FFD60A"].map((color, i) => (
+                          <Cell key={i} fill={color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Top Referrers + Payment Revenue */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+            {/* Top Referrers */}
+            <div className="lg:col-span-2 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "360ms" }}>
+              <div className="px-5 pt-5 pb-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#FFD60A]/10 flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-[#FFD60A]" strokeWidth={1.8} />
+                </div>
+                <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">{t("dash.topIndicadores")}</h3>
+              </div>
+              <div className="apple-separator mx-5" />
+              <div className="p-5">
+                {data.topReferrers.length === 0 ? (
+                  <EmptyState text={t("dash.semDados")} />
+                ) : (
+                  <div className="space-y-0">
+                    {data.topReferrers.map((ref: any, idx: number) => {
+                      const posColors = ["#FFD60A", "#C0C0C0", "#CD7F32", "#6e6e73", "#6e6e73"];
+                      return (
+                        <div key={ref.name} className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-[0.75rem] font-bold"
+                            style={{ background: `${posColors[idx]}20`, color: posColors[idx] }}
+                          >
+                            {idx + 1}
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-[#FF6B00]/10 flex items-center justify-center text-[#FF6B00] text-[0.6875rem] font-bold">
+                            {ref.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[0.8125rem] font-medium text-white truncate">{ref.name}</p>
+                            <p className="text-[0.6875rem] text-[#6e6e73]">{ref.count} {t("dash.indicacoes")}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Payment Revenue */}
+            <div className="lg:col-span-3 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "410ms" }}>
+              <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#30D158]/10 flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 text-[#30D158]" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">{t("dash.receita")}</h3>
+                    <p className="text-[0.6875rem] text-[#6e6e73]">{t("dash.ultimos6")}</p>
+                  </div>
+                </div>
+                <p className="text-[1.25rem] font-bold text-[#30D158] tracking-[-0.02em]">
+                  R$ {data.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="apple-separator mx-5" />
+              <div className="p-5">
+                {data.monthlyRevenue.every((m: any) => m.total === 0) ? (
+                  <EmptyState text={t("dash.semDados")} />
+                ) : (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={data.monthlyRevenue}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#30D158" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#30D158" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="month" stroke="#6e6e73" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#6e6e73" fontSize={12} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff' }}
+                        formatter={(value: any) => [`R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, ""]}
+                      />
+                      <Area type="monotone" dataKey="total" stroke="#30D158" fill="url(#colorRevenue)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Info Sections */}

@@ -17,6 +17,21 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-charts": ["recharts"],
+          "vendor-pdf": ["jspdf", "jspdf-autotable"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-ui": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+          ],
+        },
+      },
+    },
   },
   server: {
     host: true,

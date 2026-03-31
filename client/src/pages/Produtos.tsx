@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
-import { useProdutos, useCreateProduto, useUpdateProduto, useDeleteProduto } from "@/hooks/useSupabase";
+import { useProdutos, useCreateProduto, useUpdateProduto, useDeleteProduto, useEmbaixadores, useCreatePedido } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, Search, Edit2, Trash2, ShoppingBag, Package, PackageX,
   DollarSign, Loader2, Download, FileDown, ImageIcon, Upload, X, Mail,
+  ShoppingCart, Minus,
 } from "lucide-react";
 import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
@@ -15,6 +17,17 @@ import { sendReportByEmail } from "@/lib/sendReportByEmail";
 import SendReportDialog from "@/components/SendReportDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
+
+type CartItem = {
+  produtoId: number;
+  nome: string;
+  quantidade: number;
+  tamanho: string;
+  cor: string;
+  preco: number;
+  tamanhos: string[];
+  cores: string[];
+};
 
 const CATEGORIAS = ["bones", "patches", "camisas", "balaclava", "segunda_pele", "casacos", "acessorios"] as const;
 
@@ -47,6 +60,7 @@ function stockColor(qty: number): string {
 }
 
 export default function Produtos() {
+  const { isAdmin } = useAuth();
   const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -56,6 +70,14 @@ export default function Produtos() {
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cart state
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartDialogOpen, setCartDialogOpen] = useState(false);
+  const [selectedEmbaixadorId, setSelectedEmbaixadorId] = useState<number | null>(null);
+  const [orderObs, setOrderObs] = useState("");
+  const { data: embaixadores } = useEmbaixadores();
+  const createPedidoMut = useCreatePedido();
 
   const [form, setForm] = useState({
     nome: "",
@@ -82,6 +104,69 @@ export default function Produtos() {
     });
     setEditingId(null);
   }
+
+  function addToCart(prod: any) {
+    setCart((prev) => {
+      const existing = prev.find((c) => c.produtoId === prod.id);
+      if (existing) {
+        return prev.map((c) => c.produtoId === prod.id ? { ...c, quantidade: c.quantidade + 1 } : c);
+      }
+      return [...prev, {
+        produtoId: prod.id,
+        nome: prod.nome,
+        quantidade: 1,
+        tamanho: prod.tamanhos?.[0] || "",
+        cor: prod.cores?.[0] || "",
+        preco: parseFloat(prod.preco) || 0,
+        tamanhos: prod.tamanhos || [],
+        cores: prod.cores || [],
+      }];
+    });
+    toast.success(`${prod.nome} ${t("ped.adicionar").toLowerCase()}!`);
+  }
+
+  function updateCartItem(produtoId: number, updates: Partial<CartItem>) {
+    setCart((prev) => prev.map((c) => c.produtoId === produtoId ? { ...c, ...updates } : c));
+  }
+
+  function removeFromCart(produtoId: number) {
+    setCart((prev) => prev.filter((c) => c.produtoId !== produtoId));
+  }
+
+  function handleFinalizarPedido() {
+    if (!selectedEmbaixadorId) return toast.error(t("ped.selecioneEmb"));
+    if (cart.length === 0) return toast.error(t("ped.carrinhoVazio"));
+
+    createPedidoMut.mutate(
+      {
+        pedido: {
+          embaixadorId: selectedEmbaixadorId,
+          status: "solicitado",
+          observacoes: orderObs || null,
+        },
+        itens: cart.map((c) => ({
+          produtoId: c.produtoId,
+          quantidade: c.quantidade,
+          tamanho: c.tamanho || null,
+          cor: c.cor || null,
+          precoUnitario: String(c.preco),
+        })),
+      },
+      {
+        onSuccess: () => {
+          toast.success(t("ped.pedidoCriado"));
+          setCart([]);
+          setSelectedEmbaixadorId(null);
+          setOrderObs("");
+          setCartDialogOpen(false);
+        },
+        onError: (e: any) => toast.error(e.message),
+      }
+    );
+  }
+
+  const cartTotal = useMemo(() => cart.reduce((acc, c) => acc + c.preco * c.quantidade, 0), [cart]);
+  const cartCount = useMemo(() => cart.reduce((acc, c) => acc + c.quantidade, 0), [cart]);
 
   function openEdit(prod: any) {
     setEditingId(prod.id);
@@ -276,37 +361,56 @@ export default function Produtos() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("prod.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => setSendEmailOpen(true)}
+                  className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                  title={t("report.enviarEmail")}
+                >
+                  <Mail className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="hidden sm:inline">Email</span>
+                </button>
+                <button
+                  onClick={handleExportPdf}
+                  className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                  title="Exportar PDF"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span className="hidden sm:inline">PDF</span>
+                </button>
+                <button
+                  onClick={handleExport}
+                  className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                  title="Exportar XLSX"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">XLSX</span>
+                </button>
+              </>
+            )}
             <button
-              onClick={() => setSendEmailOpen(true)}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title={t("report.enviarEmail")}
+              onClick={() => setCartDialogOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0 relative"
+              title={t("ped.carrinho")}
             >
-              <Mail className="w-4 h-4" strokeWidth={1.5} />
-              <span className="hidden sm:inline">Email</span>
+              <ShoppingCart className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">{t("ped.carrinho")}</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-[#FF6B00] text-white text-[0.625rem] font-bold flex items-center justify-center px-1">
+                  {cartCount}
+                </span>
+              )}
             </button>
-            <button
-              onClick={handleExportPdf}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title="Exportar PDF"
-            >
-              <FileDown className="w-4 h-4" />
-              <span className="hidden sm:inline">PDF</span>
-            </button>
-            <button
-              onClick={handleExport}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title="Exportar XLSX"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">XLSX</span>
-            </button>
-            <button
-              onClick={() => { resetForm(); setDialogOpen(true); }}
-              className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4"
-            >
-              <Plus className="w-4 h-4" strokeWidth={2} />
-              <span className="hidden sm:inline">{t("prod.novo")}</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => { resetForm(); setDialogOpen(true); }}
+                className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4"
+              >
+                <Plus className="w-4 h-4" strokeWidth={2} />
+                <span className="hidden sm:inline">{t("prod.novo")}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -379,21 +483,23 @@ export default function Produtos() {
                     ) : (
                       <ImageIcon className="w-10 h-10 text-[#3a3a3c]" strokeWidth={1} />
                     )}
-                    {/* Action buttons overlay */}
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <button
-                        onClick={() => openEdit(prod)}
-                        className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-xl flex items-center justify-center text-white hover:bg-black/80 transition-colors"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(prod.id)}
-                        className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-xl flex items-center justify-center text-[#FF453A] hover:bg-black/80 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-                      </button>
-                    </div>
+                    {/* Action buttons overlay (admin only) */}
+                    {isAdmin && (
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          onClick={() => openEdit(prod)}
+                          className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-xl flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(prod.id)}
+                          className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-xl flex items-center justify-center text-[#FF453A] hover:bg-black/80 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
@@ -423,9 +529,19 @@ export default function Produtos() {
                           : t("prod.preLancamento")}
                       </span>
                     </div>
-                    <span className="inline-block apple-badge apple-badge-orange text-[0.625rem]">
-                      {t(CATEGORIA_I18N[prod.categoria] || "prod.acessorios")}
-                    </span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="inline-block apple-badge apple-badge-orange text-[0.625rem]">
+                        {t(CATEGORIA_I18N[prod.categoria] || "prod.acessorios")}
+                      </span>
+                      <button
+                        onClick={() => addToCart(prod)}
+                        disabled={prod.status === "esgotado"}
+                        className="apple-btn text-[0.625rem] py-1 px-2.5 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-3 h-3" strokeWidth={2} />
+                        {t("ped.adicionar")}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -629,6 +745,166 @@ export default function Produtos() {
           onClose={() => setSendEmailOpen(false)}
           onSend={handleSendEmail}
         />
+
+        {/* Cart / Order Dialog */}
+        <Dialog open={cartDialogOpen} onOpenChange={setCartDialogOpen}>
+          <DialogContent className="apple-sheet-content border-white/[0.08] rounded-[20px] max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto p-0">
+            <DialogHeader className="px-6 pt-6 pb-0">
+              <DialogTitle className="text-lg font-bold text-white tracking-[-0.02em]">
+                {t("ped.fazerPedido")}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="p-6 pt-4 space-y-4">
+              {/* Ambassador selection */}
+              <div>
+                <label className="text-[0.75rem] font-medium text-[#86868b] mb-1 block">{t("ped.embaixador")} *</label>
+                <select
+                  value={selectedEmbaixadorId ?? ""}
+                  onChange={(e) => setSelectedEmbaixadorId(e.target.value ? Number(e.target.value) : null)}
+                  className="apple-input"
+                >
+                  <option value="">{t("ped.selecioneEmb")}</option>
+                  {embaixadores
+                    ?.filter((e: any) => e.status === "ativo")
+                    .map((e: any) => (
+                      <option key={e.id} value={e.id}>{e.nomeCompleto}</option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Cart items */}
+              <div>
+                <label className="text-[0.75rem] font-medium text-[#86868b] mb-2 block">{t("ped.revisarItens")}</label>
+                {cart.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <ShoppingCart className="w-8 h-8 text-[#3a3a3c] mx-auto mb-2" strokeWidth={1} />
+                    <p className="text-[0.8125rem] text-[#48484a]">{t("ped.carrinhoVazio")}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {cart.map((item) => (
+                      <div key={item.produtoId} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-[0.8125rem] font-semibold text-white truncate flex-1">{item.nome}</h4>
+                          <button
+                            onClick={() => removeFromCart(item.produtoId)}
+                            className="w-6 h-6 rounded-full bg-white/[0.04] flex items-center justify-center text-[#FF453A] hover:bg-white/[0.08] shrink-0"
+                          >
+                            <X className="w-3 h-3" strokeWidth={2} />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* Quantity */}
+                          <div>
+                            <label className="text-[0.625rem] text-[#6e6e73] mb-0.5 block">{t("ped.quantidade")}</label>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => updateCartItem(item.produtoId, { quantidade: Math.max(1, item.quantidade - 1) })}
+                                className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-white hover:bg-white/[0.08]"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-[0.8125rem] text-white font-medium w-6 text-center">{item.quantidade}</span>
+                              <button
+                                onClick={() => updateCartItem(item.produtoId, { quantidade: item.quantidade + 1 })}
+                                className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-white hover:bg-white/[0.08]"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                          {/* Size */}
+                          {item.tamanhos.length > 0 && (
+                            <div>
+                              <label className="text-[0.625rem] text-[#6e6e73] mb-0.5 block">{t("ped.tamanho")}</label>
+                              <select
+                                value={item.tamanho}
+                                onChange={(e) => updateCartItem(item.produtoId, { tamanho: e.target.value })}
+                                className="apple-input text-[0.75rem] py-1.5"
+                              >
+                                {item.tamanhos.map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          {/* Color */}
+                          {item.cores.length > 0 && (
+                            <div>
+                              <label className="text-[0.625rem] text-[#6e6e73] mb-0.5 block">{t("ped.cor")}</label>
+                              <select
+                                value={item.cor}
+                                onChange={(e) => updateCartItem(item.produtoId, { cor: e.target.value })}
+                                className="apple-input text-[0.75rem] py-1.5"
+                              >
+                                {item.cores.map((c) => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[0.8125rem] font-semibold text-[#FF6B00]">
+                            {formatBRL(item.preco * item.quantidade)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Total */}
+                    <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                      <span className="text-[0.8125rem] font-semibold text-white">{t("ped.valorTotal")}</span>
+                      <span className="text-[0.9375rem] font-bold text-[#FF6B00]">{formatBRL(cartTotal)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Observations */}
+              <div>
+                <label className="text-[0.75rem] font-medium text-[#86868b] mb-1 block">{t("ped.observacoes")}</label>
+                <textarea
+                  value={orderObs}
+                  onChange={(e) => setOrderObs(e.target.value)}
+                  className="apple-input min-h-[60px] resize-none"
+                  placeholder={t("ped.observacoes")}
+                  rows={2}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setCartDialogOpen(false)}
+                  className="apple-btn apple-btn-gray flex-1 py-2.5 text-[0.8125rem]"
+                >
+                  {t("confirm.cancelar")}
+                </button>
+                <button
+                  onClick={handleFinalizarPedido}
+                  disabled={createPedidoMut.isPending || cart.length === 0}
+                  className="apple-btn apple-btn-filled flex-1 py-2.5 text-[0.8125rem]"
+                >
+                  {createPedidoMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {t("ped.finalizar")}
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Floating cart indicator */}
+        {cartCount > 0 && !cartDialogOpen && (
+          <button
+            onClick={() => setCartDialogOpen(true)}
+            className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-30 flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-[#FF6B00] text-white shadow-lg shadow-[#FF6B00]/30 hover:bg-[#E85D00] transition-all duration-200 animate-scale-in"
+          >
+            <ShoppingCart className="w-5 h-5" strokeWidth={2} />
+            <span className="text-[0.875rem] font-semibold">{cartCount} {cartCount === 1 ? "item" : "itens"}</span>
+            <span className="text-[0.75rem] opacity-80">({formatBRL(cartTotal)})</span>
+          </button>
+        )}
       </div>
     </DashboardLayout>
   );
