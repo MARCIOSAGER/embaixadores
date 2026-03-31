@@ -82,24 +82,26 @@ export default function Embaixadores() {
 
   function handleExport() {
     const data = filtered.map((emb: any) => ({
+      "Nº Legendário": emb.numeroLegendario || "",
+      "Nº Embaixador": emb.numeroEmbaixador || "",
       "Nome": emb.nomeCompleto || "",
       "Email": emb.email || "",
       "Telefone": emb.telefone || "",
       "Cidade": emb.cidade || "",
       "Estado": emb.estado || "",
-      "Status": emb.status === "ativo" ? "Ativo" : emb.status === "inativo" ? "Inativo" : "Pendente Renovacao",
+      "Profissão": emb.profissao || "",
+      "Status": emb.status === "ativo" ? "Ativo" : emb.status === "inativo" ? "Inativo" : "Pendente Renovação",
       "Data Ingresso": emb.dataIngresso ? new Date(emb.dataIngresso).toLocaleDateString("pt-BR") : "",
-      "Numero Legendario": emb.numeroLegendario || "",
-      "Numero Embaixador": emb.numeroEmbaixador || "",
     }));
     exportToXlsx(data, `embaixadores-${new Date().toISOString().split("T")[0]}`);
   }
 
   function handleExportPdf() {
-    const statusPt: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", pendente_renovacao: "Pendente Renovacao" };
+    const statusPt: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", pendente_renovacao: "Pendente Renovação" };
     const rows = filtered.map((emb: any) => [
+      emb.numeroLegendario || "—",
+      emb.numeroEmbaixador || "—",
       emb.nomeCompleto || "",
-      emb.email || "",
       emb.telefone || "",
       emb.cidade || "",
       statusPt[emb.status] || emb.status || "",
@@ -107,7 +109,7 @@ export default function Embaixadores() {
     exportGenericPdf(
       "Lista de Embaixadores",
       "Embaixadores dos Legendários",
-      ["Nome", "Email", "Telefone", "Cidade", "Status"],
+      ["Nº Leg.", "Nº Emb.", "Nome", "Telefone", "Cidade", "Status"],
       rows,
       "embaixadores"
     );

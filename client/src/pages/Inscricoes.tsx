@@ -10,7 +10,10 @@ import {
   Briefcase, Building2, Heart, Globe, DollarSign, Calendar, Video
 } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 
 const STATUS_MAP: Record<string, { color: string; bg: string; label: string }> = {
   pendente: { color: "#FF9F0A", bg: "rgba(255,159,10,0.14)", label: "Pendente" },
@@ -107,21 +110,25 @@ export default function Inscricoes() {
 
   function handleExport() {
     const data = filtered.map((insc) => ({
+      "Nº Legendário": insc.numeroLegendario || "",
       "Nome": insc.nomeCompleto || "",
       "Email": insc.email || "",
       "Telefone": insc.telefone || "",
       "Cidade": insc.cidade || "",
       "Estado": insc.estado || "",
+      "Profissão": insc.profissao || "",
       "Status": insc.status || "",
-      "Data Inscricao": insc.createdAt ? new Date(insc.createdAt).toLocaleDateString("pt-BR") : "",
+      "Data Inscrição": insc.createdAt ? new Date(insc.createdAt).toLocaleDateString("pt-BR") : "",
       "Indicador": insc.nomeIndicador || "",
-      "Num Legendario": insc.numeroLegendario || "",
+      "Estado Civil": insc.estadoCivil || "",
+      "Segmento": insc.segmentoMercado || "",
     }));
     exportToXlsx(data, `inscricoes-${new Date().toISOString().split("T")[0]}`);
   }
 
   function handleExportPdf() {
     const rows = filtered.map((insc) => [
+      insc.numeroLegendario || "—",
       insc.nomeCompleto || "",
       insc.email || "",
       insc.telefone || "",
@@ -131,7 +138,7 @@ export default function Inscricoes() {
     exportGenericPdf(
       "Lista de Inscrições",
       "Inscrições dos Embaixadores Legendários",
-      ["Nome", "Email", "Telefone", "Cidade", "Status"],
+      ["Nº Leg.", "Nome", "Email", "Telefone", "Cidade", "Status"],
       rows,
       "inscricoes"
     );
