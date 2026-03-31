@@ -541,6 +541,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "setpw.erroNaoCoincidem": "As senhas não coincidem.",
     "setpw.erroDefinir": "Erro ao definir senha",
 
+    // Report Email
+    "report.enviarEmail": "Enviar por Email",
+    "report.emailDest": "Email do destinatario",
+    "report.enviar": "Enviar",
+    "report.enviando": "Enviando...",
+    "report.enviado": "Relatorio enviado com sucesso!",
+    "report.erroEnvio": "Erro ao enviar relatorio",
+    "report.assunto": "Relatorio - Embaixadores dos Legendarios",
+
     // ErrorBoundary
     "error.unexpected": "Ocorreu um erro inesperado.",
     "error.reload": "Recarregar Página",
@@ -1084,6 +1093,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "setpw.erroNaoCoincidem": "Las contraseñas no coinciden.",
     "setpw.erroDefinir": "Error al definir contraseña",
 
+    // Report Email
+    "report.enviarEmail": "Enviar por Email",
+    "report.emailDest": "Email del destinatario",
+    "report.enviar": "Enviar",
+    "report.enviando": "Enviando...",
+    "report.enviado": "Informe enviado con exito!",
+    "report.erroEnvio": "Error al enviar informe",
+    "report.assunto": "Informe - Embajadores de los Legendarios",
+
     // ErrorBoundary
     "error.unexpected": "Ocurrió un error inesperado.",
     "error.reload": "Recargar Página",
@@ -1626,6 +1644,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "setpw.erroMinimo": "Password must be at least 8 characters.",
     "setpw.erroNaoCoincidem": "Passwords do not match.",
     "setpw.erroDefinir": "Error setting password",
+
+    // Report Email
+    "report.enviarEmail": "Send by Email",
+    "report.emailDest": "Recipient email",
+    "report.enviar": "Send",
+    "report.enviando": "Sending...",
+    "report.enviado": "Report sent successfully!",
+    "report.erroEnvio": "Error sending report",
+    "report.assunto": "Report - Legendarios Ambassadors",
 
     // ErrorBoundary
     "error.unexpected": "An unexpected error occurred.",

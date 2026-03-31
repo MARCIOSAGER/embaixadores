@@ -32,6 +32,7 @@ export default function Inscricoes() {
   const [confirmInterview, setConfirmInterview] = useState<Inscricao | null>(null);
   const [confirmReject, setConfirmReject] = useState<Inscricao | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
 
   const searchTerm = useMemo(() => search || undefined, [search]);
   const { data: inscricoes, isLoading } = useInscricoes(searchTerm);
@@ -144,6 +145,31 @@ export default function Inscricoes() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const rows = filtered.map((insc) => [
+      insc.numeroLegendario || "\u2014",
+      insc.nomeCompleto || "",
+      insc.email || "",
+      insc.telefone || "",
+      insc.cidade || "",
+      (STATUS_MAP[insc.status] || STATUS_MAP.pendente).label,
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Lista de Inscricoes",
+      "Inscricoes dos Embaixadores Legendarios",
+      ["No Leg.", "Nome", "Email", "Telefone", "Cidade", "Status"],
+      rows,
+    );
+    const filename = `inscricoes-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   function formatCreatedAt(dateStr: string | null) {
     if (!dateStr) return "\u2014";
     const loc = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
@@ -168,6 +194,14 @@ export default function Inscricoes() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("insc.mgmt.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -437,6 +471,13 @@ export default function Inscricoes() {
               onError: (e: any) => toast.error(e.message),
             });
           }}
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
       </div>
     </DashboardLayout>

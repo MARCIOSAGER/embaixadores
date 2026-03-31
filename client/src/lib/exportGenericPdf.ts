@@ -1,13 +1,16 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export function exportGenericPdf(
+/**
+ * Builds a jsPDF document with the given title, subtitle, columns, and rows.
+ * Returns the doc instance without saving — useful for email sending.
+ */
+export function buildGenericPdfDoc(
   title: string,
   subtitle: string,
   columns: string[],
   rows: string[][],
-  filename: string
-) {
+): jsPDF {
   const doc = new jsPDF();
   const today = new Date().toLocaleDateString('pt-BR');
 
@@ -39,5 +42,16 @@ export function exportGenericPdf(
   doc.setFontSize(8);
   doc.text(`Total de registros: ${rows.length}`, 14, finalY);
 
+  return doc;
+}
+
+export function exportGenericPdf(
+  title: string,
+  subtitle: string,
+  columns: string[],
+  rows: string[][],
+  filename: string
+) {
+  const doc = buildGenericPdfDoc(title, subtitle, columns, rows);
   doc.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
 }

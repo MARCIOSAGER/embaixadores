@@ -7,7 +7,10 @@ import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, UserPlus, Video, Phone, Mail, User, Calendar, ExternalLink, Loader2, X, Download, MessageCircle, FileDown, Send, Search, Users, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
-import { exportGenericPdf } from "@/lib/exportGenericPdf";
+import { exportGenericPdf, buildGenericPdfDoc } from "@/lib/exportGenericPdf";
+import { sendReportByEmail } from "@/lib/sendReportByEmail";
+import SendReportDialog from "@/components/SendReportDialog";
+import { supabase } from "@/lib/supabase";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
 import { formatDateTime, dateToTimestamp, tsToInputDT } from "@/lib/dateUtils";
@@ -31,6 +34,7 @@ export default function Entrevistas() {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [confirmConvert, setConfirmConvert] = useState<any>(null);
   const [search, setSearch] = useState("");
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: entrevistas, isLoading } = useEntrevistas();
@@ -135,6 +139,32 @@ export default function Entrevistas() {
     );
   }
 
+  async function handleSendEmail(email: string) {
+    const statusPt: Record<string, string> = { agendada: "Agendada", realizada: "Realizada", aprovada: "Aprovada", reprovada: "Reprovada", cancelada: "Cancelada" };
+    const rows = filtered.map((ent: any) => [
+      ent.nomeCandidato || "",
+      ent.emailCandidato || "",
+      ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
+      statusPt[ent.status] || ent.status || "",
+      ent.indicadoPor || "",
+      (() => { const e = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return e?.nomeCompleto || ""; })(),
+    ]);
+    const doc = buildGenericPdfDoc(
+      "Lista de Entrevistas",
+      "Embaixadores dos Legendarios",
+      ["Candidato", "Email", "Data", "Status", "Indicado Por", "Entrevistador"],
+      rows,
+    );
+    const filename = `entrevistas-${new Date().toISOString().split("T")[0]}.pdf`;
+    try {
+      await sendReportByEmail(supabase, doc, email, t("report.assunto"), filename);
+      toast.success(t("report.enviado"));
+    } catch (err: any) {
+      toast.error(t("report.erroEnvio") + ": " + (err.message || ""));
+      throw err;
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -145,6 +175,14 @@ export default function Entrevistas() {
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("ent.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSendEmailOpen(true)}
+              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+              title={t("report.enviarEmail")}
+            >
+              <Mail className="w-4 h-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">Email</span>
+            </button>
             <button
               onClick={handleExportPdf}
               className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
@@ -455,6 +493,13 @@ export default function Entrevistas() {
           description={t("ent.confirmarConverter")}
           confirmLabel={t("ent.converterEmb")}
           variant="warning"
+        />
+
+        {/* Send Email Dialog */}
+        <SendReportDialog
+          open={sendEmailOpen}
+          onClose={() => setSendEmailOpen(false)}
+          onSend={handleSendEmail}
         />
       </div>
     </DashboardLayout>
