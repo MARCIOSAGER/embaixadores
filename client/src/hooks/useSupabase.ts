@@ -638,6 +638,73 @@ export function useDeleteProduto() {
   });
 }
 
+// ========== EVENTO PARTICIPANTES ==========
+
+type EventoParticipante = Database["public"]["Tables"]["evento_participantes"]["Row"];
+type InsertEventoParticipante = Database["public"]["Tables"]["evento_participantes"]["Insert"];
+
+export function useEventoParticipantes(eventoId: number) {
+  return useQuery({
+    queryKey: ["eventoParticipantes", eventoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("evento_participantes")
+        .select("*")
+        .eq("eventoId", eventoId)
+        .order("createdAt", { ascending: false });
+      if (error) throw error;
+      return data as EventoParticipante[];
+    },
+    enabled: !!eventoId,
+  });
+}
+
+export function useCreateParticipante() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: InsertEventoParticipante) => {
+      const { data: result, error } = await supabase
+        .from("evento_participantes")
+        .insert(data)
+        .select("id, status")
+        .single();
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["eventoParticipantes", variables.eventoId] });
+    },
+  });
+}
+
+export function useUpdateParticipante() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, eventoId, ...data }: { id: number; eventoId: number } & Partial<InsertEventoParticipante>) => {
+      const { error } = await supabase.from("evento_participantes").update(data).eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["eventoParticipantes", variables.eventoId] });
+    },
+  });
+}
+
+export function useDeleteParticipante() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, eventoId }: { id: number; eventoId: number }) => {
+      const { error } = await supabase.from("evento_participantes").delete().eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["eventoParticipantes", variables.eventoId] });
+    },
+  });
+}
+
 export function useConvertInscricaoToEmbaixador() {
   const qc = useQueryClient();
   return useMutation({

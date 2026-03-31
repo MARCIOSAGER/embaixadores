@@ -23,6 +23,7 @@ import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Inscricao from "./pages/Inscricao";
+import EventoInscricao from "./pages/EventoInscricao";
 import Inscricoes from "./pages/Inscricoes";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -115,6 +116,7 @@ function App() {
             <Route path="/privacidade" component={Privacy} />
             <Route path="/termos" component={Terms} />
             <Route path="/inscricao" component={Inscricao} />
+            <Route path="/evento/:id" component={EventoInscricao} />
             <Route>{isAuthenticated ? <Router /> : <Login />}</Route>
           </Switch>
         </TooltipProvider>

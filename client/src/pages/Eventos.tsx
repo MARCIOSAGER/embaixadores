@@ -6,11 +6,12 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Calendar, CalendarDays, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail, List, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, CalendarDays, MapPin, Clock, Video, Repeat, ExternalLink, Loader2, Download, MessageCircle, FileDown, Send, Mail, List, ChevronLeft, ChevronRight, Users, Copy } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import NotifyDialog from "@/components/NotifyDialog";
+import EventoParticipantes from "@/components/EventoParticipantes";
 import { formatDateTime, dateToTimestamp, tsToInputDT } from "@/lib/dateUtils";
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
@@ -35,22 +36,23 @@ export default function Eventos() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none" });
+  const [participantesEvento, setParticipantesEvento] = useState<any>(null);
+  const [form, setForm] = useState({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" as "both" | "whatsapp" | "email" | "none", capacidade: "" as string, inscricaoAberta: false, imagemUrl: "" });
 
   const { data: eventos, isLoading } = useEventos();
   const createMut = useCreateEvento();
   const updateMut = useUpdateEvento();
   const deleteMut = useDeleteEvento();
 
-  function resetForm() { setForm({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both" }); setEditingId(null); }
+  function resetForm() { setForm({ titulo: "", descricao: "", data: "", dataFim: "", local: "", tipo: "encontro", linkMeet: "", recorrente: false, status: "agendado", notificar: "both", capacidade: "", inscricaoAberta: false, imagemUrl: "" }); setEditingId(null); }
   function openEdit(ev: any) {
     setEditingId(ev.id);
-    setForm({ titulo: ev.titulo || "", descricao: ev.descricao || "", data: tsToInputDT(ev.data), dataFim: tsToInputDT(ev.dataFim), local: ev.local || "", tipo: ev.tipo || "encontro", linkMeet: ev.linkMeet || "", recorrente: ev.recorrente || false, status: ev.status || "agendado" });
+    setForm({ titulo: ev.titulo || "", descricao: ev.descricao || "", data: tsToInputDT(ev.data), dataFim: tsToInputDT(ev.dataFim), local: ev.local || "", tipo: ev.tipo || "encontro", linkMeet: ev.linkMeet || "", recorrente: ev.recorrente || false, status: ev.status || "agendado", notificar: "none", capacidade: ev.capacidade != null ? String(ev.capacidade) : "", inscricaoAberta: ev.inscricaoAberta || false, imagemUrl: ev.imagemUrl || "" });
     setDialogOpen(true);
   }
   function handleSubmit() {
     if (!form.titulo.trim() || !form.data) return toast.error(t("ev.tituloObrigatorio"));
-    const d = { titulo: form.titulo, descricao: form.descricao || null, data: dateToTimestamp(form.data), dataFim: form.dataFim ? dateToTimestamp(form.dataFim) : null, local: form.local || null, tipo: form.tipo as any, linkMeet: form.linkMeet || null, recorrente: form.recorrente, status: form.status as any };
+    const d = { titulo: form.titulo, descricao: form.descricao || null, data: dateToTimestamp(form.data), dataFim: form.dataFim ? dateToTimestamp(form.dataFim) : null, local: form.local || null, tipo: form.tipo as any, linkMeet: form.linkMeet || null, recorrente: form.recorrente, status: form.status as any, capacidade: form.capacidade ? Number(form.capacidade) : null, inscricaoAberta: form.inscricaoAberta, imagemUrl: form.imagemUrl || null };
     const onSuccess = () => {
       toast.success(t("common.sucesso"));
       setDialogOpen(false); resetForm();
@@ -81,13 +83,25 @@ export default function Eventos() {
   const eventsInMonth = useMemo(() => {
     if (!filtered) return new Map<number, any[]>();
     const map = new Map<number, any[]>();
+    const monthStart = new Date(calYear, calMonth, 1).getTime();
+    const monthEnd = new Date(calYear, calMonth + 1, 0, 23, 59, 59, 999).getTime();
     filtered.forEach((ev: any) => {
       if (!ev.data) return;
-      const d = new Date(ev.data);
-      if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
-        const day = d.getDate();
-        if (!map.has(day)) map.set(day, []);
-        map.get(day)!.push(ev);
+      const evStart = new Date(ev.data).getTime();
+      const evEnd = ev.dataFim ? new Date(ev.dataFim).getTime() : evStart;
+      // Skip events that don't overlap with this month at all
+      if (evEnd < monthStart || evStart > monthEnd) return;
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const startDay = evStart < monthStart ? 1 : new Date(evStart).getDate();
+      const endDay = evEnd > monthEnd ? daysInMonth : new Date(evEnd).getDate();
+      // Only add days within this month
+      const startMonth = new Date(evStart);
+      const endMonth = new Date(evEnd);
+      const effectiveStart = (startMonth.getFullYear() === calYear && startMonth.getMonth() === calMonth) ? startDay : 1;
+      const effectiveEnd = (endMonth.getFullYear() === calYear && endMonth.getMonth() === calMonth) ? endDay : daysInMonth;
+      for (let d = effectiveStart; d <= effectiveEnd; d++) {
+        if (!map.has(d)) map.set(d, []);
+        map.get(d)!.push(ev);
       }
     });
     return map;
@@ -110,6 +124,19 @@ export default function Eventos() {
     setSelectedDay(null);
     if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
     else setCalMonth(m => m + 1);
+  }
+
+  function goToToday() {
+    const now = new Date();
+    setCalMonth(now.getMonth());
+    setCalYear(now.getFullYear());
+    setSelectedDay(null);
+  }
+  function openNewForDay(day: number) {
+    resetForm();
+    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}T09:00`;
+    setForm(f => ({ ...f, data: dateStr }));
+    setDialogOpen(true);
   }
 
   const weekdays = t("ev.dias").split(",");
@@ -216,34 +243,92 @@ export default function Eventos() {
         ) : viewMode === "calendar" ? (
           <div className="animate-fade-up space-y-4" style={{ animationDelay: "100ms" }}>
             {/* Calendar View */}
-            <div className="apple-card p-4 sm:p-5">
+            <div className="apple-card p-3 sm:p-5">
               {/* Month navigation */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <button onClick={prevMonth} className="apple-btn apple-btn-gray p-2 rounded-xl">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <h2 className="text-[1rem] font-semibold text-white tracking-[-0.02em]">
-                  {months[calMonth]} {calYear}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[1rem] font-semibold text-white tracking-[-0.02em]">
+                    {months[calMonth]} {calYear}
+                  </h2>
+                  {!(calMonth === today.getMonth() && calYear === today.getFullYear()) && (
+                    <button onClick={goToToday} className="text-[0.6875rem] px-2 py-0.5 rounded-lg bg-[#FF6B00]/15 text-[#FF6B00] hover:bg-[#FF6B00]/25 transition-colors font-medium">
+                      {t("ev.hoje")}
+                    </button>
+                  )}
+                </div>
                 <button onClick={nextMonth} className="apple-btn apple-btn-gray p-2 rounded-xl">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Weekday headers */}
-              <div className="grid grid-cols-7 gap-px mb-1">
+              <div className="grid grid-cols-7 gap-px mb-0.5">
                 {weekdays.map(d => (
-                  <div key={d} className="text-center text-[0.6875rem] font-medium text-[#86868b] py-1.5">
+                  <div key={d} className="text-center text-[0.625rem] font-medium text-[#86868b] py-1 uppercase tracking-wider">
                     {d}
                   </div>
                 ))}
               </div>
 
-              {/* Days grid */}
-              <div className="grid grid-cols-7 gap-px">
+              {/* Days grid — DESKTOP (hidden on mobile) */}
+              <div className="hidden md:grid grid-cols-7 gap-px bg-white/[0.03] rounded-xl overflow-hidden">
                 {calDays.map((cell, i) => {
-                  const hasEvents = cell.current && eventsInMonth.has(cell.day);
-                  const dayEvents = cell.current ? eventsInMonth.get(cell.day) : undefined;
+                  const dayEvents = cell.current ? eventsInMonth.get(cell.day) || [] : [];
+                  const isTodayCell = cell.current && isToday(cell.day);
+                  const maxVisible = 3;
+                  const visibleEvents = dayEvents.slice(0, maxVisible);
+                  const remaining = dayEvents.length - maxVisible;
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => cell.current && openNewForDay(cell.day)}
+                      className={`
+                        relative flex flex-col min-h-[88px] p-1 transition-all
+                        ${cell.current ? "hover:bg-white/[0.04] cursor-pointer bg-white/[0.01]" : "bg-transparent cursor-default"}
+                        ${isTodayCell ? "ring-2 ring-inset ring-[#FF6B00] bg-[#FF6B00]/[0.04]" : ""}
+                      `}
+                    >
+                      <span className={`text-[0.6875rem] leading-none mb-1 ${
+                        !cell.current ? "text-white/15" : isTodayCell ? "text-[#FF6B00] font-bold" : "text-[#86868b] font-medium"
+                      }`}>
+                        {cell.day}
+                      </span>
+                      <div className="flex flex-col gap-[2px] flex-1 min-w-0">
+                        {visibleEvents.map((ev: any) => {
+                          const color = TYPE_COLORS[ev.tipo] || "#8E8E93";
+                          return (
+                            <div
+                              key={ev.id}
+                              onClick={(e) => { e.stopPropagation(); openEdit(ev); }}
+                              className="text-[10px] leading-tight px-1.5 py-[3px] rounded truncate cursor-pointer hover:brightness-125 transition-all"
+                              style={{ backgroundColor: color + "30", color }}
+                              title={ev.titulo}
+                            >
+                              {ev.titulo}
+                            </div>
+                          );
+                        })}
+                        {remaining > 0 && (
+                          <div
+                            onClick={(e) => { e.stopPropagation(); setSelectedDay(cell.day); }}
+                            className="text-[9px] leading-tight px-1.5 py-[2px] text-[#86868b] hover:text-white cursor-pointer transition-colors"
+                          >
+                            {t("ev.mais").replace("{n}", String(remaining))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Days grid — MOBILE (shown on mobile, hidden on desktop) */}
+              <div className="grid md:hidden grid-cols-7 gap-px">
+                {calDays.map((cell, i) => {
+                  const dayEvents = cell.current ? eventsInMonth.get(cell.day) || [] : [];
                   const isTodayCell = cell.current && isToday(cell.day);
                   const isSelected = cell.current && selectedDay === cell.day;
                   return (
@@ -253,26 +338,29 @@ export default function Eventos() {
                       disabled={!cell.current}
                       className={`
                         relative flex flex-col items-center justify-center
-                        aspect-square min-h-[40px] sm:min-h-[48px] rounded-xl transition-all
+                        min-h-[52px] rounded-lg transition-all
                         ${cell.current ? "hover:bg-white/[0.04] cursor-pointer" : "cursor-default"}
                         ${isSelected ? "bg-[#FF6B00]/20" : ""}
-                        ${isTodayCell ? "border-2 border-[#FF6B00]" : "border border-white/[0.05]"}
+                        ${isTodayCell ? "ring-2 ring-[#FF6B00] bg-[#FF6B00]/[0.04]" : ""}
                       `}
                     >
-                      <span className={`text-[0.8125rem] sm:text-[0.875rem] font-medium ${
-                        !cell.current ? "text-white/20" : isTodayCell ? "text-[#FF6B00]" : "text-white"
+                      <span className={`text-[0.75rem] font-medium ${
+                        !cell.current ? "text-white/15" : isTodayCell ? "text-[#FF6B00] font-bold" : "text-white"
                       }`}>
                         {cell.day}
                       </span>
-                      {hasEvents && (
+                      {dayEvents.length > 0 && (
                         <div className="flex gap-0.5 mt-0.5">
-                          {(dayEvents || []).slice(0, 3).map((ev: any, j: number) => (
+                          {dayEvents.slice(0, 3).map((ev: any, j: number) => (
                             <span
                               key={j}
                               className="w-1.5 h-1.5 rounded-full"
                               style={{ backgroundColor: TYPE_COLORS[ev.tipo] || "#8E8E93" }}
                             />
                           ))}
+                          {dayEvents.length > 3 && (
+                            <span className="text-[8px] text-[#86868b] leading-none ml-0.5">+{dayEvents.length - 3}</span>
+                          )}
                         </div>
                       )}
                     </button>
@@ -281,13 +369,22 @@ export default function Eventos() {
               </div>
             </div>
 
-            {/* Selected day events */}
+            {/* Selected day events — mobile detail panel */}
             {selectedDay !== null && (
               <div className="space-y-3 animate-fade-up">
-                <h3 className="text-[0.875rem] font-semibold text-[#86868b]">
-                  {selectedDay} {months[calMonth]} {calYear}
-                  {isToday(selectedDay) && <span className="ml-2 text-[#FF6B00] text-[0.75rem]">({t("ev.hoje")})</span>}
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[0.875rem] font-semibold text-[#86868b]">
+                    {selectedDay} {months[calMonth]} {calYear}
+                    {isToday(selectedDay) && <span className="ml-2 text-[#FF6B00] text-[0.75rem]">({t("ev.hoje")})</span>}
+                  </h3>
+                  <button
+                    onClick={() => openNewForDay(selectedDay)}
+                    className="apple-btn apple-btn-filled text-[0.6875rem] py-1.5 px-3 flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" strokeWidth={2} />
+                    {t("ev.novo")}
+                  </button>
+                </div>
                 {selectedDayEvents.length === 0 ? (
                   <div className="apple-card p-4 text-center">
                     <p className="text-[0.8125rem] text-[#48484a]">{t("ev.semEventosDia")}</p>
@@ -297,7 +394,7 @@ export default function Eventos() {
                     const sc = STATUS_MAP[ev.status] || STATUS_MAP.agendado;
                     const typeColor = TYPE_COLORS[ev.tipo] || "#8E8E93";
                     return (
-                      <div key={ev.id} className="apple-card p-4">
+                      <div key={ev.id} className="apple-card p-4 cursor-pointer hover:bg-white/[0.03] transition-colors" onClick={() => openEdit(ev)}>
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${typeColor}14` }}>
                             <Calendar className="w-4 h-4" style={{ color: typeColor }} strokeWidth={1.5} />
@@ -313,7 +410,7 @@ export default function Eventos() {
                             </div>
                           </div>
                           <div className="flex gap-1.5 shrink-0">
-                            <button onClick={() => openEdit(ev)} className="apple-btn apple-btn-tinted py-1.5 px-2.5 text-[0.6875rem]">
+                            <button onClick={(e) => { e.stopPropagation(); openEdit(ev); }} className="apple-btn apple-btn-tinted py-1.5 px-2.5 text-[0.6875rem]">
                               <Edit2 className="w-3 h-3" strokeWidth={1.5} />
                             </button>
                           </div>
@@ -358,11 +455,34 @@ export default function Eventos() {
                       {ev.descricao && <p className="text-[0.75rem] text-[#48484a] mt-2 line-clamp-2">{ev.descricao}</p>}
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-4 pt-3 border-t border-white/[0.04]">
+                  <div className="flex gap-2 mt-4 pt-3 border-t border-white/[0.04] flex-wrap">
                     {ev.linkMeet && (
                       <a href={ev.linkMeet} target="_blank" rel="noopener" className="apple-btn apple-btn-gray flex-1 py-2 text-[0.75rem]">
                         <Video className="w-3.5 h-3.5" strokeWidth={1.5} />Google Meet
                       </a>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setParticipantesEvento(ev); }}
+                      className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#0A84FF] hover:text-[#409CFF] min-h-[44px] flex items-center justify-center gap-1.5"
+                      title={t("ev.participantes")}
+                    >
+                      <Users className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      <span className="hidden sm:inline">{t("ev.participantes")}</span>
+                    </button>
+                    {ev.inscricaoAberta && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = `${window.location.origin}/evento/${ev.id}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success(t("ev.linkCopiado"));
+                        }}
+                        className="apple-btn apple-btn-gray py-2 px-3 text-[0.75rem] text-[#FF6B00] hover:text-[#FF8C33] min-h-[44px] flex items-center justify-center gap-1.5"
+                        title={t("ev.copiarLink")}
+                      >
+                        <Copy className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        <span className="hidden sm:inline">Link</span>
+                      </button>
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); setNotifyTarget(ev); }}
@@ -461,6 +581,17 @@ export default function Eventos() {
                     </button>
                   </div>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="apple-input-label">{t("ev.capacidade")}</label>
+                    <input type="number" min="0" value={form.capacidade} onChange={e => setForm({ ...form, capacidade: e.target.value })} className="apple-input" placeholder="Ilimitado" />
+                  </div>
+                  <div className="flex items-center gap-3 py-1">
+                    <Switch checked={form.inscricaoAberta} onCheckedChange={v => setForm({ ...form, inscricaoAberta: v })} />
+                    <label className="text-[0.8125rem] text-[#d2d2d7]">{t("ev.inscricaoAberta")}</label>
+                  </div>
+                </div>
+                <div><label className="apple-input-label">Imagem / Banner URL</label><input value={form.imagemUrl} onChange={e => setForm({ ...form, imagemUrl: e.target.value })} className="apple-input" placeholder="https://..." /></div>
                 <div className="flex items-center gap-3 py-1">
                   <Switch checked={form.recorrente} onCheckedChange={v => setForm({ ...form, recorrente: v })} />
                   <label className="text-[0.8125rem] text-[#d2d2d7]">{t("ev.recorrente")}</label>
@@ -519,6 +650,15 @@ export default function Eventos() {
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
           onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
         />
+
+        {/* Participantes Panel */}
+        {participantesEvento && (
+          <EventoParticipantes
+            eventoId={participantesEvento.id}
+            capacidade={participantesEvento.capacidade ?? null}
+            onClose={() => setParticipantesEvento(null)}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

@@ -104,6 +104,9 @@ export type Database = {
           linkMeet: string | null;
           recorrente: boolean;
           status: "agendado" | "realizado" | "cancelado";
+          capacidade: number | null;
+          imagemUrl: string | null;
+          inscricaoAberta: boolean;
           createdAt: string;
           updatedAt: string;
         };
@@ -216,6 +219,20 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["pedido_itens"]["Row"], "id">;
         Update: Partial<Database["public"]["Tables"]["pedido_itens"]["Insert"]>;
+      };
+      evento_participantes: {
+        Row: {
+          id: number;
+          eventoId: number;
+          nomeCompleto: string;
+          email: string;
+          telefone: string;
+          status: "confirmado" | "lista_espera" | "cancelado" | "presente";
+          observacoes: string | null;
+          createdAt: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["evento_participantes"]["Row"], "id" | "createdAt">;
+        Update: Partial<Database["public"]["Tables"]["evento_participantes"]["Insert"]>;
       };
     };
   };
