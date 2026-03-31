@@ -241,183 +241,170 @@ export default function Eventos() {
         {isLoading ? (
           <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="apple-skeleton h-28 rounded-2xl" />)}</div>
         ) : viewMode === "calendar" ? (
-          <div className="animate-fade-up space-y-4" style={{ animationDelay: "100ms" }}>
-            {/* Calendar View */}
-            <div className="apple-card p-3 sm:p-5">
-              {/* Month navigation */}
-              <div className="flex items-center justify-between mb-3">
-                <button onClick={prevMonth} className="apple-btn apple-btn-gray p-2 rounded-xl">
-                  <ChevronLeft className="w-4 h-4" />
+          <div className="animate-fade-up" style={{ animationDelay: "100ms" }}>
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer">
+                  <ChevronLeft className="w-4 h-4 text-white/60" />
                 </button>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[1rem] font-semibold text-white tracking-[-0.02em]">
-                    {months[calMonth]} {calYear}
-                  </h2>
-                  {!(calMonth === today.getMonth() && calYear === today.getFullYear()) && (
-                    <button onClick={goToToday} className="text-[0.6875rem] px-2 py-0.5 rounded-lg bg-[#FF6B00]/15 text-[#FF6B00] hover:bg-[#FF6B00]/25 transition-colors font-medium">
-                      {t("ev.hoje")}
-                    </button>
-                  )}
-                </div>
-                <button onClick={nextMonth} className="apple-btn apple-btn-gray p-2 rounded-xl">
-                  <ChevronRight className="w-4 h-4" />
+                <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer">
+                  <ChevronRight className="w-4 h-4 text-white/60" />
                 </button>
+                <h2 className="text-xl font-bold text-white tracking-[-0.02em]">
+                  {months[calMonth]} {calYear}
+                </h2>
+                {!(calMonth === today.getMonth() && calYear === today.getFullYear()) && (
+                  <button onClick={goToToday} className="text-[0.75rem] px-3 py-1 rounded-full bg-[#FF6B00]/15 text-[#FF6B00] hover:bg-[#FF6B00]/25 transition-colors font-medium cursor-pointer">
+                    {t("ev.hoje")}
+                  </button>
+                )}
               </div>
-
-              {/* Weekday headers */}
-              <div className="grid grid-cols-7 gap-px mb-0.5">
-                {weekdays.map(d => (
-                  <div key={d} className="text-center text-[0.625rem] font-medium text-[#86868b] py-1 uppercase tracking-wider">
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              {/* Days grid — DESKTOP (hidden on mobile) */}
-              <div className="hidden md:grid grid-cols-7 gap-px bg-white/[0.03] rounded-xl overflow-hidden">
-                {calDays.map((cell, i) => {
-                  const dayEvents = cell.current ? eventsInMonth.get(cell.day) || [] : [];
-                  const isTodayCell = cell.current && isToday(cell.day);
-                  const maxVisible = 3;
-                  const visibleEvents = dayEvents.slice(0, maxVisible);
-                  const remaining = dayEvents.length - maxVisible;
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => cell.current && openNewForDay(cell.day)}
-                      className={`
-                        relative flex flex-col min-h-[88px] p-1 transition-all
-                        ${cell.current ? "hover:bg-white/[0.04] cursor-pointer bg-white/[0.01]" : "bg-transparent cursor-default"}
-                        ${isTodayCell ? "ring-2 ring-inset ring-[#FF6B00] bg-[#FF6B00]/[0.04]" : ""}
-                      `}
-                    >
-                      <span className={`text-[0.6875rem] leading-none mb-1 ${
-                        !cell.current ? "text-white/15" : isTodayCell ? "text-[#FF6B00] font-bold" : "text-[#86868b] font-medium"
-                      }`}>
-                        {cell.day}
-                      </span>
-                      <div className="flex flex-col gap-[2px] flex-1 min-w-0">
-                        {visibleEvents.map((ev: any) => {
-                          const color = TYPE_COLORS[ev.tipo] || "#8E8E93";
-                          return (
-                            <div
-                              key={ev.id}
-                              onClick={(e) => { e.stopPropagation(); openEdit(ev); }}
-                              className="text-[10px] leading-tight px-1.5 py-[3px] rounded truncate cursor-pointer hover:brightness-125 transition-all"
-                              style={{ backgroundColor: color + "30", color }}
-                              title={ev.titulo}
-                            >
-                              {ev.titulo}
-                            </div>
-                          );
-                        })}
-                        {remaining > 0 && (
-                          <div
-                            onClick={(e) => { e.stopPropagation(); setSelectedDay(cell.day); }}
-                            className="text-[9px] leading-tight px-1.5 py-[2px] text-[#86868b] hover:text-white cursor-pointer transition-colors"
-                          >
-                            {t("ev.mais").replace("{n}", String(remaining))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Days grid — MOBILE (shown on mobile, hidden on desktop) */}
-              <div className="grid md:hidden grid-cols-7 gap-px">
-                {calDays.map((cell, i) => {
-                  const dayEvents = cell.current ? eventsInMonth.get(cell.day) || [] : [];
-                  const isTodayCell = cell.current && isToday(cell.day);
-                  const isSelected = cell.current && selectedDay === cell.day;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => cell.current && setSelectedDay(selectedDay === cell.day ? null : cell.day)}
-                      disabled={!cell.current}
-                      className={`
-                        relative flex flex-col items-center justify-center
-                        min-h-[52px] rounded-lg transition-all
-                        ${cell.current ? "hover:bg-white/[0.04] cursor-pointer" : "cursor-default"}
-                        ${isSelected ? "bg-[#FF6B00]/20" : ""}
-                        ${isTodayCell ? "ring-2 ring-[#FF6B00] bg-[#FF6B00]/[0.04]" : ""}
-                      `}
-                    >
-                      <span className={`text-[0.75rem] font-medium ${
-                        !cell.current ? "text-white/15" : isTodayCell ? "text-[#FF6B00] font-bold" : "text-white"
-                      }`}>
-                        {cell.day}
-                      </span>
-                      {dayEvents.length > 0 && (
-                        <div className="flex gap-0.5 mt-0.5">
-                          {dayEvents.slice(0, 3).map((ev: any, j: number) => (
-                            <span
-                              key={j}
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ backgroundColor: TYPE_COLORS[ev.tipo] || "#8E8E93" }}
-                            />
-                          ))}
-                          {dayEvents.length > 3 && (
-                            <span className="text-[8px] text-[#86868b] leading-none ml-0.5">+{dayEvents.length - 3}</span>
-                          )}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+              <button
+                onClick={() => openNewForDay(today.getDate())}
+                className="apple-btn apple-btn-filled text-[0.8125rem] py-2 px-4 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" strokeWidth={2} />
+                {t("ev.novo")}
+              </button>
             </div>
 
-            {/* Selected day events — mobile detail panel */}
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 mb-1">
+              {weekdays.map(d => (
+                <div key={d} className="text-center text-[0.6875rem] font-semibold text-[#86868b] py-2 uppercase tracking-widest">
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Days grid */}
+            <div className="grid grid-cols-7 border border-white/[0.06] rounded-2xl overflow-hidden">
+              {calDays.map((cell, i) => {
+                const dayEvents = cell.current ? eventsInMonth.get(cell.day) || [] : [];
+                const isTodayCell = cell.current && isToday(cell.day);
+                const isSelected = cell.current && selectedDay === cell.day;
+                const maxVisible = 2;
+                const visibleEvents = dayEvents.slice(0, maxVisible);
+                const remaining = dayEvents.length - maxVisible;
+                const isWeekend = i % 7 === 0 || i % 7 === 6;
+                return (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      if (!cell.current) return;
+                      if (dayEvents.length > 0) setSelectedDay(selectedDay === cell.day ? null : cell.day);
+                      else openNewForDay(cell.day);
+                    }}
+                    className={`
+                      relative flex flex-col min-h-[56px] sm:min-h-[90px] p-1.5 sm:p-2 transition-all border-b border-r border-white/[0.04] cursor-pointer
+                      ${cell.current ? "hover:bg-white/[0.03]" : "cursor-default"}
+                      ${!cell.current ? "bg-white/[0.01]" : isWeekend ? "bg-white/[0.015]" : "bg-transparent"}
+                      ${isSelected ? "bg-[#FF6B00]/[0.08] hover:bg-[#FF6B00]/[0.12]" : ""}
+                      ${isTodayCell ? "bg-[#FF6B00]/[0.06]" : ""}
+                    `}
+                  >
+                    {/* Day number */}
+                    <span className={`text-[0.75rem] sm:text-[0.8125rem] leading-none mb-1.5 ${
+                      !cell.current ? "text-white/10"
+                        : isTodayCell ? "text-black font-bold bg-[#FF6B00] w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center"
+                        : isWeekend ? "text-white/40 font-medium"
+                        : "text-white/70 font-medium"
+                    }`}>
+                      {cell.day}
+                    </span>
+
+                    {/* Event pills */}
+                    <div className="flex flex-col gap-[3px] flex-1 min-w-0">
+                      {visibleEvents.map((ev: any) => {
+                        const color = TYPE_COLORS[ev.tipo] || "#8E8E93";
+                        return (
+                          <div
+                            key={ev.id}
+                            onClick={(e) => { e.stopPropagation(); openEdit(ev); }}
+                            className="hidden sm:block text-[10px] leading-tight px-1.5 py-[3px] rounded-md truncate cursor-pointer hover:brightness-125 transition-all font-medium"
+                            style={{ backgroundColor: color + "25", color, borderLeft: `2px solid ${color}` }}
+                            title={ev.titulo}
+                          >
+                            {ev.titulo}
+                          </div>
+                        );
+                      })}
+                      {/* Mobile: dots only */}
+                      {dayEvents.length > 0 && (
+                        <div className="flex sm:hidden gap-0.5 mt-auto">
+                          {dayEvents.slice(0, 3).map((ev: any, j: number) => (
+                            <span key={j} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: TYPE_COLORS[ev.tipo] || "#8E8E93" }} />
+                          ))}
+                        </div>
+                      )}
+                      {remaining > 0 && (
+                        <span className="hidden sm:block text-[9px] text-[#86868b] px-1.5 cursor-pointer hover:text-white transition-colors">
+                          {t("ev.mais").replace("{n}", String(remaining))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Selected day detail panel */}
             {selectedDay !== null && (
-              <div className="space-y-3 animate-fade-up">
+              <div className="mt-4 space-y-3 animate-fade-up">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[0.875rem] font-semibold text-[#86868b]">
-                    {selectedDay} {months[calMonth]} {calYear}
-                    {isToday(selectedDay) && <span className="ml-2 text-[#FF6B00] text-[0.75rem]">({t("ev.hoje")})</span>}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FF6B00]/15 flex items-center justify-center">
+                      <CalendarDays className="w-4 h-4 text-[#FF6B00]" />
+                    </div>
+                    <div>
+                      <h3 className="text-[0.9375rem] font-semibold text-white">
+                        {selectedDay} {months[calMonth]}
+                      </h3>
+                      {isToday(selectedDay) && <span className="text-[0.6875rem] text-[#FF6B00]">{t("ev.hoje")}</span>}
+                    </div>
+                  </div>
                   <button
                     onClick={() => openNewForDay(selectedDay)}
-                    className="apple-btn apple-btn-filled text-[0.6875rem] py-1.5 px-3 flex items-center gap-1"
+                    className="apple-btn apple-btn-filled text-[0.75rem] py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Plus className="w-3 h-3" strokeWidth={2} />
+                    <Plus className="w-3.5 h-3.5" strokeWidth={2} />
                     {t("ev.novo")}
                   </button>
                 </div>
                 {selectedDayEvents.length === 0 ? (
-                  <div className="apple-card p-4 text-center">
+                  <div className="apple-card p-6 text-center">
+                    <CalendarDays className="w-8 h-8 text-[#48484a] mx-auto mb-2" />
                     <p className="text-[0.8125rem] text-[#48484a]">{t("ev.semEventosDia")}</p>
+                    <button onClick={() => openNewForDay(selectedDay)} className="text-[#FF6B00] text-[0.8125rem] font-medium mt-2 hover:underline cursor-pointer">
+                      + {t("ev.novo")}
+                    </button>
                   </div>
                 ) : (
-                  selectedDayEvents.map((ev: any) => {
-                    const sc = STATUS_MAP[ev.status] || STATUS_MAP.agendado;
-                    const typeColor = TYPE_COLORS[ev.tipo] || "#8E8E93";
-                    return (
-                      <div key={ev.id} className="apple-card p-4 cursor-pointer hover:bg-white/[0.03] transition-colors" onClick={() => openEdit(ev)}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${typeColor}14` }}>
-                            <Calendar className="w-4 h-4" style={{ color: typeColor }} strokeWidth={1.5} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[0.8125rem] font-semibold text-white">{ev.titulo}</span>
-                              <span className="apple-badge text-[0.625rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ev.${ev.status}`)}</span>
+                  <div className="grid gap-2">
+                    {selectedDayEvents.map((ev: any) => {
+                      const sc = STATUS_MAP[ev.status] || STATUS_MAP.agendado;
+                      const typeColor = TYPE_COLORS[ev.tipo] || "#8E8E93";
+                      return (
+                        <div key={ev.id} className="apple-card p-4 cursor-pointer hover:bg-white/[0.04] transition-all group" onClick={() => openEdit(ev)}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[0.875rem] font-semibold text-white">{ev.titulo}</span>
+                                <span className="apple-badge text-[0.625rem]" style={{ background: sc.bg, color: sc.color }}>{t(`ev.${ev.status}`)}</span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.6875rem] text-[#6e6e73] mt-1">
+                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ev.data, locale)}</span>
+                                {ev.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" strokeWidth={1.5} />{ev.local}</span>}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.6875rem] text-[#6e6e73] mt-0.5">
-                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ev.data, locale)}</span>
-                              {ev.local && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" strokeWidth={1.5} />{ev.local}</span>}
-                            </div>
-                          </div>
-                          <div className="flex gap-1.5 shrink-0">
-                            <button onClick={(e) => { e.stopPropagation(); openEdit(ev); }} className="apple-btn apple-btn-tinted py-1.5 px-2.5 text-[0.6875rem]">
-                              <Edit2 className="w-3 h-3" strokeWidth={1.5} />
-                            </button>
+                            <Edit2 className="w-4 h-4 text-[#48484a] group-hover:text-[#FF6B00] transition-colors shrink-0" strokeWidth={1.5} />
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             )}
