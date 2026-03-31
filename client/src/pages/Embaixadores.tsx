@@ -91,7 +91,9 @@ export default function Embaixadores() {
       "Estado": emb.estado || "",
       "Profissão": emb.profissao || "",
       "Status": emb.status === "ativo" ? "Ativo" : emb.status === "inativo" ? "Inativo" : "Pendente Renovação",
+      "Nascimento": emb.dataNascimento ? new Date(emb.dataNascimento).toLocaleDateString("pt-BR") : "",
       "Data Ingresso": emb.dataIngresso ? new Date(emb.dataIngresso).toLocaleDateString("pt-BR") : "",
+      "Renovação": emb.dataRenovacao ? new Date(emb.dataRenovacao).toLocaleDateString("pt-BR") : "",
     }));
     exportToXlsx(data, `embaixadores-${new Date().toISOString().split("T")[0]}`);
   }
