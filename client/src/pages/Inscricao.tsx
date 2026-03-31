@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, Loader2, ArrowRight, ArrowLeft, Send, UserCheck, Camera, Upload, Globe } from "lucide-react";
-import { useI18n, type Locale, localeFlags } from "@/lib/i18n";
+import { useI18n, type Locale } from "@/lib/i18n";
 
 const LOGO = "/logo-legendarios.png";
 
@@ -289,21 +289,57 @@ function PhotoUpload({
    MAIN COMPONENT
    ============================================================ */
 
+function FlagBR({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg">
+      <rect width="640" height="480" fill="#009b3a"/>
+      <polygon points="320,39 600,240 320,441 40,240" fill="#fedf00"/>
+      <circle cx="320" cy="240" r="95" fill="#002776"/>
+      <path d="M196,248 Q320,180 444,248" fill="none" stroke="#fff" strokeWidth="12"/>
+    </svg>
+  );
+}
+
+function FlagES({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg">
+      <rect width="640" height="480" fill="#c60b1e"/>
+      <rect y="120" width="640" height="240" fill="#ffc400"/>
+    </svg>
+  );
+}
+
+function FlagUS({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg">
+      <rect width="640" height="480" fill="#fff"/>
+      {[0,2,4,6,8,10,12].map(i => <rect key={i} y={i*37} width="640" height="37" fill="#b22234"/>)}
+      <rect width="256" height="259" fill="#3c3b6e"/>
+    </svg>
+  );
+}
+
+const FLAG_COMPONENTS: Record<Locale, typeof FlagBR> = { pt: FlagBR, es: FlagES, en: FlagUS };
+
 function LangSelector() {
   const { locale, setLocale } = useI18n();
   const langs: Locale[] = ["pt", "es", "en"];
   return (
-    <div className="flex items-center gap-1 bg-white/5 rounded-full p-1">
-      {langs.map((l) => (
-        <button
-          key={l}
-          onClick={() => setLocale(l)}
-          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer
-            ${locale === l ? "bg-[#FF6B00] text-white" : "text-white/50 hover:text-white/80"}`}
-        >
-          {localeFlags[l]} {l.toUpperCase()}
-        </button>
-      ))}
+    <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md rounded-full p-1">
+      {langs.map((l) => {
+        const Flag = FLAG_COMPONENTS[l];
+        return (
+          <button
+            key={l}
+            onClick={() => setLocale(l)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer
+              ${locale === l ? "bg-[#FF6B00] text-white shadow-lg" : "text-white/50 hover:text-white/80 hover:bg-white/5"}`}
+          >
+            <Flag className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0" />
+            {l.toUpperCase()}
+          </button>
+        );
+      })}
     </div>
   );
 }
