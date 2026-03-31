@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle } from "lucide-react";
 import { exportToXlsx } from "@/lib/exportXlsx";
 import { exportGenericPdf } from "@/lib/exportGenericPdf";
 import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
@@ -272,16 +272,28 @@ export default function Embaixadores() {
                 )}
 
                 {selected.codigoIndicacao && (
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/inscricao?ref=${selected.codigoIndicacao}`;
-                      navigator.clipboard.writeText(url);
-                      toast.success("Link de indicação copiado!");
-                    }}
-                    className="apple-btn apple-btn-filled w-full py-2.5 mb-1"
-                  >
-                    <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link de Indicação
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/inscricao?ref=${selected.codigoIndicacao}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Link de indicação copiado!");
+                      }}
+                      className="apple-btn apple-btn-filled w-full py-2.5"
+                    >
+                      <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link de Indicação
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/inscricao?ref=${selected.codigoIndicacao}`;
+                        const msg = encodeURIComponent(`Olá! Você foi convidado para se tornar um Embaixador dos Legendários. Preencha sua inscrição aqui: ${url}`);
+                        window.open(`https://wa.me/?text=${msg}`, "_blank");
+                      }}
+                      className="apple-btn apple-btn-tinted w-full py-2.5"
+                    >
+                      <MessageCircle className="w-4 h-4" strokeWidth={1.5} />Enviar via WhatsApp
+                    </button>
+                  </div>
                 )}
 
                 <div className="flex gap-2">

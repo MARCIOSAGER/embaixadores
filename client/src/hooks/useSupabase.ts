@@ -531,3 +531,88 @@ export function useUpdateUserRole() {
     },
   });
 }
+
+// ========== INSCRICOES ==========
+
+type Inscricao = Database["public"]["Tables"]["inscricoes"]["Row"];
+
+export function useInscricoes(search?: string) {
+  return useQuery({
+    queryKey: ["inscricoes", search],
+    queryFn: async () => {
+      let query = supabase.from("inscricoes").select("*").order("createdAt", { ascending: false });
+      if (search) {
+        const escaped = search.replace(/[%_\\]/g, '\\$&').replace(/[,().]/g, '');
+        query = query.or(`nomeCompleto.ilike.%${escaped}%,email.ilike.%${escaped}%`);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Inscricao[];
+    },
+  });
+}
+
+export function useUpdateInscricao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<Database["public"]["Tables"]["inscricoes"]["Update"]>) => {
+      const { error } = await supabase.from("inscricoes").update(data).eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inscricoes"] });
+    },
+  });
+}
+
+export function useDeleteInscricao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from("inscricoes").delete().eq("id", id);
+      if (error) throw error;
+      return { success: true };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inscricoes"] });
+    },
+  });
+}
+
+export function useConvertInscricaoToEmbaixador() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (inscricao: Inscricao) => {
+      const codigoIndicacao = Math.random().toString(36).substring(2, 8);
+      const embData: InsertEmbaixador = {
+        nomeCompleto: inscricao.nomeCompleto,
+        email: inscricao.email || null,
+        telefone: inscricao.telefone || null,
+        cidade: inscricao.cidade || null,
+        estado: inscricao.estado || null,
+        profissao: inscricao.profissao || null,
+        empresa: null,
+        numeroLegendario: inscricao.numeroLegendario || null,
+        numeroEmbaixador: null,
+        dataNascimento: inscricao.dataNascimento ? new Date(inscricao.dataNascimento + "T12:00:00").getTime() : null,
+        dataIngresso: Date.now(),
+        dataRenovacao: null,
+        status: "ativo",
+        idioma: "pt",
+        observacoes: null,
+        fotoUrl: inscricao.fotoUrl || null,
+        codigoIndicacao,
+      };
+      const { data: newEmb, error: embError } = await supabase.from("embaixadores").insert(embData).select("id").single();
+      if (embError) throw embError;
+      const { error: updateError } = await supabase.from("inscricoes").update({ status: "aprovado" }).eq("id", inscricao.id);
+      if (updateError) throw updateError;
+      return newEmb;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inscricoes"] });
+      qc.invalidateQueries({ queryKey: ["embaixadores"] });
+    },
+  });
+}

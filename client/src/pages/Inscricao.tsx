@@ -5,15 +5,15 @@ import { useI18n, type Locale } from "@/lib/i18n";
 
 const LOGO = "/logo-legendarios.png";
 
-const BG_IMAGES = [
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80",
-  "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1920&q=80",
-  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1920&q=80",
-  "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80",
-  "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1920&q=80",
-  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80",
-  "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80",
-  "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=1920&q=80",
+const BG_GRADIENTS = [
+  "linear-gradient(135deg, #0a0a0a 0%, #1a0f00 40%, #0d0d0d 100%)",           // Welcome: dark dramatic
+  "linear-gradient(135deg, #0a0a14 0%, #0c1a2e 50%, #050508 100%)",           // Pessoal (1): deep blue to black
+  "linear-gradient(135deg, #0a1210 0%, #0c201c 50%, #060a09 100%)",           // Legendarios (2): dark teal to black
+  "linear-gradient(135deg, #100a14 0%, #1a0c2a 50%, #08050a 100%)",           // Indicacao (3): dark purple to black
+  "linear-gradient(135deg, #12100a 0%, #1e1408 50%, #0a0908 100%)",           // Familia (4): warm dark brown to black
+  "linear-gradient(135deg, #0c0e12 0%, #141820 50%, #080a0c 100%)",           // Profissional (5): dark slate to black
+  "linear-gradient(135deg, #0a0c18 0%, #0e1230 50%, #060710 100%)",           // Mercado (6): dark indigo to black
+  "linear-gradient(135deg, #120c08 0%, #1a1005 50%, #0a0804 100%)",           // Investimento (7): dark orange-tinged to black
 ];
 
 /* ============================================================ */
@@ -345,7 +345,7 @@ function LangSelector() {
 }
 
 export default function Inscricao() {
-  const { t } = useI18n();
+  const { t, setLocale } = useI18n();
   const [qIdx, setQIdx] = useState(-1);
   const [form, setForm] = useState<FormData>(initial);
   const [submitting, setSubmitting] = useState(false);
@@ -357,6 +357,15 @@ export default function Inscricao() {
   const [refCode, setRefCode] = useState<string | null>(null);
   const [refEmbId, setRefEmbId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("app-locale");
+    if (saved) return; // user already chose
+    const browserLang = navigator.language.slice(0, 2);
+    if (browserLang === "es") setLocale("es");
+    else if (browserLang === "en") setLocale("en");
+    // default is already PT
+  }, []);
 
   const questions = buildQuestions(t);
   const visibleQuestions = questions.filter((q) => !q.showIf || q.showIf(form));
@@ -538,10 +547,7 @@ export default function Inscricao() {
   if (isWelcome) {
     return (
       <div className="min-h-dvh relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0">
-          <img src={BG_IMAGES[0]} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
-        </div>
+        <div className="absolute inset-0" style={{ background: BG_GRADIENTS[0] }} />
 
         <div className="relative z-10 text-center px-6 max-w-lg slide-up">
           <div className="flex justify-center mb-6"><LangSelector /></div>
@@ -587,15 +593,7 @@ export default function Inscricao() {
 
   return (
     <div className="min-h-dvh relative overflow-hidden flex flex-col" onKeyDown={handleKeyDown}>
-      <div className="absolute inset-0 transition-opacity duration-700">
-        <img
-          src={BG_IMAGES[bgIdx] || BG_IMAGES[0]}
-          alt=""
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/80 to-black/85 backdrop-blur-sm" />
-      </div>
+      <div className="absolute inset-0 transition-all duration-700" style={{ background: BG_GRADIENTS[bgIdx] || BG_GRADIENTS[0] }} />
 
       {/* Progress bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/5">

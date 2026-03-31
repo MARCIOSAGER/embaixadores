@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Inscricao from "./pages/Inscricao";
+import Inscricoes from "./pages/Inscricoes";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/welcome-kit" component={WelcomeKit} />
       <Route path="/eventos" component={Eventos} />
       <Route path="/entrevistas" component={Entrevistas} />
+      <Route path="/inscricoes" component={Inscricoes} />
       <Route path="/pagamentos" component={Pagamentos} />
       <Route path="/admin">{() => <ProtectedRoute requireAdmin><Admin /></ProtectedRoute>}</Route>
 
