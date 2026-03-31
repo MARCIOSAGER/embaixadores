@@ -24,6 +24,21 @@ function json(data: unknown, status = 200) {
   });
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) && email.length < 254;
+}
+
+const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 /**
  * send-report: Send a PDF report as email attachment.
  *
@@ -68,6 +83,21 @@ Deno.serve(async (req) => {
       return json({ error: "to, subject, pdfBase64 e filename sao obrigatorios" }, 400);
     }
 
+    // Validate email format
+    if (!isValidEmail(to)) {
+      return json({ error: "Endereco de email invalido" }, 400);
+    }
+
+    // Limit PDF size (base64 is ~4/3 of original, so check base64 length)
+    const pdfSizeBytes = Math.ceil((pdfBase64.length * 3) / 4);
+    if (pdfSizeBytes > MAX_PDF_SIZE_BYTES) {
+      return json({ error: "PDF excede o tamanho maximo de 10MB" }, 400);
+    }
+
+    // Sanitize subject and body for email
+    const safeSubject = escapeHtml(subject);
+    const safeBody = body ? escapeHtml(body) : safeSubject;
+
     const smtpHost = (Deno.env.get("SMTP_HOST") || "smtp.hostinger.com").trim();
     const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());
     const smtpUser = (Deno.env.get("SMTP_USER") || "").trim();
@@ -89,8 +119,8 @@ Deno.serve(async (req) => {
     await transporter.sendMail({
       from: smtpFrom,
       to,
-      subject,
-      text: body || subject,
+      subject: safeSubject,
+      text: safeBody,
       attachments: [
         {
           filename,

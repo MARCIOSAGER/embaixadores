@@ -57,6 +57,9 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    // Clean up stored tokens and session data
+    localStorage.removeItem("manus-runtime-user-info");
+    sessionStorage.clear();
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {

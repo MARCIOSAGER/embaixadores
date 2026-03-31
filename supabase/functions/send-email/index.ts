@@ -44,6 +44,19 @@ function buildEmailHtml(title: string, body: string) {
 </html>`;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) && email.length < 254;
+}
+
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -77,6 +90,19 @@ Deno.serve(async (req) => {
       return json({ error: "to, subject, title e body sao obrigatorios" }, 400);
     }
 
+    // Validate email(s)
+    const emailList = Array.isArray(to) ? to : [to];
+    for (const email of emailList) {
+      if (!isValidEmail(email)) {
+        return json({ error: `Endereco de email invalido: ${escapeHtml(email)}` }, 400);
+      }
+    }
+
+    // Sanitize subject, title, and body
+    const safeSubject = escapeHtml(subject);
+    const safeTitle = escapeHtml(title);
+    const safeBody = escapeHtml(body);
+
     const smtpHost = (Deno.env.get("SMTP_HOST") || "smtp.hostinger.com").trim();
     const smtpPort = parseInt((Deno.env.get("SMTP_PORT") || "465").trim());
     const smtpUser = (Deno.env.get("SMTP_USER") || "").trim();
@@ -98,9 +124,9 @@ Deno.serve(async (req) => {
     await transporter.sendMail({
       from: smtpFrom,
       to: Array.isArray(to) ? to.join(",") : to,
-      subject,
-      text: title,
-      html: buildEmailHtml(title, body),
+      subject: safeSubject,
+      text: safeTitle,
+      html: buildEmailHtml(safeTitle, safeBody),
     });
 
     return json({ success: true, message: `Email enviado para ${to}` });

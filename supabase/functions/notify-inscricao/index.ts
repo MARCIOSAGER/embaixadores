@@ -3,6 +3,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nodemailer from "npm:nodemailer@6.9.16";
 
 // ---------------------------------------------------------------------------
+// Sanitization
+// ---------------------------------------------------------------------------
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// ---------------------------------------------------------------------------
 // CORS
 // ---------------------------------------------------------------------------
 
@@ -144,29 +157,33 @@ function buildWhatsAppMessage(ins: InscricaoRow): string {
 }
 
 function buildEmailBody(ins: InscricaoRow): string {
+  const nome = escapeHtml(ins.nomeCompleto);
+  const email = escapeHtml(ins.email);
+  const telefone = escapeHtml(ins.telefone);
+
   const rows: string[] = [
-    `<strong>Nome:</strong> ${ins.nomeCompleto}`,
-    `<strong>Email:</strong> <a href="mailto:${ins.email}" style="color:#FF6B00;">${ins.email}</a>`,
-    `<strong>Telefone:</strong> ${ins.telefone}`,
+    `<strong>Nome:</strong> ${nome}`,
+    `<strong>Email:</strong> <a href="mailto:${email}" style="color:#FF6B00;">${email}</a>`,
+    `<strong>Telefone:</strong> ${telefone}`,
   ];
 
   if (ins.cidade || ins.estado) {
-    rows.push(`<strong>Cidade/Estado:</strong> ${ins.cidade || "—"} / ${ins.estado || "—"}`);
+    rows.push(`<strong>Cidade/Estado:</strong> ${escapeHtml(ins.cidade || "—")} / ${escapeHtml(ins.estado || "—")}`);
   }
   if (ins.numeroLegendario) {
-    rows.push(`<strong>Legendario #:</strong> ${ins.numeroLegendario}`);
+    rows.push(`<strong>Legendario #:</strong> ${escapeHtml(ins.numeroLegendario)}`);
   }
   if (ins.topSede) {
-    rows.push(`<strong>TOP/Sede:</strong> ${ins.topSede}`);
+    rows.push(`<strong>TOP/Sede:</strong> ${escapeHtml(ins.topSede)}`);
   }
   if (ins.indicadoPorEmb && ins.nomeIndicador) {
-    rows.push(`<strong>Indicado por:</strong> ${ins.nomeIndicador}`);
+    rows.push(`<strong>Indicado por:</strong> ${escapeHtml(ins.nomeIndicador)}`);
   }
   if (ins.profissao) {
-    rows.push(`<strong>Profissao:</strong> ${ins.profissao}`);
+    rows.push(`<strong>Profissao:</strong> ${escapeHtml(ins.profissao)}`);
   }
   if (ins.instagram) {
-    rows.push(`<strong>Instagram:</strong> ${ins.instagram}`);
+    rows.push(`<strong>Instagram:</strong> ${escapeHtml(ins.instagram)}`);
   }
 
   return rows.join("<br>");
@@ -200,7 +217,33 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Auth: require service role key or valid user JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    if (token !== serviceRoleKey) {
+      // Not service role — verify as user JWT
+      const supabaseAuth = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser();
+      if (authError || !authUser) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+    }
+
     const body = await req.json();
+
+    // Require a record in the body (database webhook or direct POST with inscription data)
+    if (!body.record && !body.nomeCompleto) {
+      return json({ error: "Payload invalido: record ou dados da inscricao obrigatorios" }, 400);
+    }
+
     const inscricao = extractInscricao(body);
 
     if (!inscricao.nomeCompleto || !inscricao.email) {
@@ -318,7 +361,7 @@ Deno.serve(async (req) => {
           });
 
           const emailBody = buildEmailBody(inscricao);
-          const emailSubject = `Nova Inscricao: ${inscricao.nomeCompleto}`;
+          const emailSubject = `Nova Inscricao: ${escapeHtml(inscricao.nomeCompleto)}`;
           const emailTitle = "Nova Inscricao Recebida";
           const plainText = buildWhatsAppMessage(inscricao);
 

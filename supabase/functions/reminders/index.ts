@@ -2,6 +2,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nodemailer from "npm:nodemailer@6.9.16";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const LOGO_URL = "https://embaixadores.marciosager.com/logo-legendarios.png";
 
 function buildEmailHtml(title: string, body: string) {
@@ -193,9 +202,10 @@ async function processPaymentReminders(
       const diasLabel = dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`;
       const vencimento = formatDateOnly(pag.dataVencimento);
 
+      const safeName = escapeHtml(emb.nomeCompleto);
       const waMsg = `Ola ${emb.nomeCompleto}, seu pagamento de R$ ${pag.valor} vence em ${diasLabel} (${vencimento}).`;
       const emailSubject = `Lembrete de pagamento - vence em ${diasLabel}`;
-      const emailBody = `<p>Ola <strong>${emb.nomeCompleto}</strong>,</p>
+      const emailBody = `<p>Ola <strong>${safeName}</strong>,</p>
 <p>Seu pagamento de <strong>R$ ${pag.valor}</strong> vence em <strong>${diasLabel}</strong> (${vencimento}).</p>
 <p>Por favor, regularize para manter seu status de embaixador ativo.</p>`;
 
@@ -253,9 +263,10 @@ async function processRenewalReminders(
       const diasLabel = dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`;
       const dataRenov = formatDateOnly(emb.dataRenovacao);
 
+      const safeName = escapeHtml(emb.nomeCompleto);
       const waMsg = `Ola ${emb.nomeCompleto}, sua renovacao como embaixador vence em ${diasLabel} (${dataRenov}).`;
       const emailSubject = `Renovacao de embaixador - vence em ${diasLabel}`;
-      const emailBody = `<p>Ola <strong>${emb.nomeCompleto}</strong>,</p>
+      const emailBody = `<p>Ola <strong>${safeName}</strong>,</p>
 <p>Sua renovacao como embaixador vence em <strong>${diasLabel}</strong> (${dataRenov}).</p>
 <p>Entre em contato para renovar e continuar fazendo parte dos Embaixadores dos Legendarios.</p>`;
 
@@ -317,9 +328,10 @@ async function processBirthdayGreetings(
     });
 
     for (const emb of birthdayPeople) {
+      const safeName = escapeHtml(emb.nomeCompleto);
       const waMsg = `Feliz aniversario, ${emb.nomeCompleto}! \u{1F382} Os Embaixadores dos Legendarios desejam um dia abencoado.`;
-      const emailSubject = `Feliz Aniversario, ${emb.nomeCompleto}!`;
-      const emailBody = `<p style="font-size:16px;">Feliz aniversario, <strong>${emb.nomeCompleto}</strong>! \u{1F382}</p>
+      const emailSubject = `Feliz Aniversario, ${escapeHtml(emb.nomeCompleto)}!`;
+      const emailBody = `<p style="font-size:16px;">Feliz aniversario, <strong>${safeName}</strong>! \u{1F382}</p>
 <p>Os Embaixadores dos Legendarios desejam um dia abencoado, repleto de alegria e gracas.</p>
 <p>Que Deus continue te guiando e fortalecendo nesta jornada!</p>`;
 
@@ -389,13 +401,17 @@ async function processEventReminders(
 
       const horaStr = formatTimeOnly(evento.data);
       const localStr = evento.local || "a definir";
+      const safeTitulo = escapeHtml(evento.titulo);
+      const safeLocal = escapeHtml(localStr);
+      const safeMeetLink = evento.linkMeet ? escapeHtml(evento.linkMeet) : "";
 
       for (const part of participantes) {
+        const safePartName = escapeHtml(part.nomeCompleto);
         const waMsg = `Lembrete: o evento ${evento.titulo} acontece amanha as ${horaStr} em ${localStr}.${evento.linkMeet ? `\nMeet: ${evento.linkMeet}` : ""}`;
-        const emailSubject = `Lembrete: ${evento.titulo} - amanha`;
-        const emailBody = `<p>Ola <strong>${part.nomeCompleto}</strong>,</p>
-<p>Lembrete: o evento <strong>${evento.titulo}</strong> acontece amanha as <strong>${horaStr}</strong> em <strong>${localStr}</strong>.</p>
-${evento.linkMeet ? `<p><a href="${evento.linkMeet}" style="color:#FF6B00;">Entrar na reuniao (Google Meet)</a></p>` : ""}`;
+        const emailSubject = `Lembrete: ${safeTitulo} - amanha`;
+        const emailBody = `<p>Ola <strong>${safePartName}</strong>,</p>
+<p>Lembrete: o evento <strong>${safeTitulo}</strong> acontece amanha as <strong>${horaStr}</strong> em <strong>${safeLocal}</strong>.</p>
+${evento.linkMeet ? `<p><a href="${safeMeetLink}" style="color:#FF6B00;">Entrar na reuniao (Google Meet)</a></p>` : ""}`;
 
         if (zapiConfig && part.telefone) {
           const ok = await sendWhatsApp(zapiConfig, part.telefone, waMsg);
@@ -430,6 +446,14 @@ Deno.serve(async (req) => {
         "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       },
     });
+  }
+
+  // Only accept POST requests (cron triggers use POST)
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Method not allowed" }),
+      { status: 405, headers: { "Content-Type": "application/json" } },
+    );
   }
 
   try {

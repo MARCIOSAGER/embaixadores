@@ -17,6 +17,7 @@ export default function EventoInscricao() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastSubmit, setLastSubmit] = useState(0);
   const [resultStatus, setResultStatus] = useState<"confirmado" | "lista_espera">("confirmado");
 
   const [form, setForm] = useState({
@@ -52,6 +53,21 @@ export default function EventoInscricao() {
     e.preventDefault();
     if (!eventoId || !form.nomeCompleto || !form.email || !form.telefone) return;
 
+    // Rate limiting: 30s cooldown
+    const now = Date.now();
+    if (now - lastSubmit < 30000) {
+      alert(t("form.aguarde"));
+      return;
+    }
+
+    // Duplicate email check per event via localStorage
+    const submittedKey = `evento-submitted-${eventoId}-${form.email}`;
+    if (localStorage.getItem(submittedKey)) {
+      alert(t("form.jaEnviado"));
+      return;
+    }
+
+    setLastSubmit(now);
     setSubmitting(true);
     try {
       // Re-check capacity at submission time
@@ -75,6 +91,7 @@ export default function EventoInscricao() {
       });
 
       if (error) throw error;
+      localStorage.setItem(`evento-submitted-${eventoId}-${form.email}`, "1");
       setResultStatus(status);
       setSubmitted(true);
     } catch (err: any) {

@@ -15,6 +15,24 @@ function corsHeaders(req: Request) {
   };
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function stripHtmlTags(str: string): string {
+  return str.replace(/<[^>]*>/g, "");
+}
+
+function isValidPhone(phone: string): boolean {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 10 && digits.length <= 13;
+}
+
 let _req: Request;
 
 function json(data: unknown, status = 200) {
@@ -105,27 +123,36 @@ interface EntrevistaData { nomeCandidato: string; dataEntrevista: number; linkMe
 function buildEventoMsg(ev: EventoData, locale: Locale) {
   const dateStr = formatDate(ev.data, locale);
   const calLink = buildCalendarLink(ev.titulo, ev.data, ev.dataFim, ev.local, ev.linkMeet);
+  const safeTitulo = escapeHtml(ev.titulo);
+  const safeLocal = escapeHtml(ev.local || t("tbd", locale));
+  const safeMeetLink = ev.linkMeet ? escapeHtml(ev.linkMeet) : "";
   const whatsapp = `*${ev.titulo}*\n${t("date", locale)}: ${dateStr}\n${t("local", locale)}: ${ev.local || t("tbd", locale)}${ev.linkMeet ? `\nMeet: ${ev.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
-  const emailBody = `<strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("local", locale)}:</strong> ${ev.local || t("tbd", locale)}${ev.linkMeet ? `<br><br><a href="${ev.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
-  return { whatsapp, emailSubject: `${t("evento", locale)}: ${ev.titulo}`, emailTitle: ev.titulo, emailBody };
+  const emailBody = `<strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("local", locale)}:</strong> ${safeLocal}${ev.linkMeet ? `<br><br><a href="${safeMeetLink}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
+  return { whatsapp, emailSubject: `${t("evento", locale)}: ${safeTitulo}`, emailTitle: safeTitulo, emailBody };
 }
 
 function buildTercaMsg(tg: TercaData, locale: Locale) {
   const dateStr = formatDate(tg.data, locale);
-  const title = `${t("tercaTitle", locale)} - ${tg.tema}`;
-  const calLink = buildCalendarLink(title, tg.data, undefined, undefined, tg.linkMeet);
+  const safeTema = escapeHtml(tg.tema);
+  const safePregador = escapeHtml(tg.pregador || t("tbd", locale));
+  const safeMeetLink = tg.linkMeet ? escapeHtml(tg.linkMeet) : "";
+  const title = `${t("tercaTitle", locale)} - ${safeTema}`;
+  const calLink = buildCalendarLink(tg.tema, tg.data, undefined, undefined, tg.linkMeet);
   const whatsapp = `*${t("tercaTitle", locale)}*\n${t("tema", locale)}: ${tg.tema}\n${t("date", locale)}: ${dateStr}\n${t("pregador", locale)}: ${tg.pregador || t("tbd", locale)}${tg.linkMeet ? `\nMeet: ${tg.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
-  const emailBody = `<strong>${t("tema", locale)}:</strong> ${tg.tema}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("pregador", locale)}:</strong> ${tg.pregador || t("tbd", locale)}${tg.linkMeet ? `<br><br><a href="${tg.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
-  return { whatsapp, emailSubject: `${t("tercaTitle", locale)}: ${tg.tema}`, emailTitle: title, emailBody };
+  const emailBody = `<strong>${t("tema", locale)}:</strong> ${safeTema}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("pregador", locale)}:</strong> ${safePregador}${tg.linkMeet ? `<br><br><a href="${safeMeetLink}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
+  return { whatsapp, emailSubject: `${t("tercaTitle", locale)}: ${safeTema}`, emailTitle: title, emailBody };
 }
 
 function buildEntrevistaMsg(ent: EntrevistaData, locale: Locale) {
   const dateStr = formatDate(ent.dataEntrevista, locale);
-  const title = `${t("entrevista", locale)} - ${ent.nomeCandidato}`;
-  const calLink = buildCalendarLink(title, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
+  const safeCandidato = escapeHtml(ent.nomeCandidato);
+  const safeIndicador = escapeHtml(ent.indicadoPor || "—");
+  const safeMeetLink = ent.linkMeet ? escapeHtml(ent.linkMeet) : "";
+  const title = `${t("entrevista", locale)} - ${safeCandidato}`;
+  const calLink = buildCalendarLink(ent.nomeCandidato, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
   const whatsapp = `*${t("entrevistaTitle", locale)}*\n${t("candidato", locale)}: ${ent.nomeCandidato}\n${t("date", locale)}: ${dateStr}\n${t("indicadoPor", locale)}: ${ent.indicadoPor || "—"}${ent.linkMeet ? `\nMeet: ${ent.linkMeet}` : ""}\n\n${t("saveCalendar", locale)}: ${calLink}`;
-  const emailBody = `<strong>${t("candidato", locale)}:</strong> ${ent.nomeCandidato}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("indicadoPor", locale)}:</strong> ${ent.indicadoPor || "—"}${ent.linkMeet ? `<br><br><a href="${ent.linkMeet}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
-  return { whatsapp, emailSubject: `${t("entrevista", locale)}: ${ent.nomeCandidato}`, emailTitle: title, emailBody };
+  const emailBody = `<strong>${t("candidato", locale)}:</strong> ${safeCandidato}<br><strong>${t("date", locale)}:</strong> ${dateStr}<br><strong>${t("indicadoPor", locale)}:</strong> ${safeIndicador}${ent.linkMeet ? `<br><br><a href="${safeMeetLink}" style="color:#FF6B00;">${t("meet", locale)}</a>` : ""}<br><br><a href="${calLink}" style="color:#FF6B00;">${t("saveCalendar", locale)}</a>`;
+  return { whatsapp, emailSubject: `${t("entrevista", locale)}: ${safeCandidato}`, emailTitle: title, emailBody };
 }
 
 function formatDateOnly(ts: number): string {
@@ -139,8 +166,8 @@ function formatTimeOnly(ts: number): string {
 function buildEntrevistaCandidatoMsg(ent: EntrevistaData, entrevistadorNome: string) {
   const dataStr = formatDateOnly(ent.dataEntrevista);
   const horaStr = formatTimeOnly(ent.dataEntrevista);
-  const title = `Entrevista - ${ent.nomeCandidato}`;
-  const calLink = buildCalendarLink(title, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
+  const title = `Entrevista - ${escapeHtml(ent.nomeCandidato)}`;
+  const calLink = buildCalendarLink(ent.nomeCandidato, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
 
   const text = `Prezado ${ent.nomeCandidato},
 
@@ -164,7 +191,9 @@ Permanecemos à disposição.
 Respeitosamente,
 Embaixadores Legendários`;
 
-  const emailBody = text.replace(/\n/g, "<br>");
+  // Sanitize for HTML email (the plain text version stays unsanitized for WhatsApp)
+  const safeText = escapeHtml(text);
+  const emailBody = safeText.replace(/\n/g, "<br>");
 
   return {
     whatsapp: text,
@@ -177,8 +206,8 @@ Embaixadores Legendários`;
 function buildEntrevistaEntrevistadorMsg(ent: EntrevistaData) {
   const dataStr = formatDateOnly(ent.dataEntrevista);
   const horaStr = formatTimeOnly(ent.dataEntrevista);
-  const title = `Entrevista - ${ent.nomeCandidato}`;
-  const calLink = buildCalendarLink(title, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
+  const title = `Entrevista - ${escapeHtml(ent.nomeCandidato)}`;
+  const calLink = buildCalendarLink(ent.nomeCandidato, ent.dataEntrevista, undefined, undefined, ent.linkMeet);
 
   const text = `Nova Entrevista Agendada
 
@@ -190,11 +219,13 @@ Data: ${dataStr} às ${horaStr}${ent.linkMeet ? `\nGoogle Meet: ${ent.linkMeet}`
 
 Adicione ao seu calendário: ${calLink}`;
 
-  const emailBody = text.replace(/\n/g, "<br>");
+  // Sanitize for HTML email
+  const safeText = escapeHtml(text);
+  const emailBody = safeText.replace(/\n/g, "<br>");
 
   return {
     whatsapp: text,
-    emailSubject: `Nova Entrevista: ${ent.nomeCandidato}`,
+    emailSubject: `Nova Entrevista: ${escapeHtml(ent.nomeCandidato)}`,
     emailTitle: `Nova Entrevista Agendada`,
     emailBody,
   };
@@ -248,8 +279,9 @@ Deno.serve(async (req) => {
     if (!type || !channel) {
       return json({ error: "type e channel sao obrigatorios" }, 400);
     }
-    if (!["evento", "terca", "entrevista", "custom"].includes(type)) {
-      return json({ error: "type deve ser: evento, terca, entrevista, custom" }, 400);
+    const allowedTypes = ["evento", "terca", "entrevista", "custom"];
+    if (!allowedTypes.includes(type)) {
+      return json({ error: `type deve ser: ${allowedTypes.join(", ")}` }, 400);
     }
     if (!["whatsapp", "email", "both"].includes(channel)) {
       return json({ error: "channel deve ser: whatsapp, email, both" }, 400);
@@ -264,6 +296,18 @@ Deno.serve(async (req) => {
         emails?: string[];
       };
       if (!message) return json({ error: "message e obrigatorio para type=custom" }, 400);
+
+      // Validate phone numbers
+      if (phones && phones.length > 0) {
+        const invalidPhones = phones.filter((p: string) => !isValidPhone(p));
+        if (invalidPhones.length > 0) {
+          return json({ error: `Telefones invalidos (devem ter 10-13 digitos): ${invalidPhones.join(", ")}` }, 400);
+        }
+      }
+
+      // Sanitize message: strip HTML tags for WhatsApp, escape for email
+      const whatsappMessage = stripHtmlTags(message);
+      const emailMessage = escapeHtml(message);
 
       const results = {
         whatsapp: { sent: 0, failed: 0, errors: [] as string[] },
@@ -292,7 +336,7 @@ Deno.serve(async (req) => {
                   const res = await fetch(`${zapiBaseUrl}/send-text`, {
                     method: "POST",
                     headers: zapiHeaders,
-                    body: JSON.stringify({ phone: cleanPhone, message }),
+                    body: JSON.stringify({ phone: cleanPhone, message: whatsappMessage }),
                   });
                   if (res.ok) results.whatsapp.sent++;
                   else { results.whatsapp.failed++; results.whatsapp.errors.push(`${phone}: ${res.statusText}`); }
@@ -321,15 +365,15 @@ Deno.serve(async (req) => {
               auth: { user: smtpUser, pass: smtpPass },
             });
 
-            const emailSubject = subject || "Mensagem dos Embaixadores";
-            const emailHtml = buildEmailHtml(emailSubject, message.replace(/\n/g, "<br>"), locale);
+            const emailSubject = escapeHtml(subject || "Mensagem dos Embaixadores");
+            const emailHtml = buildEmailHtml(emailSubject, emailMessage.replace(/\n/g, "<br>"), locale);
 
             for (let i = 0; i < emails.length; i += 10) {
               const batch = emails.slice(i, i + 10);
               await Promise.allSettled(
                 batch.map(async (to) => {
                   try {
-                    await transporter.sendMail({ from: smtpFrom, to, subject: emailSubject, text: message, html: emailHtml });
+                    await transporter.sendMail({ from: smtpFrom, to, subject: emailSubject, text: whatsappMessage, html: emailHtml });
                     results.email.sent++;
                   } catch (err: any) { results.email.failed++; results.email.errors.push(`${to}: ${err.message}`); }
                 })
@@ -454,7 +498,7 @@ Deno.serve(async (req) => {
         };
 
         // Send to embaixadores (each in their preferred locale) - parallel in batches
-        const waRecipients = embaixadores.filter(e => e.telefone);
+        const waRecipients = embaixadores.filter(e => e.telefone && isValidPhone(e.telefone));
         for (let i = 0; i < waRecipients.length; i += 10) {
           const batch = waRecipients.slice(i, i + 10);
           await Promise.allSettled(

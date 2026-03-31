@@ -226,15 +226,60 @@ function YesNoButtons({ value, onChange, t }: { value: boolean; onChange: (v: bo
   );
 }
 
+async function resizeImage(file: File, maxWidth: number): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const canvas = document.createElement("canvas");
+      const ratio = Math.min(maxWidth / img.width, 1);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          resolve(new File([blob!], file.name, { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.85,
+      );
+    };
+    img.src = objectUrl;
+  });
+}
+
 function PhotoUpload({
   preview, onChange, t,
 }: { preview: string; onChange: (file: File, preview: string) => void; t: (k: string) => string }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState("");
 
-  function handleFile(file: File) {
-    if (!file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
-    onChange(file, url);
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+  async function handleFile(file: File) {
+    setUploadError("");
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadError(t("upload.tipoInvalido"));
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      setUploadError(t("upload.muitoGrande"));
+      return;
+    }
+
+    // Resize if > 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      const resized = await resizeImage(file, 1200);
+      const url = URL.createObjectURL(resized);
+      onChange(resized, url);
+    } else {
+      const url = URL.createObjectURL(file);
+      onChange(file, url);
+    }
   }
 
   return (
@@ -253,6 +298,11 @@ function PhotoUpload({
           <Camera className="w-12 h-12 text-white/30" />
         )}
       </div>
+
+      {/* Upload error */}
+      {uploadError && (
+        <p className="text-[#FF453A] text-sm font-medium text-center">{uploadError}</p>
+      )}
 
       {/* Buttons */}
       <div className="flex gap-3">
@@ -277,7 +327,7 @@ function PhotoUpload({
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
       />
@@ -352,6 +402,7 @@ export default function Inscricao() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldError, setFieldError] = useState("");
+  const [lastSubmit, setLastSubmit] = useState(0);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [referrer, setReferrer] = useState<{ nomeCompleto: string } | null>(null);
   const [refCode, setRefCode] = useState<string | null>(null);
@@ -462,6 +513,22 @@ export default function Inscricao() {
 
   async function submit() {
     if (!validate()) return;
+
+    // Rate limiting: 30s cooldown
+    const now = Date.now();
+    if (now - lastSubmit < 30000) {
+      setError(t("form.aguarde"));
+      return;
+    }
+
+    // Duplicate email check via localStorage
+    const submittedKey = `inscricao-submitted-${form.email}`;
+    if (localStorage.getItem(submittedKey)) {
+      setError(t("form.jaEnviado"));
+      return;
+    }
+
+    setLastSubmit(now);
     setSubmitting(true);
     setError("");
     try {
@@ -506,6 +573,7 @@ export default function Inscricao() {
         status: "pendente",
       });
       if (err) throw err;
+      localStorage.setItem(`inscricao-submitted-${form.email}`, "1");
       setSubmitted(true);
     } catch (e: any) {
       setError(e.message || "Erro ao enviar. Tente novamente.");
