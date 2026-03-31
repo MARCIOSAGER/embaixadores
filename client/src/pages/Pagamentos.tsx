@@ -220,7 +220,8 @@ export default function Pagamentos() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("pag.buscar")}
-              className="apple-input pl-10 w-full"
+              className="apple-input w-full"
+              style={{ paddingLeft: "2.5rem" }}
             />
           </div>
         </div>

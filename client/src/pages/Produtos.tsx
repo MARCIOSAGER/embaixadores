@@ -430,7 +430,8 @@ export default function Produtos() {
               placeholder={t("prod.buscar")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="apple-input pl-10"
+              className="apple-input"
+              style={{ paddingLeft: "2.5rem" }}
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
