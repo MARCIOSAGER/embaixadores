@@ -167,23 +167,26 @@ function PhotoUpload({
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className={`w-40 h-40 rounded-full border-4 overflow-hidden flex items-center justify-center transition-all duration-300
-        ${preview ? "border-[#FF6B00] shadow-[0_0_40px_rgba(255,107,0,0.25)]" : "border-white/20 border-dashed"}`}>
+      <div className={`w-44 h-44 sm:w-48 sm:h-48 rounded-full border-4 overflow-hidden flex items-center justify-center transition-all duration-500
+        ${preview ? "border-[#FF6B00] shadow-[0_0_60px_rgba(255,107,0,0.3)]" : "border-white/15 border-dashed bg-white/[0.02]"}`}>
         {preview ? (
           <img src={preview} alt="Foto" className="w-full h-full object-cover" />
         ) : (
-          <Camera className="w-12 h-12 text-white/30" />
+          <div className="text-center">
+            <Camera className="w-10 h-10 text-white/20 mx-auto mb-2" />
+            <span className="text-[0.65rem] text-white/20 uppercase tracking-wider">{t("perfil.foto.toque")}</span>
+          </div>
         )}
       </div>
       {uploadError && <p className="text-[#FF453A] text-sm font-medium text-center">{uploadError}</p>}
-      <div className="flex gap-3">
+      <div className="flex gap-3 w-full max-w-xs">
         <button type="button" onClick={() => { if (fileRef.current) { fileRef.current.setAttribute("capture", "user"); fileRef.current.click(); } }}
-          className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-white/10 bg-white/5 text-white/80 text-sm font-medium hover:border-white/25 hover:bg-white/8 transition-all cursor-pointer">
-          <Camera className="w-4 h-4" />{t("perfil.foto.camera")}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-2xl border-2 border-white/10 bg-white/5 text-white/80 text-sm font-medium hover:border-white/25 hover:bg-white/8 transition-all cursor-pointer active:scale-95">
+          <Camera className="w-5 h-5" />{t("perfil.foto.camera")}
         </button>
         <button type="button" onClick={() => { if (fileRef.current) { fileRef.current.removeAttribute("capture"); fileRef.current.click(); } }}
-          className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-[#FF6B00]/50 bg-[#FF6B00]/10 text-white text-sm font-medium hover:bg-[#FF6B00]/20 transition-all cursor-pointer">
-          <Upload className="w-4 h-4" />{t("perfil.foto.galeria")}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-2xl border-2 border-[#FF6B00]/50 bg-[#FF6B00]/10 text-white text-sm font-medium hover:bg-[#FF6B00]/20 transition-all cursor-pointer active:scale-95">
+          <Upload className="w-5 h-5" />{t("perfil.foto.galeria")}
         </button>
       </div>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
@@ -370,17 +373,30 @@ export default function EmbaixadorPerfil() {
   /* ==================== SUCCESS ==================== */
   if (submitted) {
     return (
-      <div className="min-h-dvh bg-gradient-to-br from-[#0a0a0a] via-[#1a0f00] to-[#0a0a0a] flex items-center justify-center p-6">
-        <div className="text-center max-w-md slide-up">
-          <div className="relative w-24 h-24 mx-auto mb-8">
-            <div className="absolute inset-0 rounded-full bg-[#FF6B00]/20 animate-ping" />
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#ff8533] flex items-center justify-center shadow-[0_0_60px_rgba(255,107,0,0.4)]">
-              <Check className="w-12 h-12 text-white" strokeWidth={3} />
+      <div className="min-h-dvh relative overflow-hidden flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-black" />
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse at 50% 40%, rgba(255,107,0,0.1) 0%, transparent 60%)",
+        }} />
+        <div className="relative z-10 text-center max-w-md slide-up">
+          <div className="relative w-28 h-28 mx-auto mb-10">
+            <div className="absolute inset-0 rounded-full bg-[#FF6B00]/15 animate-ping" style={{ animationDuration: "2s" }} />
+            <div className="absolute inset-2 rounded-full bg-[#FF6B00]/10 animate-ping" style={{ animationDuration: "2.5s", animationDelay: "0.5s" }} />
+            <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#ff8533] flex items-center justify-center shadow-[0_0_80px_rgba(255,107,0,0.4)]">
+              <Check className="w-14 h-14 text-white" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-4">{t("perfil.sucesso.titulo")}</h1>
-          <p className="text-white/60 text-base leading-relaxed">{t("perfil.sucesso.msg")}</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-5 tracking-tight">{t("perfil.sucesso.titulo")}</h1>
+          <p className="text-white/50 text-base sm:text-lg leading-relaxed max-w-sm mx-auto">{t("perfil.sucesso.msg")}</p>
+          <div className="mt-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+            <div className="w-2 h-2 rounded-full bg-[#30D158]" />
+            <span className="text-[0.75rem] text-white/40">{t("perfil.sucesso.aguarde")}</span>
+          </div>
         </div>
+        <style>{`
+          @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+          .slide-up { animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        `}</style>
       </div>
     );
   }
@@ -389,30 +405,71 @@ export default function EmbaixadorPerfil() {
   if (isWelcome) {
     return (
       <div className="min-h-dvh relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0" style={{ background: BG_GRADIENTS[0] }} />
-        <div className="relative z-10 text-center px-6 max-w-lg slide-up">
-          <div className="flex justify-center mb-6"><LangSelector /></div>
-          <img src={LOGO} alt="Legendários" className="h-16 mx-auto mb-10 drop-shadow-2xl" />
+        {/* Background layers */}
+        <div className="absolute inset-0 bg-black" />
+        <div className="absolute inset-0 opacity-40" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80')",
+          backgroundSize: "cover", backgroundPosition: "center",
+          filter: "blur(2px) brightness(0.3)",
+        }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90" />
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse at 50% 30%, rgba(255,107,0,0.08) 0%, transparent 70%)",
+        }} />
 
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 leading-tight tracking-tight">
-            {t("perfil.welcome.ola")}!
+        <div className="relative z-10 text-center px-6 max-w-lg">
+          <div className="flex justify-center mb-8"><LangSelector /></div>
+
+          {/* Logo with glow */}
+          <div className="relative inline-block mb-10">
+            <div className="absolute inset-0 blur-3xl opacity-30 bg-[#FF6B00] rounded-full scale-150" />
+            <img src={LOGO} alt="Legendários" className="relative h-20 mx-auto drop-shadow-2xl" />
+          </div>
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm mb-6 slide-up">
+            <div className="w-2 h-2 rounded-full bg-[#FF6B00] animate-pulse" />
+            <span className="text-[0.7rem] font-medium text-white/60 uppercase tracking-widest">{t("perfil.welcome.badge")}</span>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 leading-[1.1] tracking-tight slide-up" style={{ animationDelay: "100ms" }}>
+            {t("perfil.welcome.titulo1")}<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#ff9a44] to-[#FF6B00]">{t("perfil.welcome.titulo2")}</span>
           </h1>
 
-          <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-md mx-auto">
+          {/* Description */}
+          <p className="text-white/50 text-base sm:text-lg leading-relaxed mb-12 max-w-sm mx-auto slide-up" style={{ animationDelay: "200ms" }}>
             {t("perfil.welcome.desc")}
           </p>
 
-          <button
-            type="button"
-            onClick={() => { setDirection("next"); setQIdx(0); }}
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] hover:from-[#e55f00] hover:to-[#FF6B00] text-white font-bold px-10 py-4 rounded-full text-lg transition-all duration-300 shadow-[0_8px_40px_rgba(255,107,0,0.35)] hover:shadow-[0_12px_50px_rgba(255,107,0,0.5)] hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
-          >
-            {t("perfil.welcome.comecar")}
-            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-          </button>
+          {/* CTA Button */}
+          <div className="slide-up" style={{ animationDelay: "300ms" }}>
+            <button
+              type="button"
+              onClick={() => { setDirection("next"); setQIdx(0); }}
+              className="group relative inline-flex items-center gap-3 text-white font-bold px-12 py-5 rounded-full text-lg transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] transition-all duration-300 group-hover:scale-105" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
+                background: "radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%)",
+              }} />
+              <span className="relative">{t("perfil.welcome.comecar")}</span>
+              <ArrowRight className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <div className="absolute -inset-1 rounded-full opacity-40 blur-xl bg-[#FF6B00] -z-10" />
+            </button>
+          </div>
 
-          <p className="text-white/40 text-xs mt-6">{t("perfil.welcome.tempo")}</p>
+          {/* Time estimate */}
+          <p className="text-white/30 text-xs mt-8 slide-up" style={{ animationDelay: "400ms" }}>
+            {t("perfil.welcome.tempo")}
+          </p>
         </div>
+
+        <style>{`
+          @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+          .slide-up { animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        `}</style>
       </div>
     );
   }
