@@ -439,13 +439,14 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard", "stats"],
     queryFn: async () => {
-      const [embRes, kitsRes, eventosRes, reunioesRes, inscRes, pagRes] = await Promise.all([
+      const [embRes, kitsRes, eventosRes, reunioesRes, inscRes, pagRes, entrevRes] = await Promise.all([
         supabase.from("embaixadores").select("*"),
         supabase.from("welcomeKits").select("status"),
         supabase.from("eventos").select("*").gte("data", Date.now()).eq("status", "agendado").order("data").limit(5),
         supabase.from("tercaGloria").select("*").gte("data", Date.now()).eq("status", "planejada").order("data").limit(3),
         supabase.from("inscricoes").select("createdAt, status, embaixadorIndicadorId, nomeIndicador"),
         supabase.from("pagamentos").select("dataPagamento, valor, status"),
+        supabase.from("entrevistas").select("status, indicadoPor"),
       ]);
 
       const allEmb = embRes.data || [];
@@ -462,40 +463,22 @@ export function useDashboardStats() {
         return nextBday.getTime() <= thirtyDaysFromNow;
       }).slice(0, 5);
 
-      // Process inscricoes for monthly trend and funnel
+      // Entrevistas data for funnel and top referrers
+      const allEntrev = entrevRes.data || [];
       const allInsc = inscRes.data || [];
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-      sixMonthsAgo.setDate(1);
-      sixMonthsAgo.setHours(0, 0, 0, 0);
-
-      const monthlyInscricoes: { month: string; count: number }[] = [];
-      for (let i = 0; i < 6; i++) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - (5 - i));
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-        const label = monthNames[d.getMonth()];
-        const count = allInsc.filter((ins) => {
-          if (!ins.createdAt) return false;
-          const cd = new Date(ins.createdAt);
-          return `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, "0")}` === key;
-        }).length;
-        monthlyInscricoes.push({ month: label, count });
-      }
 
       const funnel = {
         total: allInsc.length,
-        entrevistando: allInsc.filter((i) => i.status === "entrevistando").length,
-        aprovados: allInsc.filter((i) => i.status === "aprovado").length,
+        entrevistando: allEntrev.filter((e) => e.status === "agendada" || e.status === "realizada").length,
+        aprovados: allEntrev.filter((e) => e.status === "aprovada").length,
         embaixadores: allEmb.filter((e) => e.status === "ativo").length,
       };
 
-      // Top referrers
+      // Top referrers from entrevistas.indicadoPor
       const referrerMap = new Map<string, number>();
-      allInsc.forEach((ins) => {
-        if (ins.nomeIndicador) {
-          referrerMap.set(ins.nomeIndicador, (referrerMap.get(ins.nomeIndicador) || 0) + 1);
+      allEntrev.forEach((ent) => {
+        if (ent.indicadoPor) {
+          referrerMap.set(ent.indicadoPor, (referrerMap.get(ent.indicadoPor) || 0) + 1);
         }
       });
       const topReferrers = [...referrerMap.entries()]
@@ -540,7 +523,6 @@ export function useDashboardStats() {
           parciais: allKits.filter((k) => k.status === "parcial").length,
           completos: allKits.filter((k) => k.status === "completo").length,
         },
-        monthlyInscricoes,
         funnel,
         topReferrers,
         monthlyRevenue,

@@ -16,26 +16,37 @@ interface NotifyDialogProps {
   id: number | null;
   title: string;
   entrevistadorId?: number | null;
+  entrevistadorNome?: string | null;
+  entrevistadorEmail?: string | null;
+  entrevistadorTelefone?: string | null;
 }
 
-export default function NotifyDialog({ open, onOpenChange, type, id, title, entrevistadorId }: NotifyDialogProps) {
+export default function NotifyDialog({ open, onOpenChange, type, id, title, entrevistadorId, entrevistadorNome, entrevistadorEmail, entrevistadorTelefone }: NotifyDialogProps) {
   const { session } = useAuth();
   const { t, locale } = useI18n();
   const { data: embaixadores } = useEmbaixadores();
-  const [recipientMode, setRecipientMode] = useState<"all" | "select">("all");
+  const isEntrevista = type === "entrevista";
+  const [recipientMode, setRecipientMode] = useState<"all" | "select">(isEntrevista ? "select" : "all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [includeCandidato, setIncludeCandidato] = useState(true);
+  const [includeEntrevistador, setIncludeEntrevistador] = useState(true);
   const [sending, setSending] = useState(false);
 
   const activeEmbaixadores = (embaixadores || []).filter((e: any) => e.status === "ativo");
 
   useEffect(() => {
     if (open) {
-      setRecipientMode("all");
-      setSelectedIds([]);
+      if (isEntrevista) {
+        setRecipientMode("select");
+        setSelectedIds(entrevistadorId ? [entrevistadorId] : []);
+        setIncludeEntrevistador(true);
+      } else {
+        setRecipientMode("all");
+        setSelectedIds([]);
+      }
       setIncludeCandidato(true);
     }
-  }, [open]);
+  }, [open, isEntrevista, entrevistadorId]);
 
   function toggleId(id: number) {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -57,8 +68,12 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title, entr
           id,
           channel,
           recipients: recipientMode === "all" ? "all" : selectedIds,
-          includeCandidato: type === "entrevista" ? includeCandidato : undefined,
-          entrevistadorId: type === "entrevista" ? entrevistadorId : undefined,
+          includeCandidato: isEntrevista ? includeCandidato : undefined,
+          entrevistadorId: isEntrevista ? entrevistadorId : undefined,
+          includeEntrevistador: isEntrevista ? includeEntrevistador : undefined,
+          entrevistadorNome: isEntrevista && !entrevistadorId ? entrevistadorNome : undefined,
+          entrevistadorEmail: isEntrevista && !entrevistadorId ? entrevistadorEmail : undefined,
+          entrevistadorTelefone: isEntrevista && !entrevistadorId ? entrevistadorTelefone : undefined,
           locale,
         }),
       });
@@ -93,66 +108,88 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title, entr
           </h2>
           <p className="text-[0.8125rem] text-[#86868b]">{title}</p>
 
-          {/* Recipient mode */}
-          <div className="space-y-2">
-            <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">{t("notify.destinatarios")}</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setRecipientMode("all")}
-                className={`flex-1 py-2 px-3 rounded-lg border text-[0.8125rem] flex items-center gap-2 justify-center transition-all ${recipientMode === "all" ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
-              >
-                <Users className="w-4 h-4" />
-                {t("notify.todos")} ({activeEmbaixadores.length})
-              </button>
-              <button
-                onClick={() => setRecipientMode("select")}
-                className={`flex-1 py-2 px-3 rounded-lg border text-[0.8125rem] flex items-center gap-2 justify-center transition-all ${recipientMode === "select" ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
-              >
-                <UserCheck className="w-4 h-4" />
-                {t("notify.selecionar")}
-              </button>
-            </div>
-          </div>
-
-          {/* Embaixador list (when selecting) */}
-          {recipientMode === "select" && (
-            <div className="space-y-1 max-h-48 overflow-y-auto apple-card-inset p-2 rounded-xl">
-              {activeEmbaixadores.map((e: any) => (
+          {/* Recipient mode - for entrevistas show only candidato + entrevistador */}
+          {isEntrevista ? (
+            <div className="space-y-2">
+              <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">{t("notify.destinatarios")}</label>
+              <div className="space-y-1 apple-card-inset p-2 rounded-xl">
                 <button
-                  key={e.id}
-                  onClick={() => toggleId(e.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${selectedIds.includes(e.id) ? "bg-[#FF6B00]/10" : "hover:bg-white/[0.04]"}`}
+                  onClick={() => setIncludeCandidato(!includeCandidato)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${includeCandidato ? "bg-[#FF6B00]/10" : "hover:bg-white/[0.04]"}`}
                 >
-                  <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${selectedIds.includes(e.id) ? "border-[#FF6B00] bg-[#FF6B00]" : "border-white/[0.15]"}`}>
-                    {selectedIds.includes(e.id) && <Check className="w-3 h-3 text-white" />}
+                  <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${includeCandidato ? "border-[#FF6B00] bg-[#FF6B00]" : "border-white/[0.15]"}`}>
+                    {includeCandidato && <Check className="w-3 h-3 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[0.8125rem] text-white truncate">{e.nomeCompleto}</p>
-                    <p className="text-[0.6875rem] text-[#48484a] truncate">
-                      {e.telefone && `Tel: ${e.telefone}`}
-                      {e.telefone && e.email && " · "}
-                      {e.email && e.email}
-                    </p>
+                    <p className="text-[0.8125rem] text-white">{t("notify.candidato")}</p>
                   </div>
                 </button>
-              ))}
-              {activeEmbaixadores.length === 0 && (
-                <p className="text-[0.8125rem] text-[#48484a] text-center py-4">{t("notify.nenhumAtivo")}</p>
-              )}
-            </div>
-          )}
-
-          {/* Include candidate (entrevistas only) */}
-          {type === "entrevista" && (
-            <button
-              onClick={() => setIncludeCandidato(!includeCandidato)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${includeCandidato ? "border-[#FF6B00] bg-[#FF6B00]/10" : "border-white/[0.08]"}`}
-            >
-              <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${includeCandidato ? "border-[#FF6B00] bg-[#FF6B00]" : "border-white/[0.15]"}`}>
-                {includeCandidato && <Check className="w-3 h-3 text-white" />}
+                {(entrevistadorId || entrevistadorNome) && (
+                  <button
+                    onClick={() => setIncludeEntrevistador(!includeEntrevistador)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${includeEntrevistador ? "bg-[#FF6B00]/10" : "hover:bg-white/[0.04]"}`}
+                  >
+                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${includeEntrevistador ? "border-[#FF6B00] bg-[#FF6B00]" : "border-white/[0.15]"}`}>
+                      {includeEntrevistador && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[0.8125rem] text-white">{t("ent.entrevistador")}: {entrevistadorId ? activeEmbaixadores.find((e: any) => e.id === entrevistadorId)?.nomeCompleto || "" : entrevistadorNome}</p>
+                    </div>
+                  </button>
+                )}
               </div>
-              <span className="text-[0.8125rem] text-[#d2d2d7]">{t("notify.incluirCandidato")}</span>
-            </button>
+            </div>
+          ) : (
+            <>
+              {/* Recipient mode for eventos/terca */}
+              <div className="space-y-2">
+                <label className="text-[0.75rem] text-[#6e6e73] uppercase tracking-wider">{t("notify.destinatarios")}</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setRecipientMode("all")}
+                    className={`flex-1 py-2 px-3 rounded-lg border text-[0.8125rem] flex items-center gap-2 justify-center transition-all ${recipientMode === "all" ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
+                  >
+                    <Users className="w-4 h-4" />
+                    {t("notify.todos")} ({activeEmbaixadores.length})
+                  </button>
+                  <button
+                    onClick={() => setRecipientMode("select")}
+                    className={`flex-1 py-2 px-3 rounded-lg border text-[0.8125rem] flex items-center gap-2 justify-center transition-all ${recipientMode === "select" ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]" : "border-white/[0.08] text-[#86868b] hover:border-white/[0.15]"}`}
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    {t("notify.selecionar")}
+                  </button>
+                </div>
+              </div>
+
+              {/* Embaixador list (when selecting) */}
+              {recipientMode === "select" && (
+                <div className="space-y-1 max-h-48 overflow-y-auto apple-card-inset p-2 rounded-xl">
+                  {activeEmbaixadores.map((e: any) => (
+                    <button
+                      key={e.id}
+                      onClick={() => toggleId(e.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${selectedIds.includes(e.id) ? "bg-[#FF6B00]/10" : "hover:bg-white/[0.04]"}`}
+                    >
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${selectedIds.includes(e.id) ? "border-[#FF6B00] bg-[#FF6B00]" : "border-white/[0.15]"}`}>
+                        {selectedIds.includes(e.id) && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[0.8125rem] text-white truncate">{e.nomeCompleto}</p>
+                        <p className="text-[0.6875rem] text-[#48484a] truncate">
+                          {e.telefone && `Tel: ${e.telefone}`}
+                          {e.telefone && e.email && " · "}
+                          {e.email && e.email}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                  {activeEmbaixadores.length === 0 && (
+                    <p className="text-[0.8125rem] text-[#48484a] text-center py-4">{t("notify.nenhumAtivo")}</p>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* Channel buttons */}
@@ -165,7 +202,7 @@ export default function NotifyDialog({ open, onOpenChange, type, id, title, entr
             ]).map(opt => (
               <button
                 key={opt.key}
-                disabled={sending || (recipientMode === "select" && selectedIds.length === 0)}
+                disabled={sending || (!isEntrevista && recipientMode === "select" && selectedIds.length === 0) || (isEntrevista && !includeCandidato && !includeEntrevistador)}
                 onClick={() => handleSend(opt.key)}
                 className="apple-btn apple-btn-gray w-full py-3 text-[0.8125rem] flex items-center gap-2 justify-center disabled:opacity-40"
               >

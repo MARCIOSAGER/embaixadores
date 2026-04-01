@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, id, channel, recipients = "all", includeCandidato = true, entrevistadorId: reqEntrevistadorId, locale: reqLocale = "pt" } = body;
+    const { type, id, channel, recipients = "all", includeCandidato = true, includeEntrevistador = true, entrevistadorId: reqEntrevistadorId, entrevistadorNome: reqEntrevistadorNome, entrevistadorEmail: reqEntrevistadorEmail, entrevistadorTelefone: reqEntrevistadorTelefone, locale: reqLocale = "pt" } = body;
     const locale: Locale = ["pt", "es", "en"].includes(reqLocale) ? reqLocale : "pt";
 
     if (!type || !channel) {
@@ -415,9 +415,9 @@ Deno.serve(async (req) => {
       candidateEmail = data.emailCandidato || null;
     }
 
-    // Fetch entrevistador details
-    let entrevistadorRecord: { id: number; nomeCompleto: string; email: string | null; telefone: string | null } | null = null;
-    if (type === "entrevista") {
+    // Fetch entrevistador details (from embaixadores or manual fields)
+    let entrevistadorRecord: { id: number | null; nomeCompleto: string; email: string | null; telefone: string | null } | null = null;
+    if (type === "entrevista" && includeEntrevistador) {
       const entIdToUse = reqEntrevistadorId || eventRecord.entrevistadorId;
       if (entIdToUse) {
         const { data: entData } = await supabaseAdmin
@@ -426,6 +426,14 @@ Deno.serve(async (req) => {
           .eq("id", entIdToUse)
           .single();
         entrevistadorRecord = entData || null;
+      } else if (reqEntrevistadorNome || eventRecord.entrevistadorNome) {
+        // Manual entrevistador (not an embaixador)
+        entrevistadorRecord = {
+          id: null,
+          nomeCompleto: reqEntrevistadorNome || eventRecord.entrevistadorNome,
+          email: reqEntrevistadorEmail || eventRecord.entrevistadorEmail || null,
+          telefone: reqEntrevistadorTelefone || eventRecord.entrevistadorTelefone || null,
+        };
       }
     }
 
@@ -462,7 +470,7 @@ Deno.serve(async (req) => {
     }
 
     // Dedup: remove entrevistador from generic list (they get their own template)
-    if (type === "entrevista" && entrevistadorRecord) {
+    if (type === "entrevista" && entrevistadorRecord?.id) {
       embaixadores = embaixadores.filter(e => e.id !== entrevistadorRecord!.id);
     }
 

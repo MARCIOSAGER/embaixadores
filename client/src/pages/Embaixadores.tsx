@@ -38,6 +38,7 @@ export default function Embaixadores() {
     email: "", telefone: "", cidade: "", estado: "",
     profissao: "", empresa: "", dataNascimento: "", dataIngresso: "",
     dataRenovacao: "", status: "ativo" as string, idioma: "pt" as string, observacoes: "",
+    estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "",
   });
 
   const searchTerm = useMemo(() => search || undefined, [search]);
@@ -49,7 +50,7 @@ export default function Embaixadores() {
   const deleteMut = useDeleteEmbaixador();
 
   function resetForm() {
-    setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", idioma: "pt", observacoes: "" });
+    setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", idioma: "pt", observacoes: "", estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "" });
     setEditingId(null);
   }
 
@@ -61,6 +62,7 @@ export default function Embaixadores() {
       profissao: emb.profissao || "", empresa: emb.empresa || "",
       dataNascimento: tsToDate(emb.dataNascimento), dataIngresso: tsToDate(emb.dataIngresso),
       dataRenovacao: tsToDate(emb.dataRenovacao), status: emb.status || "ativo", idioma: emb.idioma || "pt", observacoes: emb.observacoes || "",
+      estadoCivil: emb.estadoCivil || "", nomeEsposa: emb.nomeEsposa || "", dataNascimentoEsposa: tsToDate(emb.dataNascimentoEsposa), qtdFilhos: emb.qtdFilhos || 0, idadesFilhos: emb.idadesFilhos || "",
     });
     setDialogOpen(true);
   }
@@ -74,6 +76,8 @@ export default function Embaixadores() {
       dataNascimento: dateToTs(form.dataNascimento), dataIngresso: dateToTs(form.dataIngresso) || Date.now(),
       dataRenovacao: dateToTs(form.dataRenovacao), status: form.status as "ativo" | "inativo" | "pendente_renovacao",
       idioma: form.idioma as "pt" | "es" | "en", observacoes: form.observacoes || null,
+      estadoCivil: form.estadoCivil || null, nomeEsposa: form.nomeEsposa || null,
+      dataNascimentoEsposa: dateToTs(form.dataNascimentoEsposa), qtdFilhos: form.qtdFilhos, idadesFilhos: form.idadesFilhos || null,
       ...(!editingId ? { codigoIndicacao: Math.random().toString(36).substring(2, 8) } : {}),
     };
     const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
@@ -310,6 +314,17 @@ export default function Embaixadores() {
                   ))}
                 </div>
 
+                {/* Familia */}
+                {(selected.estadoCivil || selected.qtdFilhos > 0) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.familia")}</p>
+                    {selected.estadoCivil && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.estadoCivil")}: {t(`emb.${selected.estadoCivil}`)}</p>}
+                    {selected.nomeEsposa && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.nomeEsposa")}: {selected.nomeEsposa}</p>}
+                    {selected.dataNascimentoEsposa && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.nascEsposa")}: {formatDate(selected.dataNascimentoEsposa, locale)}</p>}
+                    {selected.qtdFilhos > 0 && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.qtdFilhos")}: {selected.qtdFilhos}{selected.idadesFilhos ? ` (${selected.idadesFilhos})` : ""}</p>}
+                  </div>
+                )}
+
                 {selected.observacoes && (
                   <div className="apple-card-inset p-4">
                     <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.observacoes")}</p>
@@ -385,6 +400,29 @@ export default function Embaixadores() {
                   <div><label className="apple-input-label">{t("emb.ingresso")}</label><input type="date" value={form.dataIngresso} onChange={e => setForm({ ...form, dataIngresso: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                   <div><label className="apple-input-label">{t("emb.renovacao")}</label><input type="date" value={form.dataRenovacao} onChange={e => setForm({ ...form, dataRenovacao: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
                 </div>
+                {/* Familia */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="apple-input-label">{t("emb.estadoCivil")}</label>
+                    <select value={form.estadoCivil} onChange={e => setForm({ ...form, estadoCivil: e.target.value })} className="apple-input">
+                      <option value="">{t("common.selecione")}</option>
+                      <option value="solteiro">{t("emb.solteiro")}</option>
+                      <option value="casado">{t("emb.casado")}</option>
+                      <option value="divorciado">{t("emb.divorciado")}</option>
+                      <option value="viuvo">{t("emb.viuvo")}</option>
+                    </select>
+                  </div>
+                  <div><label className="apple-input-label">{t("emb.qtdFilhos")}</label><input type="number" min={0} value={form.qtdFilhos} onChange={e => setForm({ ...form, qtdFilhos: parseInt(e.target.value) || 0 })} className="apple-input" /></div>
+                </div>
+                {form.estadoCivil === "casado" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label className="apple-input-label">{t("emb.nomeEsposa")}</label><input value={form.nomeEsposa} onChange={e => setForm({ ...form, nomeEsposa: e.target.value })} className="apple-input" /></div>
+                    <div><label className="apple-input-label">{t("emb.nascEsposa")}</label><input type="date" value={form.dataNascimentoEsposa} onChange={e => setForm({ ...form, dataNascimentoEsposa: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
+                  </div>
+                )}
+                {form.qtdFilhos > 0 && (
+                  <div><label className="apple-input-label">{t("emb.idadesFilhos")}</label><input value={form.idadesFilhos} onChange={e => setForm({ ...form, idadesFilhos: e.target.value })} className="apple-input" placeholder="Ex: 5, 8, 12" /></div>
+                )}
                 <div>
                   <label className="apple-input-label">{t("emb.status")}</label>
                   <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="apple-input">

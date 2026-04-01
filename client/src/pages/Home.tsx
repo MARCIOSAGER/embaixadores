@@ -6,7 +6,7 @@ import { useDashboardStats } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
-import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church, PieChart as PieChartIcon, BarChart3, TrendingUp, DollarSign, Trophy, UsersRound, Copy, Share2 } from "lucide-react";
+import { Users, UserCheck, Clock, UserX, Gift, Package, PackageCheck, Cake, RefreshCw, Calendar, Church, PieChart as PieChartIcon, BarChart3, DollarSign, Trophy, UsersRound, Copy, Share2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, AreaChart, Area, LineChart, Line } from "recharts";
 import { toast } from "sonner";
 
@@ -365,44 +365,10 @@ export default function Home() {
             <KitRingCard label={t("dash.kitsCompletos")} value={data.kitsStats.completos} total={data.embaixadores.total} color="#30D158" delay={350} />
           </div>
 
-          {/* Row 2: Inscriptions Trend + Conversion Funnel */}
+          {/* Row 2: Conversion Funnel */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-            {/* Monthly Inscriptions Trend */}
-            <div className="lg:col-span-3 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "260ms" }}>
-              <div className="px-5 pt-5 pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />
-                  </div>
-                  <h3 className="text-[0.9375rem] font-semibold text-white tracking-[-0.01em]">{t("dash.tendenciaInsc")}</h3>
-                </div>
-                <span className="text-[0.6875rem] text-[#6e6e73]">{t("dash.ultimos6")}</span>
-              </div>
-              <div className="apple-separator mx-5" />
-              <div className="p-5">
-                {data.monthlyInscricoes.every((m: any) => m.count === 0) ? (
-                  <EmptyState text={t("dash.semDados")} />
-                ) : (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <AreaChart data={data.monthlyInscricoes}>
-                      <defs>
-                        <linearGradient id="colorInsc" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#FF6B00" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#FF6B00" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <XAxis dataKey="month" stroke="#6e6e73" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#6e6e73" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                      <Tooltip contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff' }} />
-                      <Area type="monotone" dataKey="count" stroke="#FF6B00" fill="url(#colorInsc)" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-
             {/* Conversion Funnel */}
-            <div className="lg:col-span-2 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "310ms" }}>
+            <div className="lg:col-span-3 apple-card overflow-hidden animate-fade-up" style={{ animationDelay: "260ms" }}>
               <div className="px-5 pt-5 pb-3 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/10 flex items-center justify-center">
                   <BarChart3 className="w-4 h-4 text-[#FF6B00]" strokeWidth={1.8} />

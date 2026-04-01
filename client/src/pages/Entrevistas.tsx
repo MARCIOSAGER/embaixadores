@@ -37,7 +37,7 @@ export default function Entrevistas() {
   const [confirmConvert, setConfirmConvert] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
-  const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "" as string, notificar: "both" as "both" | "whatsapp" | "email" | "none" });
+  const [form, setForm] = useState({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "" as string, entrevistadorNome: "", entrevistadorEmail: "", entrevistadorTelefone: "", notificar: "both" as "both" | "whatsapp" | "email" | "none" });
 
   const { data: entrevistas, isLoading } = useEntrevistas();
   const { data: embaixadores } = useEmbaixadores();
@@ -47,16 +47,26 @@ export default function Entrevistas() {
   const deleteMut = useDeleteEntrevista();
   const createEmbMut = useCreateEmbaixador();
 
-  function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "", notificar: "both" }); setEditingId(null); }
+  function getEntrevistadorName(ent: any): string | null {
+    if (ent.entrevistadorId) {
+      const emb = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId);
+      return emb?.nomeCompleto || null;
+    }
+    return ent.entrevistadorNome || null;
+  }
+
+  function resetForm() { setForm({ nomeCandidato: "", emailCandidato: "", telefoneCandidato: "", dataEntrevista: "", linkMeet: "", status: "agendada", observacoes: "", indicadoPor: "", entrevistadorId: "", entrevistadorNome: "", entrevistadorEmail: "", entrevistadorTelefone: "", notificar: "both" }); setEditingId(null); }
   function openEdit(ent: any) {
     setEditingId(ent.id);
-    setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "", entrevistadorId: String(ent.entrevistadorId || ""), notificar: "both" });
+    setForm({ nomeCandidato: ent.nomeCandidato || "", emailCandidato: ent.emailCandidato || "", telefoneCandidato: ent.telefoneCandidato || "", dataEntrevista: tsToInputDT(ent.dataEntrevista), linkMeet: ent.linkMeet || "", status: ent.status || "agendada", observacoes: ent.observacoes || "", indicadoPor: ent.indicadoPor || "", entrevistadorId: ent.entrevistadorId ? String(ent.entrevistadorId) : (ent.entrevistadorNome ? "manual" : ""), entrevistadorNome: ent.entrevistadorNome || "", entrevistadorEmail: ent.entrevistadorEmail || "", entrevistadorTelefone: ent.entrevistadorTelefone || "", notificar: "both" });
     setDialogOpen(true);
   }
   function handleSubmit() {
     if (!form.nomeCandidato.trim() || !form.dataEntrevista) return toast.error(t("ent.nomeObrigatorio"));
     if (!form.entrevistadorId && !editingId) return toast.error(t("ent.entrevistadorObrigatorio"));
-    const d = { nomeCandidato: form.nomeCandidato, emailCandidato: form.emailCandidato || null, telefoneCandidato: form.telefoneCandidato || null, dataEntrevista: dateToTimestamp(form.dataEntrevista), linkMeet: form.linkMeet || null, status: form.status as any, observacoes: form.observacoes || null, indicadoPor: form.indicadoPor || null, entrevistadorId: form.entrevistadorId ? Number(form.entrevistadorId) : null };
+    if (form.entrevistadorId === "manual" && !form.entrevistadorNome.trim()) return toast.error(t("ent.nomeEntrevistadorObrigatorio"));
+    const isManual = form.entrevistadorId === "manual";
+    const d = { nomeCandidato: form.nomeCandidato, emailCandidato: form.emailCandidato || null, telefoneCandidato: form.telefoneCandidato || null, dataEntrevista: dateToTimestamp(form.dataEntrevista), linkMeet: form.linkMeet || null, status: form.status as any, observacoes: form.observacoes || null, indicadoPor: form.indicadoPor || null, entrevistadorId: isManual ? null : (form.entrevistadorId ? Number(form.entrevistadorId) : null), entrevistadorNome: isManual ? form.entrevistadorNome : null, entrevistadorEmail: isManual ? (form.entrevistadorEmail || null) : null, entrevistadorTelefone: isManual ? (form.entrevistadorTelefone || null) : null };
     const onSuccess = () => {
       toast.success(t("common.sucesso"));
       setDialogOpen(false); resetForm();
@@ -139,7 +149,7 @@ export default function Entrevistas() {
       "Data Entrevista": ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
       "Status": statusPt[ent.status] || ent.status || "",
       "Indicado Por": ent.indicadoPor || "",
-      "Entrevistador": (() => { const e = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return e?.nomeCompleto || ""; })(),
+      "Entrevistador": getEntrevistadorName(ent) || "",
     }));
     exportToXlsx(data, `entrevistas-${new Date().toISOString().split("T")[0]}`);
   }
@@ -152,7 +162,7 @@ export default function Entrevistas() {
       ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
       statusPt[ent.status] || ent.status || "",
       ent.indicadoPor || "",
-      (() => { const e = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return e?.nomeCompleto || ""; })(),
+      getEntrevistadorName(ent) || "",
     ]);
     exportGenericPdf(
       "Lista de Entrevistas",
@@ -171,7 +181,7 @@ export default function Entrevistas() {
       ent.dataEntrevista ? new Date(ent.dataEntrevista).toLocaleDateString("pt-BR") : "",
       statusPt[ent.status] || ent.status || "",
       ent.indicadoPor || "",
-      (() => { const e = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return e?.nomeCompleto || ""; })(),
+      getEntrevistadorName(ent) || "",
     ]);
     const doc = buildGenericPdfDoc(
       "Lista de Entrevistas",
@@ -288,7 +298,7 @@ export default function Entrevistas() {
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-[#6e6e73]">
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" strokeWidth={1.5} />{formatDateTime(ent.dataEntrevista, locale)}</span>
                         {ent.indicadoPor && <span className="flex items-center gap-1"><User className="w-3 h-3" strokeWidth={1.5} />{ent.indicadoPor}</span>}
-                        {(() => { const entrevistador = activeEmbaixadores.find((e: any) => e.id === ent.entrevistadorId); return entrevistador ? <span className="flex items-center gap-1"><UserPlus className="w-3 h-3" strokeWidth={1.5} />{entrevistador.nomeCompleto}</span> : null; })()}
+                        {(() => { const nome = getEntrevistadorName(ent); return nome ? <span className="flex items-center gap-1"><UserPlus className="w-3 h-3" strokeWidth={1.5} />{nome}</span> : null; })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -337,7 +347,17 @@ export default function Entrevistas() {
                   {selected.emailCandidato && <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{selected.emailCandidato}</span></div>}
                   {selected.telefoneCandidato && <div className="flex items-center gap-3"><Phone className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{selected.telefoneCandidato}</span></div>}
                   {selected.indicadoPor && <div className="flex items-center gap-3"><User className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{t("ent.indicadoPor")}: {selected.indicadoPor}</span></div>}
-                  {(() => { const entrevistador = activeEmbaixadores.find((e: any) => e.id === selected.entrevistadorId); return entrevistador ? <div className="flex items-center gap-3"><UserPlus className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{t("ent.entrevistador")}: {entrevistador.nomeCompleto}</span></div> : null; })()}
+                  {(() => {
+                    const nome = getEntrevistadorName(selected);
+                    if (!nome) return null;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3"><UserPlus className="w-4 h-4 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.8125rem] text-[#d2d2d7]">{t("ent.entrevistador")}: {nome}</span></div>
+                        {!selected.entrevistadorId && selected.entrevistadorEmail && <div className="flex items-center gap-3 pl-7"><Mail className="w-3.5 h-3.5 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.75rem] text-[#86868b]">{selected.entrevistadorEmail}</span></div>}
+                        {!selected.entrevistadorId && selected.entrevistadorTelefone && <div className="flex items-center gap-3 pl-7"><Phone className="w-3.5 h-3.5 text-[#48484a]" strokeWidth={1.5} /><span className="text-[0.75rem] text-[#86868b]">{selected.entrevistadorTelefone}</span></div>}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {selected.linkMeet && (
@@ -440,13 +460,23 @@ export default function Entrevistas() {
                 <div><label className="apple-input-label">{t("ent.indicadoPor")}</label><input value={form.indicadoPor} onChange={e => setForm({ ...form, indicadoPor: e.target.value })} className="apple-input" /></div>
                 <div>
                   <label className="apple-input-label">{t("ent.entrevistador")} *</label>
-                  <select value={form.entrevistadorId} onChange={e => setForm({ ...form, entrevistadorId: e.target.value })} className="apple-input">
+                  <select value={form.entrevistadorId} onChange={e => setForm({ ...form, entrevistadorId: e.target.value, ...(e.target.value !== "manual" ? { entrevistadorNome: "", entrevistadorEmail: "", entrevistadorTelefone: "" } : {}) })} className="apple-input">
                     <option value="">{t("ent.selecioneEntrevistador")}</option>
                     {activeEmbaixadores.map((e: any) => (
                       <option key={e.id} value={e.id}>{e.nomeCompleto}</option>
                     ))}
+                    <option value="manual">{t("ent.outroManual")}</option>
                   </select>
                 </div>
+                {form.entrevistadorId === "manual" && (
+                  <div className="space-y-3 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                    <div><label className="apple-input-label">{t("ent.nomeEntrevistador")} *</label><input value={form.entrevistadorNome} onChange={e => setForm({ ...form, entrevistadorNome: e.target.value })} className="apple-input" placeholder={t("ent.nomeEntrevistador")} /></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><label className="apple-input-label">{t("ent.emailEntrevistador")}</label><input type="email" value={form.entrevistadorEmail} onChange={e => setForm({ ...form, entrevistadorEmail: e.target.value })} className="apple-input" placeholder="email@exemplo.com" /></div>
+                      <div><label className="apple-input-label">{t("ent.telefoneEntrevistador")}</label><PhoneInput value={form.entrevistadorTelefone} onChange={(val) => setForm({ ...form, entrevistadorTelefone: val })} /></div>
+                    </div>
+                  </div>
+                )}
                 <div><label className="apple-input-label">{t("ent.observacoes")}</label><textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3} className="apple-input resize-none" /></div>
 
                 {!editingId && (
@@ -495,6 +525,9 @@ export default function Entrevistas() {
           id={notifyTarget?.id || null}
           title={`Entrevista: ${notifyTarget?.nomeCandidato || ""}`}
           entrevistadorId={notifyTarget?.entrevistadorId}
+          entrevistadorNome={notifyTarget?.entrevistadorNome}
+          entrevistadorEmail={notifyTarget?.entrevistadorEmail}
+          entrevistadorTelefone={notifyTarget?.entrevistadorTelefone}
         />
         <ConfirmDialog
           open={confirmDelete !== null}

@@ -36,6 +36,11 @@ export type Database = {
           observacoes: string | null;
           fotoUrl: string | null;
           codigoIndicacao: string | null;
+          estadoCivil: string | null;
+          nomeEsposa: string | null;
+          dataNascimentoEsposa: number | null;
+          qtdFilhos: number;
+          idadesFilhos: string | null;
           createdAt: string;
           updatedAt: string;
         };
@@ -125,6 +130,9 @@ export type Database = {
           observacoes: string | null;
           indicadoPor: string | null;
           entrevistadorId: number | null;
+          entrevistadorNome: string | null;
+          entrevistadorEmail: string | null;
+          entrevistadorTelefone: string | null;
           createdAt: string;
           updatedAt: string;
         };
