@@ -280,7 +280,6 @@ export default function EmbaixadorPerfil() {
       .then(({ data, error: err }) => {
         if (err || !data) { setNotFound(true); setLoading(false); return; }
         setAmbassador(data);
-        // Pre-fill form with existing data
         setForm((prev) => ({
           ...prev,
           nomeCompleto: data.nomeCompleto || "",
