@@ -11,7 +11,6 @@ const BG_GRADIENTS = [
   "linear-gradient(135deg, #0a0a14 0%, #0c1a2e 50%, #050508 100%)",           // Pessoal (1)
   "linear-gradient(135deg, #0a1210 0%, #0c201c 50%, #060a09 100%)",           // Legendarios (2)
   "linear-gradient(135deg, #12100a 0%, #1e1408 50%, #0a0908 100%)",           // Familia (3)
-  "linear-gradient(135deg, #0c0e12 0%, #141820 50%, #080a0c 100%)",           // Profissional (4)
 ];
 
 /* ============================================================ */
@@ -83,8 +82,6 @@ function buildQuestions(t: (k: string) => string): Question[] {
     { key: "dataNascimentoEsposa", question: t("perfil.q.nascEsposa"), type: "date", showIf: (d) => d.estadoCivil === "casado", section: t("perfil.sec.familia"), sectionIndex: 3 },
     { key: "qtdFilhos", question: t("perfil.q.filhos"), type: "number", section: t("perfil.sec.familia"), sectionIndex: 3 },
     { key: "idadesFilhos", question: t("perfil.q.idadesFilhos"), type: "text", showIf: (d) => d.qtdFilhos > 0, section: t("perfil.sec.familia"), sectionIndex: 3 },
-    { key: "profissao", question: t("perfil.q.profissao"), type: "text", section: t("perfil.sec.profissional"), sectionIndex: 4 },
-    { key: "empresa", question: t("perfil.q.empresa"), type: "text", section: t("perfil.sec.profissional"), sectionIndex: 4 },
   ];
 }
 
