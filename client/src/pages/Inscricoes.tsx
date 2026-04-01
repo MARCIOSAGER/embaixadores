@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Search, ClipboardList, Clock, CheckCircle2, XCircle, ChevronRight, X,
   Mail, Phone, MapPin, Download, FileDown, Loader2, UserCheck, Instagram,
-  Briefcase, Building2, Heart, Globe, DollarSign, Calendar, Video
+  Briefcase, Building2, Heart, Globe, DollarSign, Calendar, Video, Star
 } from "lucide-react";
 import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
@@ -124,6 +124,15 @@ export default function Inscricoes() {
       "Indicador": insc.nomeIndicador || "",
       "Estado Civil": insc.estadoCivil || "",
       "Segmento": insc.segmentoMercado || "",
+      "Tempo Empreendedorismo": insc.tempoEmpreendedorismo || "",
+      "Equipe": insc.estruturaEquipe || "",
+      "Investimento Clube": insc.investeClubePrivado || "",
+      "Mentoria": insc.participaMentoria || "",
+      "Valor Investido": insc.valorInvestimento || "",
+      "Disponibilidade": insc.disponibilidadeReuniao || "",
+      "Ambiente Esposas": insc.ambienteEsposas || "",
+      "Valor Circulo": insc.valorCirculoIntimo || "",
+      "Motivação": insc.motivoParticipacao || "",
     }));
     exportToXlsx(data, `inscricoes-${new Date().toISOString().split("T")[0]}`);
   }
@@ -135,12 +144,16 @@ export default function Inscricoes() {
       insc.email || "",
       insc.telefone || "",
       insc.cidade || "",
+      insc.profissao || "",
+      insc.segmentoMercado || "",
+      insc.valorInvestimento || "",
+      insc.motivoParticipacao || "",
       (STATUS_MAP[insc.status] || STATUS_MAP.pendente).label,
     ]);
     exportGenericPdf(
       "Lista de Inscrições",
       "Inscrições dos Embaixadores Legendários",
-      ["Nº Leg.", "Nome", "Email", "Telefone", "Cidade", "Status"],
+      ["Nº Leg.", "Nome", "Email", "Telefone", "Cidade", "Profissão", "Segmento", "Investimento", "Motivação", "Status"],
       rows,
       "inscricoes"
     );
@@ -153,12 +166,16 @@ export default function Inscricoes() {
       insc.email || "",
       insc.telefone || "",
       insc.cidade || "",
+      insc.profissao || "",
+      insc.segmentoMercado || "",
+      insc.valorInvestimento || "",
+      insc.motivoParticipacao || "",
       (STATUS_MAP[insc.status] || STATUS_MAP.pendente).label,
     ]);
     const doc = buildGenericPdfDoc(
       "Lista de Inscricoes",
       "Inscricoes dos Embaixadores Legendarios",
-      ["No Leg.", "Nome", "Email", "Telefone", "Cidade", "Status"],
+      ["No Leg.", "Nome", "Email", "Telefone", "Cidade", "Profissao", "Segmento", "Investimento", "Motivacao", "Status"],
       rows,
     );
     const filename = `inscricoes-${new Date().toISOString().split("T")[0]}.pdf`;
@@ -372,6 +389,13 @@ export default function Inscricoes() {
                   { label: "Participa Mentoria", value: selected.participaMentoria },
                   { label: "Valor Investimento", value: selected.valorInvestimento },
                   { label: "Disponibilidade Reuniao", value: selected.disponibilidadeReuniao },
+                ]} />
+
+                {/* Participacao */}
+                <DetailSection icon={Star} title={t("insc.mgmt.sec.participacao")} items={[
+                  { label: "Ambiente Esposas", value: selected.ambienteEsposas },
+                  { label: "Valor Circulo Intimo", value: selected.valorCirculoIntimo },
+                  { label: "Motivo Participacao", value: selected.motivoParticipacao },
                 ]} />
 
                 {/* Inscricao date */}

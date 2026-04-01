@@ -15,6 +15,7 @@ const BG_GRADIENTS = [
   "linear-gradient(135deg, #0c0e12 0%, #141820 50%, #080a0c 100%)",           // Profissional (5): dark slate to black
   "linear-gradient(135deg, #0a0c18 0%, #0e1230 50%, #060710 100%)",           // Mercado (6): dark indigo to black
   "linear-gradient(135deg, #120c08 0%, #1a1005 50%, #0a0804 100%)",           // Investimento (7): dark orange-tinged to black
+  "linear-gradient(135deg, #0e0a12 0%, #180e24 50%, #08060c 100%)",           // Participacao (8): deep violet to black
 ];
 
 /* ============================================================ */
@@ -53,7 +54,10 @@ type FormData = {
   investeClubePrivado: string;
   participaMentoria: string;
   valorInvestimento: string;
-  disponibilidadeReuniao: string;
+  disponibilidadeReuniao: boolean;
+  ambienteEsposas: string;
+  valorCirculoIntimo: string;
+  motivoParticipacao: string;
 };
 
 const initial: FormData = {
@@ -66,7 +70,8 @@ const initial: FormData = {
   profissao: "", areaAtuacao: "", possuiEmpresa: "", instagramEmpresa: "",
   segmentoMercado: "", tempoEmpreendedorismo: "", estruturaEquipe: "",
   investeClubePrivado: "", participaMentoria: "", valorInvestimento: "",
-  disponibilidadeReuniao: "",
+  disponibilidadeReuniao: false, ambienteEsposas: "", valorCirculoIntimo: "",
+  motivoParticipacao: "",
 };
 
 /* ---------- question definitions ---------- */
@@ -167,7 +172,25 @@ function buildQuestions(t: (k: string) => string): Question[] {
         { label: t("insc.opt.mais100k"), value: "100k+", icon: "E" },
       ],
     },
-    { key: "disponibilidadeReuniao", question: t("insc.q.disponibilidade"), type: "text", required: true, section: t("insc.sec.investimento"), sectionIndex: 7 },
+    { key: "disponibilidadeReuniao", question: t("insc.q.disponibilidade"), type: "yesno", required: true, section: t("insc.sec.investimento"), sectionIndex: 7 },
+    {
+      key: "ambienteEsposas", question: t("insc.q.ambienteEsposas"), type: "radio", section: t("insc.sec.participacao"), sectionIndex: 8,
+      options: [
+        { label: t("insc.opt.ambSim"), value: "sim", icon: "A" },
+        { label: t("insc.opt.ambNao"), value: "nao", icon: "B" },
+        { label: t("insc.opt.ambOutra"), value: "outra", icon: "C" },
+      ],
+    },
+    {
+      key: "valorCirculoIntimo", question: t("insc.q.valorCirculo"), type: "radio", section: t("insc.sec.participacao"), sectionIndex: 8,
+      options: [
+        { label: t("insc.opt.val10a30k"), value: "10-30k", icon: "A" },
+        { label: t("insc.opt.val30a50k"), value: "30-50k", icon: "B" },
+        { label: t("insc.opt.val50a80k"), value: "50-80k", icon: "C" },
+        { label: t("insc.opt.valMais100k"), value: "100k+", icon: "D" },
+      ],
+    },
+    { key: "motivoParticipacao", question: t("insc.q.motivoParticipacao"), subtitle: t("insc.q.motivoParticipacao.sub"), type: "textarea", required: true, section: t("insc.sec.participacao"), sectionIndex: 8 },
   ];
 }
 
@@ -568,7 +591,10 @@ export default function Inscricao() {
         investeClubePrivado: form.investeClubePrivado || null,
         participaMentoria: form.participaMentoria || null,
         valorInvestimento: form.valorInvestimento || null,
-        disponibilidadeReuniao: form.disponibilidadeReuniao || null,
+        disponibilidadeReuniao: form.disponibilidadeReuniao ? "sim" : "nao",
+        ambienteEsposas: form.ambienteEsposas || null,
+        valorCirculoIntimo: form.valorCirculoIntimo || null,
+        motivoParticipacao: form.motivoParticipacao || null,
         embaixadorIndicadorId: refEmbId,
         codigoIndicacao: refCode,
         status: "pendente",

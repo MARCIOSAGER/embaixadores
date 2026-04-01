@@ -35,6 +35,7 @@ export type Database = {
           idioma: "pt" | "es" | "en";
           observacoes: string | null;
           fotoUrl: string | null;
+          instagram: string | null;
           codigoIndicacao: string | null;
           estadoCivil: string | null;
           nomeEsposa: string | null;
@@ -170,6 +171,9 @@ export type Database = {
           participaMentoria: string | null;
           valorInvestimento: string | null;
           disponibilidadeReuniao: string | null;
+          ambienteEsposas: string | null;
+          valorCirculoIntimo: string | null;
+          motivoParticipacao: string | null;
           fotoUrl: string | null;
           nomeEsposa: string | null;
           dataNascimentoEsposa: string | null;

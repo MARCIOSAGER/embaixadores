@@ -29,6 +29,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Inscricao = lazy(() => import("./pages/Inscricao"));
 const EventoInscricao = lazy(() => import("./pages/EventoInscricao"));
+const EmbaixadorPerfil = lazy(() => import("./pages/EmbaixadorPerfil"));
 const MeusIndicados = lazy(() => import("./pages/MeusIndicados"));
 import InstallPrompt from "./components/InstallPrompt";
 import { supabase } from "./lib/supabase";
@@ -133,6 +134,7 @@ function App() {
               <Route path="/privacidade" component={Privacy} />
               <Route path="/termos" component={Terms} />
               <Route path="/inscricao" component={Inscricao} />
+              <Route path="/meu-perfil" component={EmbaixadorPerfil} />
               <Route path="/evento/:id" component={EventoInscricao} />
               <Route>{isAuthenticated ? <Router /> : <Login />}</Route>
             </Switch>
