@@ -535,7 +535,28 @@ export default function Embaixadores() {
                       }}
                       className="apple-btn apple-btn-tinted w-full py-2.5"
                     >
-                      <MessageCircle className="w-4 h-4" strokeWidth={1.5} />Enviar via WhatsApp
+                      <MessageCircle className="w-4 h-4" strokeWidth={1.5} />Enviar Indicação via WhatsApp
+                    </button>
+                    <div className="border-t border-white/[0.06] my-2" />
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/meu-perfil?code=${selected.codigoIndicacao}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Link do perfil copiado!");
+                      }}
+                      className="apple-btn w-full py-2.5 bg-[#0A84FF]/10 text-[#0A84FF] hover:bg-[#0A84FF]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
+                    >
+                      <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link do Perfil
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/meu-perfil?code=${selected.codigoIndicacao}`;
+                        const msg = encodeURIComponent(`Olá ${selected.nomeCompleto.split(" ")[0]}! Atualize seu perfil de Embaixador dos Legendários aqui: ${url}`);
+                        window.open(`https://wa.me/${(selected.telefone || "").replace(/\D/g, "")}?text=${msg}`, "_blank");
+                      }}
+                      className="apple-btn w-full py-2.5 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
+                    >
+                      <MessageCircle className="w-4 h-4" strokeWidth={1.5} />Enviar Link do Perfil via WhatsApp
                     </button>
                   </div>
                 )}
