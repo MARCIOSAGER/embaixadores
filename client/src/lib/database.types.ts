@@ -182,6 +182,8 @@ export type Database = {
           estado: string | null;
           embaixadorIndicadorId: number | null;
           codigoIndicacao: string | null;
+          tipo: string;
+          embaixadorId: number | null;
           status: string;
           createdAt: string;
         };

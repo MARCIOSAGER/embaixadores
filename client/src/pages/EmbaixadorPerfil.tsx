@@ -373,30 +373,35 @@ export default function EmbaixadorPerfil() {
     setError("");
     try {
       const fotoUrl = await uploadPhoto();
-      const { error: err } = await supabase.from("embaixadores").update({
+
+      // Save to inscricoes as pending profile update (admin must approve)
+      const { error: err } = await supabase.from("inscricoes").insert({
+        tipo: "atualizacao_perfil",
+        embaixadorId: ambassador.id,
         nomeCompleto: form.nomeCompleto,
-        email: form.email || null,
-        telefone: form.telefone || null,
+        dataNascimento: form.dataNascimento || null,
+        email: form.email,
+        telefone: form.telefone,
         instagram: form.instagram || null,
         cidade: form.cidade || null,
         estado: form.estado || null,
-        profissao: form.profissao || null,
-        empresa: form.empresa || null,
-        dataNascimento: dateToTs(form.dataNascimento),
+        numeroLegendario: form.numeroLegendario || null,
+        fotoUrl,
         estadoCivil: form.estadoCivil || null,
         nomeEsposa: form.nomeEsposa || null,
-        dataNascimentoEsposa: dateToTs(form.dataNascimentoEsposa),
+        dataNascimentoEsposa: form.dataNascimentoEsposa || null,
         qtdFilhos: form.qtdFilhos,
         idadesFilhos: form.idadesFilhos || null,
-        fotoUrl,
-      }).eq("id", ambassador.id);
+        codigoIndicacao: ambassador.codigoIndicacao,
+        status: "pendente",
+      });
       if (err) throw err;
 
-      // Send confirmation notifications (fire-and-forget)
+      // Notify admins (fire-and-forget)
       const locale = localStorage.getItem("app-locale") || "pt";
       supabase.functions.invoke("notify-profile-update", {
-        body: { nome: form.nomeCompleto, email: form.email, telefone: form.telefone, locale },
-      }).catch(() => {}); // don't block on notification failure
+        body: { nome: form.nomeCompleto, email: null, telefone: null, locale },
+      }).catch(() => {});
 
       setSubmitted(true);
     } catch (e: any) {

@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle, Bell, CheckCircle2, XCircle, Camera } from "lucide-react";
 import PhoneInput from "@/components/PhoneInput";
 import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
@@ -33,6 +33,10 @@ export default function Embaixadores() {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
   const [bulkMsgOpen, setBulkMsgOpen] = useState(false);
+  const [pendingUpdates, setPendingUpdates] = useState<any[]>([]);
+  const [reviewingUpdate, setReviewingUpdate] = useState<any | null>(null);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [form, setForm] = useState({
     nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "",
     email: "", telefone: "", cidade: "", estado: "",
@@ -52,6 +56,80 @@ export default function Embaixadores() {
   function resetForm() {
     setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", idioma: "pt", observacoes: "", estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "" });
     setEditingId(null);
+  }
+
+  // Fetch pending profile updates
+  async function loadPendingUpdates() {
+    const { data } = await supabase
+      .from("inscricoes")
+      .select("*")
+      .eq("tipo", "atualizacao_perfil")
+      .eq("status", "pendente")
+      .order("createdAt", { ascending: false });
+    setPendingUpdates(data || []);
+  }
+
+  // Load on mount and when mutations succeed
+  useState(() => { loadPendingUpdates(); });
+
+  async function handleApproveUpdate(update: any, notify: boolean) {
+    setApprovingId(update.id);
+    try {
+      // Update the ambassador record with the new data
+      const updateData: any = {
+        nomeCompleto: update.nomeCompleto,
+        email: update.email || null,
+        telefone: update.telefone || null,
+        instagram: update.instagram || null,
+        cidade: update.cidade || null,
+        estado: update.estado || null,
+        estadoCivil: update.estadoCivil || null,
+        nomeEsposa: update.nomeEsposa || null,
+        qtdFilhos: update.qtdFilhos || 0,
+        idadesFilhos: update.idadesFilhos || null,
+      };
+      if (update.fotoUrl) updateData.fotoUrl = update.fotoUrl;
+      if (update.dataNascimento) updateData.dataNascimento = new Date(update.dataNascimento + "T12:00:00").getTime();
+      if (update.dataNascimentoEsposa) updateData.dataNascimentoEsposa = new Date(update.dataNascimentoEsposa + "T12:00:00").getTime();
+
+      const { error: updateErr } = await supabase
+        .from("embaixadores")
+        .update(updateData)
+        .eq("id", update.embaixadorId);
+      if (updateErr) throw updateErr;
+
+      // Mark inscription as approved
+      await supabase.from("inscricoes").update({ status: "aprovado" }).eq("id", update.id);
+
+      // Send notification to ambassador if requested
+      if (notify) {
+        supabase.functions.invoke("notify-profile-update", {
+          body: { nome: update.nomeCompleto, email: update.email, telefone: update.telefone, locale: "pt" },
+        }).catch(() => {});
+      }
+
+      toast.success("Perfil aprovado" + (notify ? " e notificação enviada!" : "!"));
+      setReviewingUpdate(null);
+      loadPendingUpdates();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
+  async function handleRejectUpdate(update: any) {
+    setRejectingId(update.id);
+    try {
+      await supabase.from("inscricoes").update({ status: "rejeitado" }).eq("id", update.id);
+      toast.success("Atualização rejeitada.");
+      setReviewingUpdate(null);
+      loadPendingUpdates();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRejectingId(null);
+    }
   }
 
   function openEdit(emb: any) {
@@ -218,6 +296,111 @@ export default function Embaixadores() {
           <StatsCard icon={Clock} value={stats?.pendentes || 0} label={t("emb.pendRenov")} color="#FF9F0A" delay={150} />
           <StatsCard icon={UserX} value={stats?.inativos || 0} label={t("emb.inativo")} color="#FF453A" delay={200} />
         </div>
+
+        {/* Pending Profile Updates */}
+        {pendingUpdates.length > 0 && (
+          <div className="animate-fade-up">
+            <div className="flex items-center gap-2 mb-3">
+              <Bell className="w-4 h-4 text-[#FF9F0A]" />
+              <h3 className="text-[0.875rem] font-semibold text-white">{t("emb.perfilPendente")} ({pendingUpdates.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {pendingUpdates.map((upd: any) => (
+                <div key={upd.id} className="apple-card-inset p-3 flex items-center gap-3 cursor-pointer hover:bg-white/[0.04] transition-colors rounded-xl" onClick={() => setReviewingUpdate(upd)} role="button" tabIndex={0}>
+                  {upd.fotoUrl ? (
+                    <img src={upd.fotoUrl} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-[#FF9F0A]" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#FF9F0A]/20 flex items-center justify-center">
+                      <Camera className="w-4 h-4 text-[#FF9F0A]" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[0.8125rem] font-medium text-white truncate block">{upd.nomeCompleto}</span>
+                    <span className="text-[0.6875rem] text-[#FF9F0A]">{t("emb.aguardandoAprovacao")}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#3a3a3c] shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Review Update Sheet */}
+        {reviewingUpdate && (
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center apple-sheet-backdrop" onClick={() => setReviewingUpdate(null)}>
+            <div className="apple-sheet-content w-full max-w-[calc(100vw-2rem)] sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-[20px] lg:rounded-[20px] animate-fade-up" onClick={e => e.stopPropagation()}>
+              <div className="apple-sheet-handle" />
+              <div className="p-6 space-y-5">
+                <div className="flex items-center gap-4">
+                  {reviewingUpdate.fotoUrl ? (
+                    <img src={reviewingUpdate.fotoUrl} alt="" className="w-16 h-16 rounded-full object-cover border-3 border-[#FF9F0A]" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-[#FF9F0A]/20 flex items-center justify-center">
+                      <Camera className="w-7 h-7 text-[#FF9F0A]" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h2 className="text-lg font-bold text-white">{reviewingUpdate.nomeCompleto}</h2>
+                    <span className="apple-badge text-[0.625rem]" style={{ background: "rgba(255,159,10,0.14)", color: "#FF9F0A" }}>{t("emb.atualizacaoPerfil")}</span>
+                  </div>
+                  <button onClick={() => setReviewingUpdate(null)} className="w-11 h-11 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b]">
+                    <X className="w-4 h-4" strokeWidth={2} />
+                  </button>
+                </div>
+
+                <div className="apple-card-inset p-4 space-y-2">
+                  {reviewingUpdate.email && <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#48484a]" /><span className="text-[0.8125rem] text-[#d2d2d7]">{reviewingUpdate.email}</span></div>}
+                  {reviewingUpdate.telefone && <div className="flex items-center gap-3"><Phone className="w-4 h-4 text-[#48484a]" /><span className="text-[0.8125rem] text-[#d2d2d7]">{reviewingUpdate.telefone}</span></div>}
+                  {reviewingUpdate.instagram && <div className="flex items-center gap-3"><span className="text-[0.8125rem] text-[#d2d2d7]">Instagram: {reviewingUpdate.instagram}</span></div>}
+                  {(reviewingUpdate.cidade || reviewingUpdate.estado) && <div className="flex items-center gap-3"><MapPin className="w-4 h-4 text-[#48484a]" /><span className="text-[0.8125rem] text-[#d2d2d7]">{[reviewingUpdate.cidade, reviewingUpdate.estado].filter(Boolean).join(", ")}</span></div>}
+                </div>
+
+                {reviewingUpdate.estadoCivil && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.familia")}</p>
+                    <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.estadoCivil")}: {reviewingUpdate.estadoCivil}</p>
+                    {reviewingUpdate.nomeEsposa && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.nomeEsposa")}: {reviewingUpdate.nomeEsposa}</p>}
+                    {reviewingUpdate.qtdFilhos > 0 && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.qtdFilhos")}: {reviewingUpdate.qtdFilhos}{reviewingUpdate.idadesFilhos ? ` (${reviewingUpdate.idadesFilhos})` : ""}</p>}
+                  </div>
+                )}
+
+                {reviewingUpdate.numeroLegendario && (
+                  <div className="apple-card-inset p-3 text-center">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase">Legendário</p>
+                    <p className="text-[0.8125rem] text-[#FF9F0A] font-medium mt-1">L#{reviewingUpdate.numeroLegendario}</p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleApproveUpdate(reviewingUpdate, true)}
+                    disabled={approvingId === reviewingUpdate.id}
+                    className="apple-btn apple-btn-filled w-full py-2.5"
+                  >
+                    {approvingId === reviewingUpdate.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {t("emb.aprovarNotificar")}
+                  </button>
+                  <button
+                    onClick={() => handleApproveUpdate(reviewingUpdate, false)}
+                    disabled={approvingId === reviewingUpdate.id}
+                    className="apple-btn apple-btn-tinted w-full py-2.5"
+                  >
+                    {approvingId === reviewingUpdate.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {t("emb.aprovarSemNotificar")}
+                  </button>
+                  <button
+                    onClick={() => handleRejectUpdate(reviewingUpdate)}
+                    disabled={rejectingId === reviewingUpdate.id}
+                    className="apple-btn apple-btn-destructive w-full py-2.5"
+                  >
+                    {rejectingId === reviewingUpdate.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                    {t("emb.rejeitarAtualizacao")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search + Filters */}
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: "100ms" }}>
