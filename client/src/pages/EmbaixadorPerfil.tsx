@@ -259,6 +259,8 @@ export default function EmbaixadorPerfil() {
   const [verifyNum, setVerifyNum] = useState("");
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<"ok" | "cadastrado" | "pendente" | null>(null);
+  const [foundEmb, setFoundEmb] = useState<any>(null);
   const [error, setError] = useState("");
   const [fieldError, setFieldError] = useState("");
   const [direction, setDirection] = useState<"next" | "prev">("next");
@@ -491,17 +493,43 @@ export default function EmbaixadorPerfil() {
       if (!verifyNum.trim()) { setVerifyError(t("perfil.verify.vazio")); return; }
       setVerifying(true);
       setVerifyError("");
-      const { data } = await supabase
-        .from("embaixadores")
-        .select("id")
-        .ilike("numeroLegendario", `%${verifyNum.trim()}%`)
-        .limit(1);
-      if (data && data.length > 0) {
-        setForm((p) => ({ ...p, numeroLegendario: verifyNum.trim() }));
-        setVerified(true);
-      } else {
-        setVerifyError(t("perfil.verify.naoEncontrado"));
+      setVerifyStatus(null);
+
+      const num = verifyNum.trim();
+
+      // Secure RPC: check if already registered (only returns masked email + minimal data)
+      const { data: embData } = await supabase.rpc("verificar_legendario", { num_legendario: num });
+      if (embData && embData.length > 0) {
+        setFoundEmb({
+          nomeCompleto: embData[0].nome,
+          email: embData[0].email,
+          numeroEmbaixador: embData[0].numero_embaixador,
+          numeroLegendario: embData[0].numero_legendario,
+          fotoUrl: embData[0].foto_url,
+        });
+        setVerifyStatus("cadastrado");
+        setVerifying(false);
+        return;
       }
+
+      // Check if already submitted a pending profile
+      const { data: inscData } = await supabase
+        .from("inscricoes")
+        .select("id, status")
+        .eq("tipo", "atualizacao_perfil")
+        .ilike("numeroLegendario", `%${num}%`)
+        .order("createdAt", { ascending: false })
+        .limit(1);
+      if (inscData && inscData.length > 0 && inscData[0].status === "pendente") {
+        setVerifyStatus("pendente");
+        setVerifying(false);
+        return;
+      }
+
+      // Not found → can proceed to fill the form
+      setForm((p) => ({ ...p, numeroLegendario: num }));
+      setVerifyStatus("ok");
+      setVerified(true);
       setVerifying(false);
     }
 
@@ -569,23 +597,58 @@ export default function EmbaixadorPerfil() {
                     <p className="mt-4 text-[#FF453A] text-[0.8rem] text-center font-medium">{verifyError}</p>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={handleVerify}
-                    disabled={verifying || !verifyNum.trim()}
-                    className="mt-5 w-full relative flex items-center justify-center gap-2.5 text-white font-bold py-4.5 rounded-2xl text-[0.95rem] transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-40 active:scale-[0.98]"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] rounded-2xl" />
-                    <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity" style={{
-                      background: "linear-gradient(to right, #ff8533, #FF6B00)",
-                    }} />
-                    {verifying ? <Loader2 className="relative w-5 h-5 animate-spin" /> : (
-                      <>
-                        <span className="relative">{t("perfil.verify.btn")}</span>
-                        <ArrowRight className="relative w-4 h-4" />
-                      </>
-                    )}
-                  </button>
+                  {/* Status messages */}
+                  {verifyStatus === "cadastrado" && foundEmb && (
+                    <div className="mt-5 rounded-2xl bg-[#0A84FF]/6 border border-[#0A84FF]/12 overflow-hidden">
+                      <div className="p-5 flex items-center gap-4">
+                        {foundEmb.fotoUrl ? (
+                          <img src={foundEmb.fotoUrl} alt="" className="w-14 h-14 rounded-full object-cover border-2 border-[#0A84FF]/30 shrink-0" />
+                        ) : (
+                          <div className="w-14 h-14 rounded-full bg-[#0A84FF]/15 flex items-center justify-center shrink-0">
+                            <span className="text-lg font-bold text-[#0A84FF]">{foundEmb.nomeCompleto?.charAt(0)}</span>
+                          </div>
+                        )}
+                        <div className="text-left min-w-0">
+                          <p className="text-[0.95rem] text-white font-semibold truncate">{foundEmb.nomeCompleto}</p>
+                          {foundEmb.email && <p className="text-[0.75rem] text-white/40 truncate">{foundEmb.email}</p>}
+                          <div className="flex gap-2 mt-1">
+                            {foundEmb.numeroLegendario && <span className="text-[0.65rem] text-[#FF9F0A] font-medium">L#{foundEmb.numeroLegendario}</span>}
+                            {foundEmb.numeroEmbaixador && <span className="text-[0.65rem] text-[#0A84FF] font-medium">E#{foundEmb.numeroEmbaixador}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-5 py-3 bg-white/[0.02] border-t border-white/[0.04] text-center">
+                        <p className="text-[0.8rem] text-[#0A84FF] font-medium">{t("perfil.verify.jaCadastrado")}</p>
+                        <p className="text-[0.7rem] text-white/35 mt-0.5">{t("perfil.verify.jaCadastrado.desc")}</p>
+                      </div>
+                    </div>
+                  )}
+                  {verifyStatus === "pendente" && (
+                    <div className="mt-5 p-4 rounded-2xl bg-[#FF9F0A]/8 border border-[#FF9F0A]/15 text-center">
+                      <p className="text-[0.85rem] text-[#FF9F0A] font-medium mb-1">{t("perfil.verify.emAnalise")}</p>
+                      <p className="text-[0.75rem] text-white/40">{t("perfil.verify.emAnalise.desc")}</p>
+                    </div>
+                  )}
+
+                  {!verifyStatus && (
+                    <button
+                      type="button"
+                      onClick={handleVerify}
+                      disabled={verifying || !verifyNum.trim()}
+                      className="mt-5 w-full relative flex items-center justify-center gap-2.5 text-white font-bold py-4.5 rounded-2xl text-[0.95rem] transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-40 active:scale-[0.98]"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] rounded-2xl" />
+                      <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity" style={{
+                        background: "linear-gradient(to right, #ff8533, #FF6B00)",
+                      }} />
+                      {verifying ? <Loader2 className="relative w-5 h-5 animate-spin" /> : (
+                        <>
+                          <span className="relative">{t("perfil.verify.btn")}</span>
+                          <ArrowRight className="relative w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
