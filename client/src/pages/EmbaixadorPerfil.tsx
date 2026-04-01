@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Check, Loader2, ArrowRight, ArrowLeft, Send, Camera, Upload, Globe, AlertTriangle } from "lucide-react";
+import { Check, Loader2, ArrowRight, ArrowLeft, Send, Camera, Upload, Globe } from "lucide-react";
 import PhoneInput from "@/components/PhoneInput";
 import { useI18n, type Locale } from "@/lib/i18n";
 
@@ -253,9 +253,6 @@ export default function EmbaixadorPerfil() {
   const [error, setError] = useState("");
   const [fieldError, setFieldError] = useState("");
   const [direction, setDirection] = useState<"next" | "prev">("next");
-  const [ambassador, setAmbassador] = useState<any>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [loading, setLoading] = useState(true);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -264,44 +261,6 @@ export default function EmbaixadorPerfil() {
     const browserLang = navigator.language.slice(0, 2);
     if (browserLang === "es") setLocale("es");
     else if (browserLang === "en") setLocale("en");
-  }, []);
-
-  // Load ambassador data from code param
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (!code) { setNotFound(true); setLoading(false); return; }
-
-    supabase
-      .from("embaixadores")
-      .select("*")
-      .eq("codigoIndicacao", code)
-      .single()
-      .then(({ data, error: err }) => {
-        if (err || !data) { setNotFound(true); setLoading(false); return; }
-        setAmbassador(data);
-        setForm((prev) => ({
-          ...prev,
-          nomeCompleto: data.nomeCompleto || "",
-          dataNascimento: tsToDate(data.dataNascimento),
-          email: data.email || "",
-          telefone: data.telefone || "",
-          instagram: data.instagram || "",
-          cidade: data.cidade || "",
-          estado: data.estado || "",
-          numeroLegendario: data.numeroLegendario || "",
-          numeroEmbaixador: data.numeroEmbaixador || "",
-          estadoCivil: data.estadoCivil || "",
-          nomeEsposa: data.nomeEsposa || "",
-          dataNascimentoEsposa: tsToDate(data.dataNascimentoEsposa),
-          qtdFilhos: data.qtdFilhos || 0,
-          idadesFilhos: data.idadesFilhos || "",
-          profissao: data.profissao || "",
-          empresa: data.empresa || "",
-          fotoPreview: data.fotoUrl || "",
-        }));
-        setLoading(false);
-      });
   }, []);
 
   const questions = buildQuestions(t);
@@ -355,9 +314,9 @@ export default function EmbaixadorPerfil() {
   }
 
   async function uploadPhoto(): Promise<string | null> {
-    if (!form.fotoFile) return ambassador?.fotoUrl || null;
+    if (!form.fotoFile) return null;
     const ext = form.fotoFile.name.split(".").pop() || "jpg";
-    const path = `embaixadores/${ambassador.id}-${Date.now()}.${ext}`;
+    const path = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
     const { error: uploadErr } = await supabase.storage
       .from("inscricoes")
       .upload(path, form.fotoFile, { upsert: true });
@@ -367,7 +326,7 @@ export default function EmbaixadorPerfil() {
   }
 
   async function submit() {
-    if (!validate() || !ambassador) return;
+    if (!validate()) return;
     setSubmitting(true);
     setError("");
     try {
@@ -376,7 +335,6 @@ export default function EmbaixadorPerfil() {
       // Save to inscricoes as pending profile update (admin must approve)
       const { error: err } = await supabase.from("inscricoes").insert({
         tipo: "atualizacao_perfil",
-        embaixadorId: ambassador.id,
         nomeCompleto: form.nomeCompleto,
         dataNascimento: form.dataNascimento || null,
         email: form.email,
@@ -391,7 +349,6 @@ export default function EmbaixadorPerfil() {
         dataNascimentoEsposa: form.dataNascimentoEsposa || null,
         qtdFilhos: form.qtdFilhos,
         idadesFilhos: form.idadesFilhos || null,
-        codigoIndicacao: ambassador.codigoIndicacao,
         status: "pendente",
       });
       if (err) throw err;
@@ -408,28 +365,6 @@ export default function EmbaixadorPerfil() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  /* ==================== LOADING ==================== */
-  if (loading) {
-    return (
-      <div className="min-h-dvh bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
-      </div>
-    );
-  }
-
-  /* ==================== NOT FOUND ==================== */
-  if (notFound) {
-    return (
-      <div className="min-h-dvh bg-gradient-to-br from-[#0a0a0a] via-[#1a0f00] to-[#0a0a0a] flex items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <AlertTriangle className="w-16 h-16 text-[#FF6B00]/60 mx-auto mb-6" />
-          <h1 className="text-2xl font-bold text-white mb-3">{t("perfil.naoEncontrado")}</h1>
-          <p className="text-white/50">{t("perfil.naoEncontrado.desc")}</p>
-        </div>
-      </div>
-    );
   }
 
   /* ==================== SUCCESS ==================== */
@@ -459,18 +394,8 @@ export default function EmbaixadorPerfil() {
           <div className="flex justify-center mb-6"><LangSelector /></div>
           <img src={LOGO} alt="Legendários" className="h-16 mx-auto mb-10 drop-shadow-2xl" />
 
-          {ambassador?.fotoUrl ? (
-            <div className="w-24 h-24 rounded-full border-4 border-[#FF6B00]/50 overflow-hidden mx-auto mb-6">
-              <img src={ambassador.fotoUrl} alt="" className="w-full h-full object-cover" />
-            </div>
-          ) : (
-            <div className="w-24 h-24 rounded-full border-4 border-white/20 flex items-center justify-center mx-auto mb-6 bg-white/5">
-              <span className="text-3xl font-bold text-white/40">{ambassador?.nomeCompleto?.charAt(0)}</span>
-            </div>
-          )}
-
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 leading-tight tracking-tight">
-            {t("perfil.welcome.ola")}{ambassador ? `, ${ambassador.nomeCompleto.split(" ")[0]}` : ""}!
+            {t("perfil.welcome.ola")}!
           </h1>
 
           <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-md mx-auto">

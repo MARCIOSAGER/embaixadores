@@ -75,7 +75,6 @@ export default function Embaixadores() {
   async function handleApproveUpdate(update: any, notify: boolean) {
     setApprovingId(update.id);
     try {
-      // Update the ambassador record with the new data
       const updateData: any = {
         nomeCompleto: update.nomeCompleto,
         email: update.email || null,
@@ -92,11 +91,31 @@ export default function Embaixadores() {
       if (update.dataNascimento) updateData.dataNascimento = new Date(update.dataNascimento + "T12:00:00").getTime();
       if (update.dataNascimentoEsposa) updateData.dataNascimentoEsposa = new Date(update.dataNascimentoEsposa + "T12:00:00").getTime();
 
-      const { error: updateErr } = await supabase
-        .from("embaixadores")
-        .update(updateData)
-        .eq("id", update.embaixadorId);
-      if (updateErr) throw updateErr;
+      // Try to find existing ambassador by legendário number or name
+      let matched = false;
+      if (update.embaixadorId) {
+        // Direct link (has embaixadorId)
+        const { error: updateErr } = await supabase.from("embaixadores").update(updateData).eq("id", update.embaixadorId);
+        if (!updateErr) matched = true;
+      }
+      if (!matched && update.numeroLegendario) {
+        const { data: found } = await supabase.from("embaixadores").select("id").eq("numeroLegendario", update.numeroLegendario).limit(1);
+        if (found && found.length > 0) {
+          const { error: updateErr } = await supabase.from("embaixadores").update(updateData).eq("id", found[0].id);
+          if (!updateErr) matched = true;
+        }
+      }
+      if (!matched) {
+        // No existing match — create new ambassador
+        const { error: createErr } = await supabase.from("embaixadores").insert({
+          ...updateData,
+          numeroLegendario: update.numeroLegendario || null,
+          dataIngresso: Date.now(),
+          status: "ativo",
+          codigoIndicacao: Math.random().toString(36).substring(2, 8),
+        });
+        if (createErr) throw createErr;
+      }
 
       // Mark inscription as approved
       await supabase.from("inscricoes").update({ status: "aprovado" }).eq("id", update.id);
@@ -108,7 +127,9 @@ export default function Embaixadores() {
         }).catch(() => {});
       }
 
-      toast.success("Perfil aprovado" + (notify ? " e notificação enviada!" : "!"));
+      toast.success(matched
+        ? "Perfil atualizado" + (notify ? " e notificação enviada!" : "!")
+        : "Novo embaixador criado" + (notify ? " e notificação enviada!" : "!"));
       setReviewingUpdate(null);
       loadPendingUpdates();
     } catch (e: any) {
@@ -540,7 +561,7 @@ export default function Embaixadores() {
                     <div className="border-t border-white/[0.06] my-2" />
                     <button
                       onClick={() => {
-                        const url = `${window.location.origin}/meu-perfil?code=${selected.codigoIndicacao}`;
+                        const url = `${window.location.origin}/meu-perfil`;
                         navigator.clipboard.writeText(url);
                         toast.success("Link do perfil copiado!");
                       }}
@@ -550,8 +571,8 @@ export default function Embaixadores() {
                     </button>
                     <button
                       onClick={() => {
-                        const url = `${window.location.origin}/meu-perfil?code=${selected.codigoIndicacao}`;
-                        const msg = encodeURIComponent(`Olá ${selected.nomeCompleto.split(" ")[0]}! Atualize seu perfil de Embaixador dos Legendários aqui: ${url}`);
+                        const url = `${window.location.origin}/meu-perfil`;
+                        const msg = encodeURIComponent(`Olá ${selected.nomeCompleto.split(" ")[0]}! Preencha seu perfil de Embaixador dos Legendários aqui: ${url}`);
                         window.open(`https://wa.me/${(selected.telefone || "").replace(/\D/g, "")}?text=${msg}`, "_blank");
                       }}
                       className="apple-btn w-full py-2.5 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
