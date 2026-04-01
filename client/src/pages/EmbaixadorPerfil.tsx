@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Check, Loader2, ArrowRight, ArrowLeft, Send, Camera, Upload, Globe } from "lucide-react";
+import { Check, Loader2, ArrowRight, ArrowLeft, Send, Camera, Upload, Globe, Shield } from "lucide-react";
 import PhoneInput from "@/components/PhoneInput";
 import { useI18n, type Locale } from "@/lib/i18n";
 
@@ -253,6 +253,12 @@ export default function EmbaixadorPerfil() {
   const [form, setForm] = useState<FormData>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState<"pendente" | "aprovado" | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [verified, setVerified] = useState(false);
+  const [verifyNum, setVerifyNum] = useState("");
+  const [verifyError, setVerifyError] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
   const [fieldError, setFieldError] = useState("");
   const [direction, setDirection] = useState<"next" | "prev">("next");
@@ -264,6 +270,26 @@ export default function EmbaixadorPerfil() {
     const browserLang = navigator.language.slice(0, 2);
     if (browserLang === "es") setLocale("es");
     else if (browserLang === "en") setLocale("en");
+  }, []);
+
+  // Check if user already submitted
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("perfil-email");
+    if (!savedEmail) { setCheckingStatus(false); return; }
+    supabase
+      .from("inscricoes")
+      .select("status")
+      .eq("tipo", "atualizacao_perfil")
+      .eq("email", savedEmail)
+      .order("createdAt", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const st = data[0].status;
+          if (st === "pendente" || st === "aprovado") setAlreadySubmitted(st as any);
+        }
+        setCheckingStatus(false);
+      });
   }, []);
 
   const questions = buildQuestions(t);
@@ -362,12 +388,70 @@ export default function EmbaixadorPerfil() {
         body: { nome: form.nomeCompleto, email: null, telefone: null, locale },
       }).catch(() => {});
 
+      localStorage.setItem("perfil-email", form.email);
       setSubmitted(true);
     } catch (e: any) {
       setError(e.message || "Erro ao salvar. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  /* ==================== LOADING CHECK ==================== */
+  if (checkingStatus) {
+    return (
+      <div className="min-h-dvh bg-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
+      </div>
+    );
+  }
+
+  /* ==================== ALREADY SUBMITTED ==================== */
+  if (alreadySubmitted) {
+    const isPending = alreadySubmitted === "pendente";
+    return (
+      <div className="min-h-dvh relative overflow-hidden flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-black" />
+        <div className="absolute inset-0" style={{
+          background: `radial-gradient(ellipse at 50% 40%, ${isPending ? "rgba(255,159,10,0.08)" : "rgba(48,209,88,0.08)"} 0%, transparent 60%)`,
+        }} />
+        <div className="relative z-10 text-center max-w-md slide-up">
+          <img src={LOGO} alt="Legendários" className="h-14 mx-auto mb-10 opacity-60" />
+
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center shadow-[0_0_60px_${isPending ? "rgba(255,159,10,0.3)" : "rgba(48,209,88,0.3)"}]`}
+              style={{ background: isPending ? "linear-gradient(135deg, #FF9F0A, #E88B00)" : "linear-gradient(135deg, #30D158, #28a745)" }}>
+              {isPending ? (
+                <Loader2 className="w-10 h-10 text-white animate-[spin_3s_linear_infinite]" />
+              ) : (
+                <Check className="w-10 h-10 text-white" strokeWidth={2.5} />
+              )}
+            </div>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-4 tracking-tight">
+            {t(isPending ? "perfil.status.pendente" : "perfil.status.aprovado")}
+          </h1>
+          <p className="text-white/50 text-base leading-relaxed max-w-sm mx-auto">
+            {t(isPending ? "perfil.status.pendente.desc" : "perfil.status.aprovado.desc")}
+          </p>
+
+          {isPending && (
+            <button
+              type="button"
+              onClick={() => { localStorage.removeItem("perfil-email"); setAlreadySubmitted(null); }}
+              className="mt-10 text-sm text-white/30 hover:text-white/50 underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              {t("perfil.status.reenviar")}
+            </button>
+          )}
+        </div>
+        <style>{`
+          @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+          .slide-up { animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        `}</style>
+      </div>
+    );
   }
 
   /* ==================== SUCCESS ==================== */
@@ -401,8 +485,26 @@ export default function EmbaixadorPerfil() {
     );
   }
 
-  /* ==================== WELCOME ==================== */
+  /* ==================== WELCOME / VERIFY ==================== */
   if (isWelcome) {
+    async function handleVerify() {
+      if (!verifyNum.trim()) { setVerifyError(t("perfil.verify.vazio")); return; }
+      setVerifying(true);
+      setVerifyError("");
+      const { data } = await supabase
+        .from("embaixadores")
+        .select("id")
+        .ilike("numeroLegendario", `%${verifyNum.trim()}%`)
+        .limit(1);
+      if (data && data.length > 0) {
+        setForm((p) => ({ ...p, numeroLegendario: verifyNum.trim() }));
+        setVerified(true);
+      } else {
+        setVerifyError(t("perfil.verify.naoEncontrado"));
+      }
+      setVerifying(false);
+    }
+
     return (
       <div className="min-h-dvh relative overflow-hidden flex items-center justify-center">
         {/* Background layers */}
@@ -417,11 +519,11 @@ export default function EmbaixadorPerfil() {
           background: "radial-gradient(ellipse at 50% 30%, rgba(255,107,0,0.08) 0%, transparent 70%)",
         }} />
 
-        <div className="relative z-10 text-center px-6 max-w-lg">
+        <div className="relative z-10 text-center px-6 max-w-lg w-full">
           <div className="flex justify-center mb-8"><LangSelector /></div>
 
           {/* Logo with glow */}
-          <div className="relative inline-block mb-10">
+          <div className="relative inline-block mb-8">
             <div className="absolute inset-0 blur-3xl opacity-30 bg-[#FF6B00] rounded-full scale-150" />
             <img src={LOGO} alt="Legendários" className="relative h-20 mx-auto drop-shadow-2xl" />
           </div>
@@ -438,32 +540,69 @@ export default function EmbaixadorPerfil() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#ff9a44] to-[#FF6B00]">{t("perfil.welcome.titulo2")}</span>
           </h1>
 
-          {/* Description */}
-          <p className="text-white/50 text-base sm:text-lg leading-relaxed mb-12 max-w-sm mx-auto slide-up" style={{ animationDelay: "200ms" }}>
+          <p className="text-white/50 text-base sm:text-lg leading-relaxed mb-10 max-w-sm mx-auto slide-up" style={{ animationDelay: "200ms" }}>
             {t("perfil.welcome.desc")}
           </p>
 
-          {/* CTA Button */}
-          <div className="slide-up" style={{ animationDelay: "300ms" }}>
-            <button
-              type="button"
-              onClick={() => { setDirection("next"); setQIdx(0); }}
-              className="group relative inline-flex items-center gap-3 text-white font-bold px-12 py-5 rounded-full text-lg transition-all duration-300 cursor-pointer overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] transition-all duration-300 group-hover:scale-105" />
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
-                background: "radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%)",
-              }} />
-              <span className="relative">{t("perfil.welcome.comecar")}</span>
-              <ArrowRight className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
-              <div className="absolute -inset-1 rounded-full opacity-40 blur-xl bg-[#FF6B00] -z-10" />
-            </button>
-          </div>
+          {!verified ? (
+            /* ---- VERIFY STEP ---- */
+            <div className="slide-up max-w-xs mx-auto" style={{ animationDelay: "300ms" }}>
+              <div className="flex items-center gap-2 justify-center mb-4">
+                <Shield className="w-4 h-4 text-[#FF6B00]/60" />
+                <span className="text-xs text-white/40 uppercase tracking-wider">{t("perfil.verify.titulo")}</span>
+              </div>
+              <input
+                type="text"
+                value={verifyNum}
+                onChange={(e) => { setVerifyNum(e.target.value); setVerifyError(""); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleVerify(); }}
+                placeholder={t("perfil.verify.placeholder")}
+                className="w-full bg-white/[0.06] border-2 border-white/10 focus:border-[#FF6B00] rounded-2xl px-5 py-4 text-center text-lg text-white placeholder:text-white/25 focus:outline-none transition-colors caret-[#FF6B00]"
+                autoFocus
+              />
+              {verifyError && <p className="mt-3 text-[#FF453A] text-sm">{verifyError}</p>}
+              <button
+                type="button"
+                onClick={handleVerify}
+                disabled={verifying}
+                className="mt-4 w-full group relative inline-flex items-center justify-center gap-3 text-white font-bold px-8 py-4 rounded-full text-base transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-50"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#ff8533]" />
+                {verifying ? <Loader2 className="relative w-5 h-5 animate-spin" /> : (
+                  <>
+                    <span className="relative">{t("perfil.verify.btn")}</span>
+                    <ArrowRight className="relative w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            /* ---- VERIFIED → START ---- */
+            <div className="slide-up" style={{ animationDelay: "0ms" }}>
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#30D158]/10 border border-[#30D158]/20 mb-8">
+                <Check className="w-4 h-4 text-[#30D158]" />
+                <span className="text-sm text-[#30D158] font-medium">{t("perfil.verify.ok")}</span>
+              </div>
 
-          {/* Time estimate */}
-          <p className="text-white/30 text-xs mt-8 slide-up" style={{ animationDelay: "400ms" }}>
-            {t("perfil.welcome.tempo")}
-          </p>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => { setDirection("next"); setQIdx(0); }}
+                  className="group relative inline-flex items-center gap-3 text-white font-bold px-12 py-5 rounded-full text-lg transition-all duration-300 cursor-pointer overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] transition-all duration-300 group-hover:scale-105" />
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
+                    background: "radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%)",
+                  }} />
+                  <span className="relative">{t("perfil.welcome.comecar")}</span>
+                  <ArrowRight className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  <div className="absolute -inset-1 rounded-full opacity-40 blur-xl bg-[#FF6B00] -z-10" />
+                </button>
+              </div>
+
+              <p className="text-white/30 text-xs mt-6">{t("perfil.welcome.tempo")}</p>
+            </div>
+          )}
         </div>
 
         <style>{`
@@ -489,7 +628,7 @@ export default function EmbaixadorPerfil() {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-2">
-        <img src={LOGO} alt="Legendários" className="h-8 opacity-70" />
+        <img src={LOGO} alt="Legendários" className="h-10 sm:h-14 opacity-70" />
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/40 font-medium tracking-wider uppercase">{current.section}</span>
           <span className="text-xs text-white/30">{qIdx + 1}/{totalVisible}</span>
