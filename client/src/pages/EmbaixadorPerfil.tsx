@@ -506,108 +506,118 @@ export default function EmbaixadorPerfil() {
     }
 
     return (
-      <div className="min-h-dvh relative overflow-hidden flex items-center justify-center">
-        {/* Background layers */}
-        <div className="absolute inset-0 bg-black" />
-        <div className="absolute inset-0 opacity-40" style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80')",
-          backgroundSize: "cover", backgroundPosition: "center",
-          filter: "blur(2px) brightness(0.3)",
-        }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90" />
+      <div className="min-h-dvh relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-[#050505]" />
         <div className="absolute inset-0" style={{
-          background: "radial-gradient(ellipse at 50% 30%, rgba(255,107,0,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,107,0,0.06) 0%, transparent 100%)",
         }} />
 
-        <div className="relative z-10 text-center px-6 max-w-lg w-full">
-          <div className="flex justify-center mb-8"><LangSelector /></div>
+        {/* Content */}
+        <div className="relative z-10 min-h-dvh flex flex-col items-center justify-center px-6 py-12">
+          {/* Lang selector */}
+          <div className="absolute top-6 right-6"><LangSelector /></div>
 
-          {/* Logo with glow */}
-          <div className="relative inline-block mb-8">
-            <div className="absolute inset-0 blur-3xl opacity-30 bg-[#FF6B00] rounded-full scale-150" />
-            <img src={LOGO} alt="Legendários" className="relative h-20 mx-auto drop-shadow-2xl" />
+          {/* Logo */}
+          <div className="relative mb-12 slide-up">
+            <div className="absolute -inset-8 blur-[60px] opacity-20 bg-[#FF6B00] rounded-full" />
+            <img src={LOGO} alt="Legendários" className="relative h-24 sm:h-28 drop-shadow-2xl" />
           </div>
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm mb-6 slide-up">
-            <div className="w-2 h-2 rounded-full bg-[#FF6B00] animate-pulse" />
-            <span className="text-[0.7rem] font-medium text-white/60 uppercase tracking-widest">{t("perfil.welcome.badge")}</span>
+          {/* Card container */}
+          <div className="w-full max-w-md">
+            {/* Badge */}
+            <div className="flex justify-center mb-8 slide-up" style={{ animationDelay: "80ms" }}>
+              <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/[0.04] border border-white/[0.06]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-pulse" />
+                <span className="text-[0.65rem] font-semibold text-white/50 uppercase tracking-[0.2em]">{t("perfil.welcome.badge")}</span>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-center text-[2.5rem] sm:text-5xl font-extrabold text-white mb-5 leading-[1.08] tracking-[-0.03em] slide-up" style={{ animationDelay: "160ms" }}>
+              {t("perfil.welcome.titulo1")}<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#ffb366] to-[#FF6B00]">{t("perfil.welcome.titulo2")}</span>
+            </h1>
+
+            {/* Description */}
+            <p className="text-center text-white/40 text-[0.95rem] sm:text-base leading-relaxed mb-12 max-w-sm mx-auto slide-up" style={{ animationDelay: "240ms" }}>
+              {t("perfil.welcome.desc")}
+            </p>
+
+            {!verified ? (
+              /* ---- VERIFY STEP ---- */
+              <div className="slide-up" style={{ animationDelay: "320ms" }}>
+                {/* Glass card */}
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-3xl p-8 backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-2.5 mb-6">
+                    <Shield className="w-4 h-4 text-[#FF6B00]" />
+                    <span className="text-[0.7rem] font-semibold text-white/50 uppercase tracking-[0.15em]">{t("perfil.verify.titulo")}</span>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={verifyNum}
+                    onChange={(e) => { setVerifyNum(e.target.value); setVerifyError(""); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleVerify(); }}
+                    placeholder={t("perfil.verify.placeholder")}
+                    className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-[#FF6B00]/60 rounded-2xl px-6 py-4.5 text-center text-[1.1rem] text-white placeholder:text-white/20 focus:outline-none transition-all duration-300 caret-[#FF6B00] focus:bg-white/[0.06] focus:shadow-[0_0_0_4px_rgba(255,107,0,0.08)]"
+                    autoFocus
+                  />
+
+                  {verifyError && (
+                    <p className="mt-4 text-[#FF453A] text-[0.8rem] text-center font-medium">{verifyError}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleVerify}
+                    disabled={verifying || !verifyNum.trim()}
+                    className="mt-5 w-full relative flex items-center justify-center gap-2.5 text-white font-bold py-4.5 rounded-2xl text-[0.95rem] transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-40 active:scale-[0.98]"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] rounded-2xl" />
+                    <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity" style={{
+                      background: "linear-gradient(to right, #ff8533, #FF6B00)",
+                    }} />
+                    {verifying ? <Loader2 className="relative w-5 h-5 animate-spin" /> : (
+                      <>
+                        <span className="relative">{t("perfil.verify.btn")}</span>
+                        <ArrowRight className="relative w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ---- VERIFIED → START ---- */
+              <div className="text-center slide-up">
+                <div className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-[#30D158]/8 border border-[#30D158]/15 mb-10">
+                  <Check className="w-4 h-4 text-[#30D158]" />
+                  <span className="text-[0.85rem] text-[#30D158] font-semibold">{t("perfil.verify.ok")}</span>
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => { setDirection("next"); setQIdx(0); }}
+                    className="group relative inline-flex items-center gap-3 text-white font-bold px-14 py-5 rounded-full text-lg transition-all duration-300 cursor-pointer overflow-hidden active:scale-[0.97]"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#E85D00] transition-all duration-300 group-hover:brightness-110" />
+                    <span className="relative">{t("perfil.welcome.comecar")}</span>
+                    <ArrowRight className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    <div className="absolute -inset-2 rounded-full opacity-30 blur-2xl bg-[#FF6B00] -z-10" />
+                  </button>
+                </div>
+
+                <p className="text-white/25 text-xs mt-8">{t("perfil.welcome.tempo")}</p>
+              </div>
+            )}
           </div>
-
-          {/* Title */}
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 leading-[1.1] tracking-tight slide-up" style={{ animationDelay: "100ms" }}>
-            {t("perfil.welcome.titulo1")}<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] via-[#ff9a44] to-[#FF6B00]">{t("perfil.welcome.titulo2")}</span>
-          </h1>
-
-          <p className="text-white/50 text-base sm:text-lg leading-relaxed mb-10 max-w-sm mx-auto slide-up" style={{ animationDelay: "200ms" }}>
-            {t("perfil.welcome.desc")}
-          </p>
-
-          {!verified ? (
-            /* ---- VERIFY STEP ---- */
-            <div className="slide-up max-w-xs mx-auto" style={{ animationDelay: "300ms" }}>
-              <div className="flex items-center gap-2 justify-center mb-4">
-                <Shield className="w-4 h-4 text-[#FF6B00]/60" />
-                <span className="text-xs text-white/40 uppercase tracking-wider">{t("perfil.verify.titulo")}</span>
-              </div>
-              <input
-                type="text"
-                value={verifyNum}
-                onChange={(e) => { setVerifyNum(e.target.value); setVerifyError(""); }}
-                onKeyDown={(e) => { if (e.key === "Enter") handleVerify(); }}
-                placeholder={t("perfil.verify.placeholder")}
-                className="w-full bg-white/[0.06] border-2 border-white/10 focus:border-[#FF6B00] rounded-2xl px-5 py-4 text-center text-lg text-white placeholder:text-white/25 focus:outline-none transition-colors caret-[#FF6B00]"
-                autoFocus
-              />
-              {verifyError && <p className="mt-3 text-[#FF453A] text-sm">{verifyError}</p>}
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={verifying}
-                className="mt-4 w-full group relative inline-flex items-center justify-center gap-3 text-white font-bold px-8 py-4 rounded-full text-base transition-all duration-300 cursor-pointer overflow-hidden disabled:opacity-50"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#ff8533]" />
-                {verifying ? <Loader2 className="relative w-5 h-5 animate-spin" /> : (
-                  <>
-                    <span className="relative">{t("perfil.verify.btn")}</span>
-                    <ArrowRight className="relative w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            /* ---- VERIFIED → START ---- */
-            <div className="slide-up" style={{ animationDelay: "0ms" }}>
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#30D158]/10 border border-[#30D158]/20 mb-8">
-                <Check className="w-4 h-4 text-[#30D158]" />
-                <span className="text-sm text-[#30D158] font-medium">{t("perfil.verify.ok")}</span>
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => { setDirection("next"); setQIdx(0); }}
-                  className="group relative inline-flex items-center gap-3 text-white font-bold px-12 py-5 rounded-full text-lg transition-all duration-300 cursor-pointer overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] transition-all duration-300 group-hover:scale-105" />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
-                    background: "radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%)",
-                  }} />
-                  <span className="relative">{t("perfil.welcome.comecar")}</span>
-                  <ArrowRight className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  <div className="absolute -inset-1 rounded-full opacity-40 blur-xl bg-[#FF6B00] -z-10" />
-                </button>
-              </div>
-
-              <p className="text-white/30 text-xs mt-6">{t("perfil.welcome.tempo")}</p>
-            </div>
-          )}
         </div>
 
         <style>{`
-          @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-          .slide-up { animation: slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+          @keyframes slide-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+          .slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
         `}</style>
       </div>
     );
