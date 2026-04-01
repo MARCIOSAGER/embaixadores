@@ -549,10 +549,14 @@ export default function Embaixadores() {
                       <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link de Indicação
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!selected.telefone) { toast.error("Embaixador sem telefone cadastrado"); return; }
                         const url = `${window.location.origin}/inscricao?ref=${selected.codigoIndicacao}`;
-                        const msg = encodeURIComponent(`Olá! Você foi convidado para se tornar um Embaixador dos Legendários. Preencha sua inscrição aqui: ${url}`);
-                        window.open(`https://wa.me/?text=${msg}`, "_blank");
+                        const msg = `Olá! Você foi convidado para se tornar um Embaixador dos Legendários. Preencha sua inscrição aqui: ${url}`;
+                        try {
+                          await supabase.functions.invoke("send-whatsapp", { body: { phone: selected.telefone, message: msg } });
+                          toast.success("Mensagem enviada via WhatsApp!");
+                        } catch { toast.error("Erro ao enviar WhatsApp"); }
                       }}
                       className="apple-btn apple-btn-tinted w-full py-2.5"
                     >
@@ -570,10 +574,14 @@ export default function Embaixadores() {
                       <Link2 className="w-4 h-4" strokeWidth={1.5} />Copiar Link do Perfil
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!selected.telefone) { toast.error("Embaixador sem telefone cadastrado"); return; }
                         const url = `${window.location.origin}/meu-perfil`;
-                        const msg = encodeURIComponent(`Olá ${selected.nomeCompleto.split(" ")[0]}! Preencha seu perfil de Embaixador dos Legendários aqui: ${url}`);
-                        window.open(`https://wa.me/${(selected.telefone || "").replace(/\D/g, "")}?text=${msg}`, "_blank");
+                        const msg = `Olá ${selected.nomeCompleto.split(" ")[0]}! Preencha seu perfil de Embaixador dos Legendários aqui: ${url}`;
+                        try {
+                          await supabase.functions.invoke("send-whatsapp", { body: { phone: selected.telefone, message: msg } });
+                          toast.success("Link do perfil enviado via WhatsApp!");
+                        } catch { toast.error("Erro ao enviar WhatsApp"); }
                       }}
                       className="apple-btn w-full py-2.5 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-xl text-[0.8125rem] font-medium flex items-center justify-center gap-2 transition-all"
                     >
