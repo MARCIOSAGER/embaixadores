@@ -633,7 +633,7 @@ export default function EmbaixadorPerfil() {
 
   /* ==================== WELCOME / VERIFY ==================== */
   if (isWelcome) {
-    async function handleVerify() {
+    const handleVerify = async () => {
       if (!verifyNum.trim()) { setVerifyError(t("perfil.verify.vazio")); return; }
       setVerifying(true);
       setVerifyError("");

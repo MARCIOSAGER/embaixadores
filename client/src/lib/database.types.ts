@@ -15,6 +15,7 @@ export type Database = {
         };
         Insert: Omit<Database["public"]["Tables"]["users"]["Row"], "id" | "createdAt" | "updatedAt">;
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Relationships: [];
       };
       embaixadores: {
         Row: {
@@ -60,8 +61,9 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["embaixadores"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["embaixadores"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["embaixadores"]["Row"], "nomeCompleto">;
         Update: Partial<Database["public"]["Tables"]["embaixadores"]["Insert"]>;
+        Relationships: [];
       };
       pagamentos: {
         Row: {
@@ -74,8 +76,9 @@ export type Database = {
           observacoes: string | null;
           createdAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["pagamentos"]["Row"], "id" | "createdAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["pagamentos"]["Row"], "id" | "createdAt">> & Pick<Database["public"]["Tables"]["pagamentos"]["Row"], "embaixadorId" | "valor" | "dataVencimento">;
         Update: Partial<Database["public"]["Tables"]["pagamentos"]["Insert"]>;
+        Relationships: [];
       };
       tercaGloria: {
         Row: {
@@ -91,8 +94,9 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["tercaGloria"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["tercaGloria"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["tercaGloria"]["Row"], "data" | "tema">;
         Update: Partial<Database["public"]["Tables"]["tercaGloria"]["Insert"]>;
+        Relationships: [];
       };
       welcomeKits: {
         Row: {
@@ -110,8 +114,22 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["welcomeKits"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["welcomeKits"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["welcomeKits"]["Row"], "embaixadorId">;
         Update: Partial<Database["public"]["Tables"]["welcomeKits"]["Insert"]>;
+        Relationships: [];
+      };
+      kit_historico: {
+        Row: {
+          id: number;
+          kitId: number;
+          item: string;
+          action: "entregue" | "removido";
+          userName: string;
+          createdAt: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["kit_historico"]["Row"], "id" | "createdAt">> & Pick<Database["public"]["Tables"]["kit_historico"]["Row"], "kitId" | "item" | "action" | "userName">;
+        Update: Partial<Database["public"]["Tables"]["kit_historico"]["Insert"]>;
+        Relationships: [];
       };
       eventos: {
         Row: {
@@ -131,8 +149,9 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["eventos"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["eventos"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["eventos"]["Row"], "titulo" | "data">;
         Update: Partial<Database["public"]["Tables"]["eventos"]["Insert"]>;
+        Relationships: [];
       };
       entrevistas: {
         Row: {
@@ -152,8 +171,9 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["entrevistas"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["entrevistas"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["entrevistas"]["Row"], "nomeCandidato" | "dataEntrevista">;
         Update: Partial<Database["public"]["Tables"]["entrevistas"]["Insert"]>;
+        Relationships: [];
       };
       inscricoes: {
         Row: {
@@ -200,10 +220,25 @@ export type Database = {
           tipo: string;
           embaixadorId: number | null;
           status: string;
+          endereco: string | null;
+          bairro: string | null;
+          cep: string | null;
+          pais: string | null;
+          programasParticipou: string | null;
+          aberturasPaises: string | null;
+          dataEmbaixador: string | null;
+          sedeLegendario: string | null;
+          doacaoPoco: string | null;
+          numeroAnel: string | null;
+          temJaqueta: string | null;
+          temPin: string | null;
+          temPatch: string | null;
+          temEspada: string | null;
           createdAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["inscricoes"]["Row"], "id" | "createdAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["inscricoes"]["Row"], "id" | "createdAt">> & Pick<Database["public"]["Tables"]["inscricoes"]["Row"], "nomeCompleto" | "email" | "telefone">;
         Update: Partial<Database["public"]["Tables"]["inscricoes"]["Insert"]>;
+        Relationships: [];
       };
       produtos: {
         Row: {
@@ -221,8 +256,9 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["produtos"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["produtos"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["produtos"]["Row"], "nome" | "categoria" | "preco">;
         Update: Partial<Database["public"]["Tables"]["produtos"]["Insert"]>;
+        Relationships: [];
       };
       pedidos: {
         Row: {
@@ -233,8 +269,9 @@ export type Database = {
           createdAt: string;
           updatedAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["pedidos"]["Row"], "id" | "createdAt" | "updatedAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["pedidos"]["Row"], "id" | "createdAt" | "updatedAt">> & Pick<Database["public"]["Tables"]["pedidos"]["Row"], "embaixadorId">;
         Update: Partial<Database["public"]["Tables"]["pedidos"]["Insert"]>;
+        Relationships: [];
       };
       pedido_itens: {
         Row: {
@@ -246,8 +283,9 @@ export type Database = {
           cor: string | null;
           precoUnitario: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["pedido_itens"]["Row"], "id">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["pedido_itens"]["Row"], "id">> & Pick<Database["public"]["Tables"]["pedido_itens"]["Row"], "pedidoId" | "produtoId" | "quantidade" | "precoUnitario">;
         Update: Partial<Database["public"]["Tables"]["pedido_itens"]["Insert"]>;
+        Relationships: [];
       };
       evento_participantes: {
         Row: {
@@ -260,9 +298,36 @@ export type Database = {
           observacoes: string | null;
           createdAt: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["evento_participantes"]["Row"], "id" | "createdAt">;
+        Insert: Partial<Omit<Database["public"]["Tables"]["evento_participantes"]["Row"], "id" | "createdAt">> & Pick<Database["public"]["Tables"]["evento_participantes"]["Row"], "eventoId" | "nomeCompleto" | "email" | "telefone">;
         Update: Partial<Database["public"]["Tables"]["evento_participantes"]["Insert"]>;
+        Relationships: [];
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      verificar_legendario: {
+        Args: { num_legendario: string };
+        Returns: {
+          nome: string;
+          email: string;
+          numero_embaixador: string;
+          numero_legendario: string;
+          foto_url: string;
+          status: string;
+        }[];
+      };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 };

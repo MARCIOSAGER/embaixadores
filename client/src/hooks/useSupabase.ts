@@ -242,7 +242,7 @@ export function useCreateWelcomeKit() {
 
 export function useAddKitHistory() {
   return useMutation({
-    mutationFn: async (data: { kitId: number; item: string; action: string; userName: string }) => {
+    mutationFn: async (data: { kitId: number; item: string; action: "entregue" | "removido"; userName: string }) => {
       const { error } = await supabase.from("kit_historico").insert(data);
       if (error) throw error;
     },
@@ -481,7 +481,7 @@ export function useDashboardStats() {
           referrerMap.set(ent.indicadoPor, (referrerMap.get(ent.indicadoPor) || 0) + 1);
         }
       });
-      const topReferrers = [...referrerMap.entries()]
+      const topReferrers = Array.from(referrerMap.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map(([name, count]) => ({ name, count }));
