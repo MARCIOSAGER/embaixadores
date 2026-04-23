@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Ruler, Printer } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
@@ -114,9 +115,9 @@ export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" |
         {t("ringGuide.verGuia")}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
+          className="ring-guide-modal fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
           onClick={() => setOpen(false)}
           role="dialog"
           aria-modal="true"
@@ -201,34 +202,35 @@ export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" |
               </p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Print styles: show only the guide, render circles at actual physical size */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
-          [role="dialog"], [role="dialog"] * { visibility: visible !important; }
-          [role="dialog"] {
+          .ring-guide-modal, .ring-guide-modal * { visibility: visible !important; }
+          .ring-guide-modal {
             position: absolute !important;
             inset: 0 !important;
             background: white !important;
             backdrop-filter: none !important;
             color: #000 !important;
           }
-          [role="dialog"] > div {
+          .ring-guide-modal > div {
             background: white !important;
             border: none !important;
             box-shadow: none !important;
             max-height: none !important;
             overflow: visible !important;
           }
-          [role="dialog"] h3,
-          [role="dialog"] p,
-          [role="dialog"] span,
-          [role="dialog"] td,
-          [role="dialog"] th { color: #000 !important; }
-          [role="dialog"] button { display: none !important; }
+          .ring-guide-modal h3,
+          .ring-guide-modal p,
+          .ring-guide-modal span,
+          .ring-guide-modal td,
+          .ring-guide-modal th { color: #000 !important; }
+          .ring-guide-modal button { display: none !important; }
           .ring-guide-chart { border: 1px solid #000 !important; background: white !important; }
           .ring-guide-chart svg circle { fill: white !important; stroke: #000 !important; }
           .ring-guide-chart svg text { fill: #000 !important; }
