@@ -11,6 +11,10 @@ const BG_GRADIENTS = [
   "linear-gradient(135deg, #0a0a14 0%, #0c1a2e 50%, #050508 100%)",           // Pessoal (1)
   "linear-gradient(135deg, #0a1210 0%, #0c201c 50%, #060a09 100%)",           // Legendarios (2)
   "linear-gradient(135deg, #12100a 0%, #1e1408 50%, #0a0908 100%)",           // Familia (3)
+  "linear-gradient(135deg, #0c0e12 0%, #141820 50%, #080a0c 100%)",           // Endereço (4)
+  "linear-gradient(135deg, #100a14 0%, #1a0c2a 50%, #08050a 100%)",           // Programas (5)
+  "linear-gradient(135deg, #120c08 0%, #1a1005 50%, #0a0804 100%)",           // Jornada Embaixador (6)
+  "linear-gradient(135deg, #0e0a12 0%, #180e24 50%, #08060c 100%)",           // Itens (7)
 ];
 
 /* ============================================================ */
@@ -33,6 +37,25 @@ type FormData = {
   idadesFilhos: string;
   profissao: string;
   empresa: string;
+  // Endereço
+  endereco: string;
+  bairro: string;
+  cep: string;
+  pais: string;
+  // Programas (multi-select, armazenados como string separada por vírgula)
+  programasParticipou: string[];
+  aberturasPaises: string[];
+  // Jornada Embaixador
+  dataEmbaixador: string;
+  sedeLegendario: string;
+  cargoLideranca: string;
+  doacaoPoco: string;
+  numeroAnel: string;
+  // Itens recebidos
+  temJaqueta: string;
+  temPin: string;
+  temPatch: string;
+  temEspada: string;
 };
 
 const initial: FormData = {
@@ -41,6 +64,10 @@ const initial: FormData = {
   cidade: "", estado: "", numeroLegendario: "", numeroEmbaixador: "",
   estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "",
   profissao: "", empresa: "",
+  endereco: "", bairro: "", cep: "", pais: "",
+  programasParticipou: [], aberturasPaises: [],
+  dataEmbaixador: "", sedeLegendario: "", cargoLideranca: "", doacaoPoco: "", numeroAnel: "",
+  temJaqueta: "", temPin: "", temPatch: "", temEspada: "",
 };
 
 /* ---------- question definitions ---------- */
@@ -48,7 +75,7 @@ type Question = {
   key: keyof FormData;
   question: string;
   subtitle?: string;
-  type: "text" | "email" | "tel" | "textarea" | "radio" | "number" | "photo" | "date";
+  type: "text" | "email" | "tel" | "textarea" | "radio" | "number" | "photo" | "date" | "checkbox" | "yesno";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: string; icon?: string }[];
@@ -67,8 +94,62 @@ function buildQuestions(t: (k: string) => string): Question[] {
     { key: "instagram", question: t("perfil.q.instagram"), type: "text", placeholder: "@seu.perfil", section: t("perfil.sec.pessoal"), sectionIndex: 1 },
     { key: "cidade", question: t("perfil.q.cidade"), type: "text", placeholder: "Ex: São Paulo", section: t("perfil.sec.pessoal"), sectionIndex: 1 },
     { key: "estado", question: t("perfil.q.estado"), type: "text", placeholder: "Ex: SP", section: t("perfil.sec.pessoal"), sectionIndex: 1 },
+
+    // Endereço
+    { key: "endereco", question: t("perfil.q.endereco"), subtitle: t("perfil.q.endereco.sub"), type: "text", placeholder: "Rua, número, complemento", section: t("perfil.sec.endereco"), sectionIndex: 4 },
+    { key: "bairro", question: t("perfil.q.bairro"), type: "text", section: t("perfil.sec.endereco"), sectionIndex: 4 },
+    { key: "cep", question: t("perfil.q.cep"), type: "text", placeholder: "00000-000", section: t("perfil.sec.endereco"), sectionIndex: 4 },
+    { key: "pais", question: t("perfil.q.pais"), type: "text", placeholder: "Ex: Brasil", section: t("perfil.sec.endereco"), sectionIndex: 4 },
+
+    // Legendários / Embaixador
     { key: "numeroLegendario", question: t("perfil.q.numLeg"), type: "text", placeholder: "Ex: L#91105", section: t("perfil.sec.legendarios"), sectionIndex: 2 },
     { key: "numeroEmbaixador", question: t("perfil.q.numEmb"), type: "text", placeholder: "Ex: E#001", section: t("perfil.sec.legendarios"), sectionIndex: 2 },
+
+    // Programas participados (multi-seleção)
+    {
+      key: "programasParticipou", question: t("perfil.q.programas"), subtitle: t("perfil.q.programas.sub"), type: "checkbox", section: t("perfil.sec.programas"), sectionIndex: 5,
+      options: [
+        { label: "Legendários", value: "Legendarios" },
+        { label: "REM", value: "REM" },
+        { label: "LEGADO", value: "LEGADO" },
+        { label: "MAMUTE", value: "MAMUTE" },
+        { label: "Embaixadores Master Experience (MEX)", value: "MEX" },
+        { label: "Tour Guatemala", value: "Tour Guatemala" },
+        { label: "NEST EUA", value: "NEST EUA" },
+        { label: "NEST Brasil", value: "NEST Brasil" },
+        { label: "Encontro Augusto Cury", value: "Augusto Cury" },
+        { label: "LGND SQUAD", value: "LGND SQUAD" },
+        { label: "Aberturas de Países", value: "Aberturas" },
+      ],
+    },
+    {
+      key: "aberturasPaises", question: t("perfil.q.aberturas"), subtitle: t("perfil.q.aberturas.sub"), type: "checkbox", section: t("perfil.sec.programas"), sectionIndex: 5,
+      showIf: (d) => d.programasParticipou.includes("Aberturas"),
+      options: [
+        { label: "Portugal", value: "Portugal" },
+        { label: "Reino Unido", value: "Reino Unido" },
+        { label: "Japão", value: "Japão" },
+        { label: "Dubai", value: "Dubai" },
+        { label: "Itália", value: "Itália" },
+        { label: "Espanha", value: "Espanha" },
+        { label: "África", value: "África" },
+      ],
+    },
+
+    // Jornada Embaixador
+    { key: "dataEmbaixador", question: t("perfil.q.dataEmb"), subtitle: t("perfil.q.dataEmb.sub"), type: "date", section: t("perfil.sec.jornada"), sectionIndex: 6 },
+    { key: "sedeLegendario", question: t("perfil.q.sedeLeg"), type: "text", section: t("perfil.sec.jornada"), sectionIndex: 6 },
+    { key: "cargoLideranca", question: t("perfil.q.cargoLid"), subtitle: t("perfil.q.cargoLid.sub"), type: "text", placeholder: "Ex: Top, Coordenador, não exerço", section: t("perfil.sec.jornada"), sectionIndex: 6 },
+    {
+      key: "doacaoPoco", question: t("perfil.q.doacaoPoco"), type: "radio", section: t("perfil.sec.jornada"), sectionIndex: 6,
+      options: [
+        { label: t("insc.sim"), value: "sim", icon: "A" },
+        { label: t("insc.nao"), value: "nao", icon: "B" },
+      ],
+    },
+    { key: "numeroAnel", question: t("perfil.q.numAnel"), subtitle: t("perfil.q.numAnel.sub"), type: "text", section: t("perfil.sec.jornada"), sectionIndex: 6 },
+
+    // Família
     {
       key: "estadoCivil", question: t("perfil.q.estadoCivil"), type: "radio", section: t("perfil.sec.familia"), sectionIndex: 3,
       options: [
@@ -82,6 +163,24 @@ function buildQuestions(t: (k: string) => string): Question[] {
     { key: "dataNascimentoEsposa", question: t("perfil.q.nascEsposa"), type: "date", showIf: (d) => d.estadoCivil === "casado", section: t("perfil.sec.familia"), sectionIndex: 3 },
     { key: "qtdFilhos", question: t("perfil.q.filhos"), type: "number", section: t("perfil.sec.familia"), sectionIndex: 3 },
     { key: "idadesFilhos", question: t("perfil.q.idadesFilhos"), type: "text", showIf: (d) => d.qtdFilhos > 0, section: t("perfil.sec.familia"), sectionIndex: 3 },
+
+    // Itens recebidos (uma pergunta sim/não para cada)
+    {
+      key: "temJaqueta", question: t("perfil.q.temJaqueta"), type: "radio", section: t("perfil.sec.itens"), sectionIndex: 7,
+      options: [{ label: t("insc.sim"), value: "sim", icon: "A" }, { label: t("insc.nao"), value: "nao", icon: "B" }],
+    },
+    {
+      key: "temPin", question: t("perfil.q.temPin"), type: "radio", section: t("perfil.sec.itens"), sectionIndex: 7,
+      options: [{ label: t("insc.sim"), value: "sim", icon: "A" }, { label: t("insc.nao"), value: "nao", icon: "B" }],
+    },
+    {
+      key: "temPatch", question: t("perfil.q.temPatch"), type: "radio", section: t("perfil.sec.itens"), sectionIndex: 7,
+      options: [{ label: t("insc.sim"), value: "sim", icon: "A" }, { label: t("insc.nao"), value: "nao", icon: "B" }],
+    },
+    {
+      key: "temEspada", question: t("perfil.q.temEspada"), type: "radio", section: t("perfil.sec.itens"), sectionIndex: 7,
+      options: [{ label: t("insc.sim"), value: "sim", icon: "A" }, { label: t("insc.nao"), value: "nao", icon: "B" }],
+    },
   ];
 }
 
@@ -115,6 +214,32 @@ function OptionButton({
         {selected && (
           <Check className="w-5 h-5 text-[#FF6B00] ml-auto flex-shrink-0" />
         )}
+      </div>
+    </button>
+  );
+}
+
+function CheckboxOption({
+  label, selected, onClick,
+}: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group relative w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer
+        ${selected
+          ? "border-[#FF6B00] bg-[#FF6B00]/15 shadow-[0_0_30px_rgba(255,107,0,0.15)]"
+          : "border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/8"
+        }`}
+    >
+      <div className="flex items-center gap-4">
+        <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-colors border-2
+          ${selected ? "bg-[#FF6B00] border-[#FF6B00]" : "bg-white/5 border-white/20"}`}>
+          {selected && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+        </span>
+        <span className={`text-[15px] font-medium transition-colors ${selected ? "text-white" : "text-white/80"}`}>
+          {label}
+        </span>
       </div>
     </button>
   );
@@ -380,8 +505,27 @@ export default function EmbaixadorPerfil() {
         dataNascimentoEsposa: form.dataNascimentoEsposa || null,
         qtdFilhos: form.qtdFilhos,
         idadesFilhos: form.idadesFilhos || null,
+        // Endereço
+        endereco: form.endereco || null,
+        bairro: form.bairro || null,
+        cep: form.cep || null,
+        pais: form.pais || null,
+        // Programas (arrays → string separada por vírgula)
+        programasParticipou: form.programasParticipou.length ? form.programasParticipou.join(",") : null,
+        aberturasPaises: form.aberturasPaises.length ? form.aberturasPaises.join(",") : null,
+        // Jornada Embaixador
+        dataEmbaixador: form.dataEmbaixador || null,
+        sedeLegendario: form.sedeLegendario || null,
+        cargoLideranca: form.cargoLideranca || null,
+        doacaoPoco: form.doacaoPoco || null,
+        numeroAnel: form.numeroAnel || null,
+        // Itens recebidos
+        temJaqueta: form.temJaqueta || null,
+        temPin: form.temPin || null,
+        temPatch: form.temPatch || null,
+        temEspada: form.temEspada || null,
         status: "pendente",
-      });
+      } as any);
       if (err) throw err;
 
       // Notify admins (fire-and-forget)
@@ -768,6 +912,29 @@ export default function EmbaixadorPerfil() {
                       setTimeout(() => { if (!isLast) { setDirection("next"); setQIdx((i) => i + 1); } }, 400);
                     }} />
                 ))}
+              </div>
+            )}
+
+            {current.type === "checkbox" && current.options && (
+              <div className="flex flex-col gap-3">
+                {current.options.map((opt) => {
+                  const currentValue = (form[current.key] as string[]) || [];
+                  const isSelected = currentValue.includes(opt.value);
+                  return (
+                    <CheckboxOption
+                      key={opt.value}
+                      label={opt.label}
+                      selected={isSelected}
+                      onClick={() => {
+                        const next = isSelected
+                          ? currentValue.filter((v) => v !== opt.value)
+                          : [...currentValue, opt.value];
+                        set(current.key, next as any);
+                      }}
+                    />
+                  );
+                })}
+                <p className="text-white/30 text-xs mt-2">{t("perfil.checkbox.multi")}</p>
               </div>
             )}
           </div>
