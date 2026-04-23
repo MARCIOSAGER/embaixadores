@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { formatDate, dateToTs, tsToDate } from "@/lib/dateUtils";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import BulkMessageDialog from "@/components/BulkMessageDialog";
+import { RingSizeGuideButton } from "@/components/RingSizeGuide";
 
 const STATUS_MAP: Record<string, { color: string; bg: string }> = {
   ativo: { color: "#30D158", bg: "rgba(48,209,88,0.14)" },
@@ -935,7 +936,11 @@ export default function Embaixadores() {
                           <option value="nao">{t("emb.nao")}</option>
                         </select>
                       </div>
-                      <div><label className="apple-input-label">{t("emb.numeroAnel")}</label><input value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input" /></div>
+                      <div>
+                        <label className="apple-input-label">{t("emb.numeroAnel")}</label>
+                        <input value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input" />
+                        <div className="mt-1.5"><RingSizeGuideButton /></div>
+                      </div>
                     </div>
                   </div>
                 </div>

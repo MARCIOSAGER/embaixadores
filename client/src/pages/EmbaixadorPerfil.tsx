@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Check, Loader2, ArrowRight, ArrowLeft, Send, Camera, Upload, Globe, Shield } from "lucide-react";
+import { RingSizeGuideButton } from "@/components/RingSizeGuide";
 import PhoneInput from "@/components/PhoneInput";
 import { useI18n, type Locale } from "@/lib/i18n";
 
@@ -889,11 +890,18 @@ export default function EmbaixadorPerfil() {
             )}
 
             {(current.type === "text" || current.type === "email") && (
-              <input ref={inputRef as React.RefObject<HTMLInputElement>} type={current.type}
-                inputMode={current.type === "email" ? "email" : "text"}
-                value={form[current.key] as string} onChange={(e) => set(current.key, e.target.value as any)}
-                placeholder={current.placeholder}
-                className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-[16px] sm:text-2xl text-white placeholder:text-white/25 focus:outline-none transition-colors duration-300 caret-[#FF6B00]" autoFocus />
+              <>
+                <input ref={inputRef as React.RefObject<HTMLInputElement>} type={current.type}
+                  inputMode={current.type === "email" ? "email" : "text"}
+                  value={form[current.key] as string} onChange={(e) => set(current.key, e.target.value as any)}
+                  placeholder={current.placeholder}
+                  className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF6B00] px-0 py-4 text-[16px] sm:text-2xl text-white placeholder:text-white/25 focus:outline-none transition-colors duration-300 caret-[#FF6B00]" autoFocus />
+                {current.key === "numeroAnel" && (
+                  <div className="mt-3">
+                    <RingSizeGuideButton variant="dark" />
+                  </div>
+                )}
+              </>
             )}
 
             {current.type === "number" && (
