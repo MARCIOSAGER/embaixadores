@@ -43,6 +43,10 @@ export default function Embaixadores() {
     profissao: "", empresa: "", dataNascimento: "", dataIngresso: "",
     dataRenovacao: "", status: "ativo" as string, idioma: "pt" as string, observacoes: "",
     estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "",
+    endereco: "", bairro: "", cep: "", pais: "",
+    programasParticipou: "", aberturasPaises: "",
+    dataEmbaixador: "", sedeLegendario: "", cargoLideranca: "", doacaoPoco: "", numeroAnel: "",
+    temJaqueta: "", temPin: "", temPatch: "", temEspada: "",
   });
 
   const searchTerm = useMemo(() => search || undefined, [search]);
@@ -54,7 +58,13 @@ export default function Embaixadores() {
   const deleteMut = useDeleteEmbaixador();
 
   function resetForm() {
-    setForm({ nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", idioma: "pt", observacoes: "", estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "" });
+    setForm({
+      nomeCompleto: "", numeroLegendario: "", numeroEmbaixador: "", email: "", telefone: "", cidade: "", estado: "", profissao: "", empresa: "", dataNascimento: "", dataIngresso: "", dataRenovacao: "", status: "ativo", idioma: "pt", observacoes: "", estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "",
+      endereco: "", bairro: "", cep: "", pais: "",
+      programasParticipou: "", aberturasPaises: "",
+      dataEmbaixador: "", sedeLegendario: "", cargoLideranca: "", doacaoPoco: "", numeroAnel: "",
+      temJaqueta: "", temPin: "", temPatch: "", temEspada: "",
+    });
     setEditingId(null);
   }
 
@@ -86,6 +96,21 @@ export default function Embaixadores() {
         nomeEsposa: update.nomeEsposa || null,
         qtdFilhos: update.qtdFilhos || 0,
         idadesFilhos: update.idadesFilhos || null,
+        endereco: update.endereco || null,
+        bairro: update.bairro || null,
+        cep: update.cep || null,
+        pais: update.pais || null,
+        programasParticipou: update.programasParticipou || null,
+        aberturasPaises: update.aberturasPaises || null,
+        dataEmbaixador: update.dataEmbaixador || null,
+        sedeLegendario: update.sedeLegendario || null,
+        cargoLideranca: update.cargoLideranca || null,
+        doacaoPoco: update.doacaoPoco || null,
+        numeroAnel: update.numeroAnel || null,
+        temJaqueta: update.temJaqueta || null,
+        temPin: update.temPin || null,
+        temPatch: update.temPatch || null,
+        temEspada: update.temEspada || null,
       };
       if (update.fotoUrl) updateData.fotoUrl = update.fotoUrl;
       if (update.dataNascimento) updateData.dataNascimento = new Date(update.dataNascimento + "T12:00:00").getTime();
@@ -162,6 +187,11 @@ export default function Embaixadores() {
       dataNascimento: tsToDate(emb.dataNascimento), dataIngresso: tsToDate(emb.dataIngresso),
       dataRenovacao: tsToDate(emb.dataRenovacao), status: emb.status || "ativo", idioma: emb.idioma || "pt", observacoes: emb.observacoes || "",
       estadoCivil: emb.estadoCivil || "", nomeEsposa: emb.nomeEsposa || "", dataNascimentoEsposa: tsToDate(emb.dataNascimentoEsposa), qtdFilhos: emb.qtdFilhos || 0, idadesFilhos: emb.idadesFilhos || "",
+      endereco: emb.endereco || "", bairro: emb.bairro || "", cep: emb.cep || "", pais: emb.pais || "",
+      programasParticipou: emb.programasParticipou || "", aberturasPaises: emb.aberturasPaises || "",
+      dataEmbaixador: emb.dataEmbaixador || "", sedeLegendario: emb.sedeLegendario || "", cargoLideranca: emb.cargoLideranca || "",
+      doacaoPoco: emb.doacaoPoco || "", numeroAnel: emb.numeroAnel || "",
+      temJaqueta: emb.temJaqueta || "", temPin: emb.temPin || "", temPatch: emb.temPatch || "", temEspada: emb.temEspada || "",
     });
     setDialogOpen(true);
   }
@@ -177,6 +207,11 @@ export default function Embaixadores() {
       idioma: form.idioma as "pt" | "es" | "en", observacoes: form.observacoes || null,
       estadoCivil: form.estadoCivil || null, nomeEsposa: form.nomeEsposa || null,
       dataNascimentoEsposa: dateToTs(form.dataNascimentoEsposa), qtdFilhos: form.qtdFilhos, idadesFilhos: form.idadesFilhos || null,
+      endereco: form.endereco || null, bairro: form.bairro || null, cep: form.cep || null, pais: form.pais || null,
+      programasParticipou: form.programasParticipou || null, aberturasPaises: form.aberturasPaises || null,
+      dataEmbaixador: form.dataEmbaixador || null, sedeLegendario: form.sedeLegendario || null, cargoLideranca: form.cargoLideranca || null,
+      doacaoPoco: form.doacaoPoco || null, numeroAnel: form.numeroAnel || null,
+      temJaqueta: form.temJaqueta || null, temPin: form.temPin || null, temPatch: form.temPatch || null, temEspada: form.temEspada || null,
       ...(!editingId ? { codigoIndicacao: Math.random().toString(36).substring(2, 8) } : {}),
     };
     const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
@@ -392,6 +427,78 @@ export default function Embaixadores() {
                   </div>
                 )}
 
+                {/* Endereço */}
+                {(reviewingUpdate.endereco || reviewingUpdate.bairro || reviewingUpdate.cep || reviewingUpdate.pais) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.secEndereco")}</p>
+                    {reviewingUpdate.endereco && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.endereco")}: {reviewingUpdate.endereco}</p>}
+                    {reviewingUpdate.bairro && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.bairro")}: {reviewingUpdate.bairro}</p>}
+                    {reviewingUpdate.cep && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.cep")}: {reviewingUpdate.cep}</p>}
+                    {reviewingUpdate.pais && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.pais")}: {reviewingUpdate.pais}</p>}
+                  </div>
+                )}
+
+                {/* Programas */}
+                {(reviewingUpdate.programasParticipou || reviewingUpdate.aberturasPaises) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.secProgramas")}</p>
+                    {reviewingUpdate.programasParticipou && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {reviewingUpdate.programasParticipou.split(",").map((p: string) => p.trim()).filter(Boolean).map((p: string) => (
+                          <span key={p} className="apple-badge text-[0.6875rem]" style={{ background: "rgba(255,159,10,0.14)", color: "#FF9F0A" }}>{p}</span>
+                        ))}
+                      </div>
+                    )}
+                    {reviewingUpdate.aberturasPaises && (
+                      <div className="pt-1">
+                        <p className="text-[0.6875rem] text-[#6e6e73] mb-1">{t("emb.aberturas")}:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {reviewingUpdate.aberturasPaises.split(",").map((p: string) => p.trim()).filter(Boolean).map((p: string) => (
+                            <span key={p} className="apple-badge text-[0.6875rem]" style={{ background: "rgba(10,132,255,0.14)", color: "#0A84FF" }}>{p}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Jornada */}
+                {(reviewingUpdate.dataEmbaixador || reviewingUpdate.sedeLegendario || reviewingUpdate.cargoLideranca || reviewingUpdate.doacaoPoco || reviewingUpdate.numeroAnel) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.secJornada")}</p>
+                    {reviewingUpdate.dataEmbaixador && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.dataEmbaixador")}: {reviewingUpdate.dataEmbaixador}</p>}
+                    {reviewingUpdate.sedeLegendario && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.sedeLegendario")}: {reviewingUpdate.sedeLegendario}</p>}
+                    {reviewingUpdate.cargoLideranca && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.cargoLideranca")}: {reviewingUpdate.cargoLideranca}</p>}
+                    {reviewingUpdate.doacaoPoco && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.doacaoPoco")}: {reviewingUpdate.doacaoPoco === "sim" ? t("emb.sim") : t("emb.nao")}</p>}
+                    {reviewingUpdate.numeroAnel && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.numeroAnel")}: {reviewingUpdate.numeroAnel}</p>}
+                  </div>
+                )}
+
+                {/* Itens */}
+                {(reviewingUpdate.temJaqueta || reviewingUpdate.temPin || reviewingUpdate.temPatch || reviewingUpdate.temEspada) && (
+                  <div className="apple-card-inset p-4">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.secItens")}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { key: "temJaqueta", label: t("emb.temJaqueta") },
+                        { key: "temPin", label: t("emb.temPin") },
+                        { key: "temPatch", label: t("emb.temPatch") },
+                        { key: "temEspada", label: t("emb.temEspada") },
+                      ].map(item => {
+                        const val = reviewingUpdate[item.key];
+                        if (!val) return null;
+                        const isYes = val === "sim";
+                        return (
+                          <div key={item.key} className="flex items-center justify-between text-[0.8125rem]">
+                            <span className="text-[#d2d2d7]">{item.label}</span>
+                            <span style={{ color: isYes ? "#30D158" : "#FF453A" }}>{isYes ? t("emb.sim") : t("emb.nao")}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <button
                     onClick={() => handleApproveUpdate(reviewingUpdate, true)}
@@ -526,6 +633,78 @@ export default function Embaixadores() {
                     {selected.nomeEsposa && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.nomeEsposa")}: {selected.nomeEsposa}</p>}
                     {selected.dataNascimentoEsposa && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.nascEsposa")}: {formatDate(selected.dataNascimentoEsposa, locale)}</p>}
                     {selected.qtdFilhos > 0 && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.qtdFilhos")}: {selected.qtdFilhos}{selected.idadesFilhos ? ` (${selected.idadesFilhos})` : ""}</p>}
+                  </div>
+                )}
+
+                {/* Endereço */}
+                {(selected.endereco || selected.bairro || selected.cep || selected.pais) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.secEndereco")}</p>
+                    {selected.endereco && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.endereco")}: {selected.endereco}</p>}
+                    {selected.bairro && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.bairro")}: {selected.bairro}</p>}
+                    {selected.cep && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.cep")}: {selected.cep}</p>}
+                    {selected.pais && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.pais")}: {selected.pais}</p>}
+                  </div>
+                )}
+
+                {/* Programas */}
+                {(selected.programasParticipou || selected.aberturasPaises) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.secProgramas")}</p>
+                    {selected.programasParticipou && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {selected.programasParticipou.split(",").map((p: string) => p.trim()).filter(Boolean).map((p: string) => (
+                          <span key={p} className="apple-badge text-[0.6875rem]" style={{ background: "rgba(255,159,10,0.14)", color: "#FF9F0A" }}>{p}</span>
+                        ))}
+                      </div>
+                    )}
+                    {selected.aberturasPaises && (
+                      <div className="pt-1">
+                        <p className="text-[0.6875rem] text-[#6e6e73] mb-1">{t("emb.aberturas")}:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selected.aberturasPaises.split(",").map((p: string) => p.trim()).filter(Boolean).map((p: string) => (
+                            <span key={p} className="apple-badge text-[0.6875rem]" style={{ background: "rgba(10,132,255,0.14)", color: "#0A84FF" }}>{p}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Jornada */}
+                {(selected.dataEmbaixador || selected.sedeLegendario || selected.cargoLideranca || selected.doacaoPoco || selected.numeroAnel) && (
+                  <div className="apple-card-inset p-4 space-y-2">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-1">{t("emb.secJornada")}</p>
+                    {selected.dataEmbaixador && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.dataEmbaixador")}: {selected.dataEmbaixador}</p>}
+                    {selected.sedeLegendario && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.sedeLegendario")}: {selected.sedeLegendario}</p>}
+                    {selected.cargoLideranca && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.cargoLideranca")}: {selected.cargoLideranca}</p>}
+                    {selected.doacaoPoco && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.doacaoPoco")}: {selected.doacaoPoco === "sim" ? t("emb.sim") : t("emb.nao")}</p>}
+                    {selected.numeroAnel && <p className="text-[0.8125rem] text-[#d2d2d7]">{t("emb.numeroAnel")}: {selected.numeroAnel}</p>}
+                  </div>
+                )}
+
+                {/* Itens */}
+                {(selected.temJaqueta || selected.temPin || selected.temPatch || selected.temEspada) && (
+                  <div className="apple-card-inset p-4">
+                    <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.secItens")}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { key: "temJaqueta", label: t("emb.temJaqueta") },
+                        { key: "temPin", label: t("emb.temPin") },
+                        { key: "temPatch", label: t("emb.temPatch") },
+                        { key: "temEspada", label: t("emb.temEspada") },
+                      ].map(item => {
+                        const val = selected[item.key];
+                        if (!val) return null;
+                        const isYes = val === "sim";
+                        return (
+                          <div key={item.key} className="flex items-center justify-between text-[0.8125rem]">
+                            <span className="text-[#d2d2d7]">{item.label}</span>
+                            <span style={{ color: isYes ? "#30D158" : "#FF453A" }}>{isYes ? t("emb.sim") : t("emb.nao")}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 
@@ -672,6 +851,121 @@ export default function Embaixadores() {
                     <option value="en">English</option>
                   </select>
                 </div>
+                {/* Endereço */}
+                <div className="pt-2">
+                  <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-3">{t("emb.secEndereco")}</p>
+                  <div className="space-y-3">
+                    <div><label className="apple-input-label">{t("emb.endereco")}</label><input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="apple-input" placeholder="Rua, número, complemento" /></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><label className="apple-input-label">{t("emb.bairro")}</label><input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="apple-input" /></div>
+                      <div><label className="apple-input-label">{t("emb.cep")}</label><input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="apple-input" placeholder="00000-000" /></div>
+                    </div>
+                    <div><label className="apple-input-label">{t("emb.pais")}</label><input value={form.pais} onChange={e => setForm({ ...form, pais: e.target.value })} className="apple-input" /></div>
+                  </div>
+                </div>
+
+                {/* Programas */}
+                <div className="pt-2">
+                  <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-2">{t("emb.secProgramas")}</p>
+                  <div>
+                    <label className="apple-input-label">{t("emb.programas")}</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {["Legendarios","REM","LEGADO","MAMUTE","MEX","Tour Guatemala","NEST EUA","NEST Brasil","Augusto Cury","LGND SQUAD","Aberturas"].map(p => {
+                        const items = form.programasParticipou ? form.programasParticipou.split(",").map(s => s.trim()).filter(Boolean) : [];
+                        const checked = items.includes(p);
+                        return (
+                          <label key={p} className="flex items-center gap-2 text-[0.8125rem] text-[#d2d2d7] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                const next = checked ? items.filter(x => x !== p) : [...items, p];
+                                setForm({ ...form, programasParticipou: next.join(","), ...(p === "Aberturas" && checked ? { aberturasPaises: "" } : {}) });
+                              }}
+                              className="w-4 h-4 accent-[#FF6B00]"
+                            />
+                            {p}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {form.programasParticipou.split(",").map(s => s.trim()).includes("Aberturas") && (
+                    <div className="mt-3">
+                      <label className="apple-input-label">{t("emb.aberturas")}</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {["Portugal","UK","Japão","Dubai","Itália","Espanha","África"].map(p => {
+                          const items = form.aberturasPaises ? form.aberturasPaises.split(",").map(s => s.trim()).filter(Boolean) : [];
+                          const checked = items.includes(p);
+                          return (
+                            <label key={p} className="flex items-center gap-2 text-[0.8125rem] text-[#d2d2d7] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  const next = checked ? items.filter(x => x !== p) : [...items, p];
+                                  setForm({ ...form, aberturasPaises: next.join(",") });
+                                }}
+                                className="w-4 h-4 accent-[#FF6B00]"
+                              />
+                              {p}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Jornada Embaixador */}
+                <div className="pt-2">
+                  <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-3">{t("emb.secJornada")}</p>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><label className="apple-input-label">{t("emb.dataEmbaixador")}</label><input type="date" value={form.dataEmbaixador} onChange={e => setForm({ ...form, dataEmbaixador: e.target.value })} className="apple-input text-[0.8125rem]" /></div>
+                      <div><label className="apple-input-label">{t("emb.sedeLegendario")}</label><input value={form.sedeLegendario} onChange={e => setForm({ ...form, sedeLegendario: e.target.value })} className="apple-input" /></div>
+                    </div>
+                    <div><label className="apple-input-label">{t("emb.cargoLideranca")}</label><input value={form.cargoLideranca} onChange={e => setForm({ ...form, cargoLideranca: e.target.value })} className="apple-input" placeholder="Ex: Top, Coordenador, não exerço" /></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="apple-input-label">{t("emb.doacaoPoco")}</label>
+                        <select value={form.doacaoPoco} onChange={e => setForm({ ...form, doacaoPoco: e.target.value })} className="apple-input">
+                          <option value="">{t("common.selecione")}</option>
+                          <option value="sim">{t("emb.sim")}</option>
+                          <option value="nao">{t("emb.nao")}</option>
+                        </select>
+                      </div>
+                      <div><label className="apple-input-label">{t("emb.numeroAnel")}</label><input value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input" /></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Itens Embaixador */}
+                <div className="pt-2">
+                  <p className="text-[0.6875rem] text-[#6e6e73] uppercase tracking-wider mb-3">{t("emb.secItens")}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: "temJaqueta", label: t("emb.temJaqueta") },
+                      { key: "temPin", label: t("emb.temPin") },
+                      { key: "temPatch", label: t("emb.temPatch") },
+                      { key: "temEspada", label: t("emb.temEspada") },
+                    ].map(item => (
+                      <div key={item.key}>
+                        <label className="apple-input-label">{item.label}</label>
+                        <select
+                          value={(form as any)[item.key]}
+                          onChange={e => setForm({ ...form, [item.key]: e.target.value } as any)}
+                          className="apple-input"
+                        >
+                          <option value="">{t("common.selecione")}</option>
+                          <option value="sim">{t("emb.sim")}</option>
+                          <option value="nao">{t("emb.nao")}</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <label className="apple-input-label">{t("emb.observacoes")}</label>
                   <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3} className="apple-input resize-none" />
