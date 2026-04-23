@@ -170,7 +170,7 @@ export default function Pedidos() {
     exportToXlsx(data, `pedidos-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const rows = filtered.map((p: any) => [
       String(p.id),
       p.embaixadores?.nomeCompleto || "",
@@ -178,7 +178,7 @@ export default function Pedidos() {
       formatDate(p.createdAt),
       p.observacoes || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Pedidos",
       "Embaixadores dos Legendários",
       ["ID", "Embaixador", "Status", "Data", "Observações"],
@@ -195,7 +195,7 @@ export default function Pedidos() {
       formatDate(p.createdAt),
       p.observacoes || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Pedidos",
       "Embaixadores dos Legendarios",
       ["ID", "Embaixador", "Status", "Data", "Observacoes"],

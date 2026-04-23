@@ -174,7 +174,7 @@ export default function Eventos() {
     exportToXlsx(data, `eventos-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusPt: Record<string, string> = { agendado: "Agendado", realizado: "Realizado", cancelado: "Cancelado" };
     const tipoPt: Record<string, string> = { encontro: "Encontro", conferencia: "Conferencia", retiro: "Retiro", treinamento: "Treinamento", outro: "Outro" };
     const rows = filtered.map((ev: any) => [
@@ -184,7 +184,7 @@ export default function Eventos() {
       tipoPt[ev.tipo] || ev.tipo || "",
       statusPt[ev.status] || ev.status || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Lista de Eventos",
       "Embaixadores dos Legendários",
       ["Título", "Data", "Local", "Tipo", "Status"],
@@ -203,7 +203,7 @@ export default function Eventos() {
       tipoPt[ev.tipo] || ev.tipo || "",
       statusPt[ev.status] || ev.status || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Lista de Eventos",
       "Embaixadores dos Legendarios",
       ["Titulo", "Data", "Local", "Tipo", "Status"],

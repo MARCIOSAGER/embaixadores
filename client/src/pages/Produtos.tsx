@@ -293,7 +293,7 @@ export default function Produtos() {
     exportToXlsx(data, `produtos-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusPt: Record<string, string> = {
       disponivel: "Disponível",
       esgotado: "Esgotado",
@@ -307,7 +307,7 @@ export default function Produtos() {
       String(p.estoque ?? 0),
       statusPt[p.status] || p.status || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Catálogo de Produtos",
       "Embaixadores dos Legendários",
       ["Nome", "SKU", "Categoria", "Preço", "Estoque", "Status"],
@@ -330,7 +330,7 @@ export default function Produtos() {
       String(p.estoque ?? 0),
       statusPt[p.status] || p.status || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Catalogo de Produtos",
       "Embaixadores dos Legendarios",
       ["Nome", "SKU", "Categoria", "Preco", "Estoque", "Status"],

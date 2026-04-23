@@ -148,7 +148,7 @@ export default function WelcomeKit() {
       kit.mochilaBalacEntregue ? "Sim" : "Nao",
       `${getKitProgress(kit)}/5`,
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Welcome Kit - Controle de Entregas",
       "Embaixadores dos Legendarios",
       ["Embaixador", "Tipo", "Patch", "Pin", "Anel", "Espada", "Mochila", "Progresso"],
@@ -183,9 +183,9 @@ export default function WelcomeKit() {
               <span className="hidden sm:inline">Email</span>
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (filtered && filtered.length > 0) {
-                  exportKitsPdf(filtered, getEmbName);
+                  await exportKitsPdf(filtered, getEmbName);
                 } else {
                   toast.error(t("kit.nenhumExportar"));
                 }

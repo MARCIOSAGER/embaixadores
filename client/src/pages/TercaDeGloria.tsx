@@ -93,7 +93,7 @@ export default function TercaDeGloria() {
     exportToXlsx(data, `terca-de-gloria-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusPt: Record<string, string> = { planejada: "Planejada", realizada: "Realizada", cancelada: "Cancelada" };
     const rows = filtered.map((r: any) => [
       r.data ? new Date(r.data).toLocaleDateString("pt-BR") : "",
@@ -101,7 +101,7 @@ export default function TercaDeGloria() {
       r.pregador || "",
       statusPt[r.status] || r.status || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Terça de Glória - Reuniões",
       "Embaixadores dos Legendários",
       ["Data", "Tema", "Pregador", "Status"],
@@ -118,7 +118,7 @@ export default function TercaDeGloria() {
       r.pregador || "",
       statusPt[r.status] || r.status || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Terca de Gloria - Reunioes",
       "Embaixadores dos Legendarios",
       ["Data", "Tema", "Pregador", "Status"],

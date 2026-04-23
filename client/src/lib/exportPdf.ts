@@ -1,13 +1,15 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getLogoDataUrl } from './pdfLogo';
 
-export function exportKitsPdf(kits: any[], getEmbName: (id: number) => string) {
-  const doc = new jsPDF();
+export async function exportKitsPdf(kits: any[], getEmbName: (id: number) => string) {
+  const doc = new jsPDF({ compress: true });
   const today = new Date().toLocaleDateString('pt-BR');
 
-  // Logo
+  // Logo (downscaled + compressed)
   try {
-    doc.addImage('/logo-legendarios.png', 'PNG', 14, 10, 20, 16);
+    const logoDataUrl = await getLogoDataUrl();
+    doc.addImage(logoDataUrl, 'PNG', 14, 10, 20, 16, undefined, 'FAST');
   } catch { /* logo not available */ }
 
   // Header

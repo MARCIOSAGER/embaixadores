@@ -121,7 +121,7 @@ export default function Pagamentos() {
     exportToXlsx(data, `pagamentos-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusPt: Record<string, string> = { pendente: "Pendente", pago: "Pago", atrasado: "Atrasado" };
     const rows = filtered.map((p: any) => [
       embMap[p.embaixadorId] || `ID ${p.embaixadorId}`,
@@ -130,7 +130,7 @@ export default function Pagamentos() {
       p.dataPagamento ? new Date(p.dataPagamento).toLocaleDateString("pt-BR") : "",
       statusPt[p.status] || p.status || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Relatório de Pagamentos",
       "Embaixadores dos Legendários",
       ["Embaixador", "Valor", "Vencimento", "Pagamento", "Status"],
@@ -148,7 +148,7 @@ export default function Pagamentos() {
       p.dataPagamento ? new Date(p.dataPagamento).toLocaleDateString("pt-BR") : "",
       statusPt[p.status] || p.status || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Relatorio de Pagamentos",
       "Embaixadores dos Legendarios",
       ["Embaixador", "Valor", "Vencimento", "Pagamento", "Status"],

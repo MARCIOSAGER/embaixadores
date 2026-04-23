@@ -78,7 +78,7 @@ export default function EventoParticipantes({ eventoId, capacidade, onClose }: P
     exportToXlsx(data, `participantes-evento-${eventoId}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusLabels: Record<string, string> = { confirmado: "Confirmado", lista_espera: "Lista de Espera", cancelado: "Cancelado", presente: "Presente" };
     const rows = (participantes || []).map((p) => [
       p.nomeCompleto,
@@ -87,7 +87,7 @@ export default function EventoParticipantes({ eventoId, capacidade, onClose }: P
       statusLabels[p.status] || p.status,
       new Date(p.createdAt).toLocaleDateString("pt-BR"),
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Lista de Participantes",
       "Embaixadores dos Legendários",
       ["Nome", "Email", "Telefone", "Status", "Data"],

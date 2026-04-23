@@ -154,7 +154,7 @@ export default function Entrevistas() {
     exportToXlsx(data, `entrevistas-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusPt: Record<string, string> = { agendada: "Agendada", realizada: "Realizada", aprovada: "Aprovada", reprovada: "Reprovada", cancelada: "Cancelada" };
     const rows = filtered.map((ent: any) => [
       ent.nomeCandidato || "",
@@ -164,7 +164,7 @@ export default function Entrevistas() {
       ent.indicadoPor || "",
       getEntrevistadorName(ent) || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Lista de Entrevistas",
       "Embaixadores dos Legendários",
       ["Candidato", "Email", "Data", "Status", "Indicado Por", "Entrevistador"],
@@ -183,7 +183,7 @@ export default function Entrevistas() {
       ent.indicadoPor || "",
       getEntrevistadorName(ent) || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Lista de Entrevistas",
       "Embaixadores dos Legendarios",
       ["Candidato", "Email", "Data", "Status", "Indicado Por", "Entrevistador"],

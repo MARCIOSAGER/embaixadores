@@ -137,7 +137,7 @@ export default function Inscricoes() {
     exportToXlsx(data, `inscricoes-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const rows = filtered.map((insc) => [
       insc.numeroLegendario || "—",
       insc.nomeCompleto || "",
@@ -150,7 +150,7 @@ export default function Inscricoes() {
       insc.motivoParticipacao || "",
       (STATUS_MAP[insc.status] || STATUS_MAP.pendente).label,
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Lista de Inscrições",
       "Inscrições dos Embaixadores Legendários",
       ["Nº Leg.", "Nome", "Email", "Telefone", "Cidade", "Profissão", "Segmento", "Investimento", "Motivação", "Status"],
@@ -172,7 +172,7 @@ export default function Inscricoes() {
       insc.motivoParticipacao || "",
       (STATUS_MAP[insc.status] || STATUS_MAP.pendente).label,
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Lista de Inscricoes",
       "Inscricoes dos Embaixadores Legendarios",
       ["No Leg.", "Nome", "Email", "Telefone", "Cidade", "Profissao", "Segmento", "Investimento", "Motivacao", "Status"],

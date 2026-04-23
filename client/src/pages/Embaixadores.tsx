@@ -271,7 +271,7 @@ export default function Embaixadores() {
     exportToXlsx(data, `embaixadores-${new Date().toISOString().split("T")[0]}`);
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const statusPt: Record<string, string> = { ativo: "Ativo", inativo: "Inativo", pendente_renovacao: "Pendente Renovação" };
     const rows = filtered.map((emb: any) => [
       emb.numeroLegendario || "—",
@@ -281,7 +281,7 @@ export default function Embaixadores() {
       emb.cidade || "",
       statusPt[emb.status] || emb.status || "",
     ]);
-    exportGenericPdf(
+    await exportGenericPdf(
       "Lista de Embaixadores",
       "Embaixadores dos Legendários",
       ["Nº Leg.", "Nº Emb.", "Nome", "Telefone", "Cidade", "Status"],
@@ -300,7 +300,7 @@ export default function Embaixadores() {
       emb.cidade || "",
       statusPt[emb.status] || emb.status || "",
     ]);
-    const doc = buildGenericPdfDoc(
+    const doc = await buildGenericPdfDoc(
       "Lista de Embaixadores",
       "Embaixadores dos Legendarios",
       ["No Leg.", "No Emb.", "Nome", "Telefone", "Cidade", "Status"],

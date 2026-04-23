@@ -1,22 +1,28 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getLogoDataUrl } from './pdfLogo';
 
 /**
  * Builds a jsPDF document with the given title, subtitle, columns, and rows.
  * Returns the doc instance without saving — useful for email sending.
+ *
+ * Async because the logo is downscaled on-demand via a canvas to keep the
+ * output file under a few hundred KB (source logo is 4731x3240 which would
+ * otherwise produce ~60 MB PDFs).
  */
-export function buildGenericPdfDoc(
+export async function buildGenericPdfDoc(
   title: string,
   subtitle: string,
   columns: string[],
   rows: string[][],
-): jsPDF {
-  const doc = new jsPDF();
+): Promise<jsPDF> {
+  const doc = new jsPDF({ compress: true });
   const today = new Date().toLocaleDateString('pt-BR');
 
-  // Logo
+  // Logo (downscaled + compressed)
   try {
-    doc.addImage('/logo-legendarios.png', 'PNG', 14, 10, 20, 16);
+    const logoDataUrl = await getLogoDataUrl();
+    doc.addImage(logoDataUrl, 'PNG', 14, 10, 20, 16, undefined, 'FAST');
   } catch { /* logo not available */ }
 
   // Header
@@ -45,13 +51,13 @@ export function buildGenericPdfDoc(
   return doc;
 }
 
-export function exportGenericPdf(
+export async function exportGenericPdf(
   title: string,
   subtitle: string,
   columns: string[],
   rows: string[][],
   filename: string
-) {
-  const doc = buildGenericPdfDoc(title, subtitle, columns, rows);
+): Promise<void> {
+  const doc = await buildGenericPdfDoc(title, subtitle, columns, rows);
   doc.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
 }

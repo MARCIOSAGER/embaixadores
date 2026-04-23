@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { useEmbaixador } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ArrowLeft, Printer, Mail, Phone, MapPin, Instagram, Calendar, Users, MapPinned, Award, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, FileDown, Mail, MapPin, Calendar, Users, MapPinned, Award, Shield, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/dateUtils";
+import { exportEmbaixadorPdf } from "@/lib/exportEmbaixadorPdf";
+import { toast } from "sonner";
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   ativo:               { label: "Ativo",              color: "#30D158", bg: "rgba(48,209,88,0.14)" },
@@ -48,6 +51,19 @@ export default function EmbaixadorDetail() {
   const [, params] = useRoute("/embaixador/:id");
   const id = params?.id ? Number(params.id) : 0;
   const { data: emb, isLoading, error } = useEmbaixador(id);
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExportPdf() {
+    if (!emb) return;
+    setExporting(true);
+    try {
+      await exportEmbaixadorPdf(emb as any, locale);
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao gerar PDF");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -79,13 +95,14 @@ export default function EmbaixadorDetail() {
   return (
     <DashboardLayout>
       <div className="emb-detail-page space-y-5">
-        {/* Header — hidden in print */}
-        <div className="no-print flex items-center justify-between gap-3 flex-wrap">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <Link href="/embaixadores" className="apple-btn apple-btn-gray py-2 px-4 text-[0.8125rem]">
             <ArrowLeft className="w-4 h-4" strokeWidth={1.5} /> Voltar
           </Link>
-          <button onClick={() => window.print()} className="apple-btn apple-btn-filled py-2 px-4 text-[0.8125rem]">
-            <Printer className="w-4 h-4" strokeWidth={1.5} /> Imprimir / PDF
+          <button onClick={handleExportPdf} disabled={exporting} className="apple-btn apple-btn-filled py-2 px-4 text-[0.8125rem]">
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" strokeWidth={1.5} />}
+            Baixar ficha em PDF
           </button>
         </div>
 
@@ -214,44 +231,6 @@ export default function EmbaixadorDetail() {
         )}
       </div>
 
-      {/* Print styles — clean layout on paper */}
-      <style>{`
-        @media print {
-          @page { margin: 1.5cm; size: A4; }
-          body { background: white !important; }
-          body * { visibility: hidden !important; }
-          .emb-detail-page, .emb-detail-page * { visibility: visible !important; }
-          .emb-detail-page {
-            position: absolute !important;
-            inset: 0 !important;
-            padding: 0 !important;
-            color: #000 !important;
-            background: white !important;
-          }
-          .no-print { display: none !important; }
-          .emb-header, .emb-section {
-            background: white !important;
-            border: 1px solid #ccc !important;
-            color: #000 !important;
-            page-break-inside: avoid;
-            margin-bottom: 12px;
-          }
-          .emb-header img { border-color: #000 !important; }
-          .emb-header h1, .emb-section h3 { color: #000 !important; }
-          .emb-section h3 { color: #555 !important; }
-          .emb-section svg { color: #555 !important; }
-          .emb-section span { color: #000 !important; }
-          .emb-section .text-white { color: #000 !important; }
-          .emb-section .text-\\[\\#86868b\\] { color: #555 !important; }
-          .emb-section .text-\\[\\#6e6e73\\] { color: #666 !important; }
-          .emb-section .text-\\[\\#d2d2d7\\] { color: #222 !important; }
-          .emb-section .border-white\\/\\[0\\.04\\] { border-color: #eee !important; }
-          .apple-badge {
-            border: 1px solid currentColor !important;
-            background: transparent !important;
-          }
-        }
-      `}</style>
     </DashboardLayout>
   );
 }
