@@ -495,7 +495,9 @@ export default function EmbaixadorPerfil() {
       setVerifyError("");
       setVerifyStatus(null);
 
-      const num = verifyNum.trim();
+      // Normaliza: remove "L#", "#", espaços e deixa apenas alfanumérico
+      const num = verifyNum.trim().replace(/[^0-9A-Za-z]/g, "");
+      if (!num) { setVerifyError(t("perfil.verify.vazio")); setVerifying(false); return; }
 
       // Secure RPC: check if already registered (only returns masked email + minimal data)
       const { data: embData } = await supabase.rpc("verificar_legendario", { num_legendario: num });
@@ -512,15 +514,19 @@ export default function EmbaixadorPerfil() {
         return;
       }
 
-      // Check if already submitted a pending profile
+      // Check if already submitted a pending profile (match exato após normalização)
       const { data: inscData } = await supabase
         .from("inscricoes")
-        .select("id, status")
+        .select("id, status, numeroLegendario")
         .eq("tipo", "atualizacao_perfil")
-        .ilike("numeroLegendario", `%${num}%`)
         .order("createdAt", { ascending: false })
-        .limit(1);
-      if (inscData && inscData.length > 0 && inscData[0].status === "pendente") {
+        .limit(50);
+      const normalized = num.toUpperCase();
+      const match = (inscData || []).find((r: any) => {
+        const stored = String(r.numeroLegendario || "").replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+        return stored && stored === normalized;
+      });
+      if (match && match.status === "pendente") {
         setVerifyStatus("pendente");
         setVerifying(false);
         return;
