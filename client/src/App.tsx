@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react";
 // Lazy-loaded page components
 const Home = lazy(() => import("./pages/Home"));
 const Embaixadores = lazy(() => import("./pages/Embaixadores"));
+const EmbaixadorDetail = lazy(() => import("./pages/EmbaixadorDetail"));
 const TercaDeGloria = lazy(() => import("./pages/TercaDeGloria"));
 const WelcomeKit = lazy(() => import("./pages/WelcomeKit"));
 const Eventos = lazy(() => import("./pages/Eventos"));
@@ -48,6 +49,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/embaixadores" component={Embaixadores} />
+        <Route path="/embaixador/:id" component={EmbaixadorDetail} />
         <Route path="/terca-de-gloria" component={TercaDeGloria} />
         <Route path="/welcome-kit" component={WelcomeKit} />
         <Route path="/eventos" component={Eventos} />

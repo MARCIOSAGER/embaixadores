@@ -5,7 +5,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle, Bell, CheckCircle2, XCircle, Camera } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, UserCheck, Clock, UserX, ChevronRight, X, Mail, Phone, MapPin, Loader2, Download, FileDown, Link2, MessageCircle, Bell, CheckCircle2, XCircle, Camera, FileText } from "lucide-react";
+import { Link } from "wouter";
 import PhoneInput from "@/components/PhoneInput";
 import StatsCard from "@/components/StatsCard";
 import { exportToXlsx } from "@/lib/exportXlsx";
@@ -228,19 +229,44 @@ export default function Embaixadores() {
   }, [embaixadores, filter]);
 
   function handleExport() {
+    const ptSimNao = (v: string | null) => !v ? "" : v === "sim" ? "Sim" : "Não";
     const data = filtered.map((emb: any) => ({
       "Nº Legendário": emb.numeroLegendario || "",
       "Nº Embaixador": emb.numeroEmbaixador || "",
       "Nome": emb.nomeCompleto || "",
       "Email": emb.email || "",
       "Telefone": emb.telefone || "",
+      "Instagram": emb.instagram || "",
       "Cidade": emb.cidade || "",
       "Estado": emb.estado || "",
+      "Endereço": emb.endereco || "",
+      "Bairro": emb.bairro || "",
+      "CEP": emb.cep || "",
+      "País": emb.pais || "",
       "Profissão": emb.profissao || "",
+      "Empresa": emb.empresa || "",
       "Status": emb.status === "ativo" ? "Ativo" : emb.status === "inativo" ? "Inativo" : "Pendente Renovação",
+      "Idioma": emb.idioma || "",
       "Nascimento": emb.dataNascimento ? new Date(emb.dataNascimento).toLocaleDateString("pt-BR") : "",
       "Data Ingresso": emb.dataIngresso ? new Date(emb.dataIngresso).toLocaleDateString("pt-BR") : "",
       "Renovação": emb.dataRenovacao ? new Date(emb.dataRenovacao).toLocaleDateString("pt-BR") : "",
+      "Estado Civil": emb.estadoCivil || "",
+      "Nome Esposa": emb.nomeEsposa || "",
+      "Nasc. Esposa": emb.dataNascimentoEsposa ? new Date(emb.dataNascimentoEsposa).toLocaleDateString("pt-BR") : "",
+      "Qtd Filhos": emb.qtdFilhos || 0,
+      "Idades Filhos": emb.idadesFilhos || "",
+      "Programas Participou": emb.programasParticipou || "",
+      "Aberturas (países)": emb.aberturasPaises || "",
+      "Data Embaixador": emb.dataEmbaixador || "",
+      "Sede Legendário": emb.sedeLegendario || "",
+      "Cargo Liderança": emb.cargoLideranca || "",
+      "Doação Poço": ptSimNao(emb.doacaoPoco),
+      "Medida do Anel": emb.numeroAnel || "",
+      "Jaqueta": ptSimNao(emb.temJaqueta),
+      "Pin": ptSimNao(emb.temPin),
+      "Patch": ptSimNao(emb.temPatch),
+      "Espada": ptSimNao(emb.temEspada),
+      "Observações": emb.observacoes || "",
     }));
     exportToXlsx(data, `embaixadores-${new Date().toISOString().split("T")[0]}`);
   }
@@ -769,6 +795,10 @@ export default function Embaixadores() {
                     </button>
                   </div>
                 )}
+
+                <Link href={`/embaixador/${selected.id}`} className="apple-btn apple-btn-filled w-full py-2.5">
+                  <FileText className="w-4 h-4" strokeWidth={1.5} />Ver perfil completo
+                </Link>
 
                 <div className="flex gap-2">
                   <button onClick={() => { openEdit(selected); setSelected(null); }} className="apple-btn apple-btn-tinted flex-1 py-2.5">
