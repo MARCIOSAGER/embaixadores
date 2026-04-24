@@ -11,6 +11,7 @@ type Emb = {
   id: number;
   nomeCompleto: string;
   numeroLegendario: string | null;
+  numeroEmbaixador: string | null;
   cidade: string | null;
   temJaqueta: string | null;
   temPin: string | null;
@@ -18,6 +19,14 @@ type Emb = {
   temEspada: string | null;
   numeroAnel: string | null;
 };
+
+/** Compact identifier line: E#… · L#… (either may be missing). */
+function embIdLine(p: Emb): string {
+  const parts: string[] = [];
+  if (p.numeroEmbaixador) parts.push(`E#${p.numeroEmbaixador}`);
+  if (p.numeroLegendario) parts.push(`L#${p.numeroLegendario}`);
+  return parts.join(" · ");
+}
 
 type Mode = "pendente" | "inventario";
 
@@ -85,6 +94,7 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
     const perItem: Record<string, any[]> = {};
     for (const s of itemStats) {
       perItem[s.label] = s.people.map(p => ({
+        "Nº Embaixador": p.numeroEmbaixador || "",
         "Nº Legendário": p.numeroLegendario || "",
         Nome: p.nomeCompleto,
         Cidade: p.cidade || "",
@@ -93,6 +103,7 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
 
     const aneisResumo = ringBuckets.map(b => ({ Tamanho: b.size, Quantidade: b.count }));
     const aneisDetalhe = ringList.map(p => ({
+      "Nº Embaixador": p.numeroEmbaixador || "",
       "Nº Legendário": p.numeroLegendario || "",
       Nome: p.nomeCompleto,
       Cidade: p.cidade || "",
@@ -184,8 +195,9 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
         if (s.people.length === 0) continue;
         autoTable(doc, {
           startY: y,
-          head: [[`${s.label} — ${s.count} ${mode === "pendente" ? "pendente(s)" : "possui(em)"}`, "", ""]],
+          head: [[`${s.label} — ${s.count} ${mode === "pendente" ? "pendente(s)" : "possui(em)"}`, "", "", ""]],
           body: s.people.map(p => [
+            p.numeroEmbaixador ? `E#${p.numeroEmbaixador}` : "—",
             p.numeroLegendario ? `L#${p.numeroLegendario}` : "—",
             p.nomeCompleto,
             p.cidade || "",
@@ -194,9 +206,10 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
           headStyles: { fillColor: orange, fontSize: 10, halign: "left" },
           styles: { fontSize: 9, cellPadding: 2.5 },
           columnStyles: {
-            0: { cellWidth: 30 },
-            1: { cellWidth: "auto" as any, fontStyle: "bold" },
-            2: { cellWidth: 50 },
+            0: { cellWidth: 25 },
+            1: { cellWidth: 28 },
+            2: { cellWidth: "auto" as any, fontStyle: "bold" },
+            3: { cellWidth: 45 },
           },
           didParseCell: (data) => {
             if (data.section === "head" && data.column.index > 0) {
@@ -212,7 +225,7 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
       if (ringList.length > 0) {
         autoTable(doc, {
           startY: y,
-          head: [["Medidas de Anel por Embaixador", "", ""]],
+          head: [["Medidas de Anel por Embaixador", "", "", ""]],
           body: ringList
             .slice()
             .sort((a, b) => {
@@ -224,6 +237,7 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
               return na - nb;
             })
             .map(p => [
+              p.numeroEmbaixador ? `E#${p.numeroEmbaixador}` : "—",
               p.numeroLegendario ? `L#${p.numeroLegendario}` : "—",
               p.nomeCompleto,
               normalizeAnel(p.numeroAnel) || "",
@@ -232,9 +246,10 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
           headStyles: { fillColor: orange, fontSize: 10, halign: "left" },
           styles: { fontSize: 9, cellPadding: 2.5 },
           columnStyles: {
-            0: { cellWidth: 30 },
-            1: { cellWidth: "auto" as any, fontStyle: "bold" },
-            2: { cellWidth: 30, halign: "right" },
+            0: { cellWidth: 25 },
+            1: { cellWidth: 28 },
+            2: { cellWidth: "auto" as any, fontStyle: "bold" },
+            3: { cellWidth: 28, halign: "right" },
           },
           didParseCell: (data) => {
             if (data.section === "head" && data.column.index > 0) {
@@ -394,10 +409,13 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
                     <Link
                       key={p.id}
                       href={`/embaixador/${p.id}`}
-                      className="flex items-center justify-between text-[0.8125rem] py-1.5 px-2 rounded hover:bg-white/[0.04] transition-colors"
+                      className="flex items-center justify-between text-[0.8125rem] py-1.5 px-2 rounded hover:bg-white/[0.04] transition-colors gap-3"
                     >
-                      <span className="text-white">{p.nomeCompleto}</span>
-                      <span className="text-[#FF9F0A] font-medium tabular-nums">{normalizeAnel(p.numeroAnel)}</span>
+                      <span className="text-white truncate">{p.nomeCompleto}</span>
+                      <span className="flex items-center gap-2 shrink-0">
+                        <span className="text-[#86868b] text-[0.75rem]">{embIdLine(p)}</span>
+                        <span className="text-[#FF9F0A] font-medium tabular-nums">{normalizeAnel(p.numeroAnel)}</span>
+                      </span>
                     </Link>
                   ))}
               </div>
@@ -442,18 +460,21 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
                     {mode === "pendente" ? "Ninguém pendente 🎉" : "Ninguém ainda"}
                   </p>
                 ) : (
-                  item.people.map(p => (
-                    <Link
-                      key={p.id}
-                      href={`/embaixador/${p.id}`}
-                      className="flex items-center justify-between text-[0.8125rem] py-1.5 px-3 rounded hover:bg-white/[0.04] transition-colors"
-                    >
-                      <span className="text-white">{p.nomeCompleto}</span>
-                      <span className="text-[#86868b] text-[0.75rem]">
-                        {p.numeroLegendario ? `L#${p.numeroLegendario}` : ""} {p.cidade ? `· ${p.cidade}` : ""}
-                      </span>
-                    </Link>
-                  ))
+                  item.people.map(p => {
+                    const idLine = embIdLine(p);
+                    return (
+                      <Link
+                        key={p.id}
+                        href={`/embaixador/${p.id}`}
+                        className="flex items-center justify-between text-[0.8125rem] py-1.5 px-3 rounded hover:bg-white/[0.04] transition-colors gap-3"
+                      >
+                        <span className="text-white truncate">{p.nomeCompleto}</span>
+                        <span className="text-[#86868b] text-[0.75rem] shrink-0">
+                          {idLine}{idLine && p.cidade ? " · " : ""}{p.cidade || ""}
+                        </span>
+                      </Link>
+                    );
+                  })
                 )}
               </div>
             )}
