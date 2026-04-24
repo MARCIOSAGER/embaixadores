@@ -190,12 +190,38 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
         y = (doc as any).lastAutoTable.finalY + 6;
       }
 
+      // Sub-header cell style (second header row: column labels)
+      const colLabel = (text: string, halign: "left" | "right" = "left") => ({
+        content: text,
+        styles: {
+          fillColor: [240, 240, 240] as [number, number, number],
+          textColor: [60, 60, 60] as [number, number, number],
+          fontSize: 8,
+          fontStyle: "bold" as const,
+          halign,
+        },
+      });
+      const sectionTitle = (text: string, colSpan: number) => ({
+        content: text,
+        colSpan,
+        styles: {
+          fillColor: orange,
+          textColor: [255, 255, 255] as [number, number, number],
+          fontSize: 10,
+          fontStyle: "bold" as const,
+          halign: "left" as const,
+        },
+      });
+
       // Listas detalhadas por item
       for (const s of itemStats) {
         if (s.people.length === 0) continue;
         autoTable(doc, {
           startY: y,
-          head: [[`${s.label} — ${s.count} ${mode === "pendente" ? "pendente(s)" : "possui(em)"}`, "", "", ""]],
+          head: [
+            [sectionTitle(`${s.label} — ${s.count} ${mode === "pendente" ? "pendente(s)" : "possui(em)"}`, 4)],
+            [colLabel("Nº Emb."), colLabel("Nº Leg."), colLabel("Nome"), colLabel("Cidade")],
+          ],
           body: s.people.map(p => [
             p.numeroEmbaixador ? `E#${p.numeroEmbaixador}` : "—",
             p.numeroLegendario ? `L#${p.numeroLegendario}` : "—",
@@ -203,18 +229,12 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
             p.cidade || "",
           ]),
           theme: "grid",
-          headStyles: { fillColor: orange, fontSize: 10, halign: "left" },
           styles: { fontSize: 9, cellPadding: 2.5 },
           columnStyles: {
             0: { cellWidth: 25 },
             1: { cellWidth: 28 },
             2: { cellWidth: "auto" as any, fontStyle: "bold" },
             3: { cellWidth: 45 },
-          },
-          didParseCell: (data) => {
-            if (data.section === "head" && data.column.index > 0) {
-              data.cell.text = [""];
-            }
           },
           margin: { left: marginX, right: marginX },
         });
@@ -225,7 +245,10 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
       if (ringList.length > 0) {
         autoTable(doc, {
           startY: y,
-          head: [["Medidas de Anel por Embaixador", "", "", ""]],
+          head: [
+            [sectionTitle("Medidas de Anel por Embaixador", 4)],
+            [colLabel("Nº Emb."), colLabel("Nº Leg."), colLabel("Nome"), colLabel("Tamanho", "right")],
+          ],
           body: ringList
             .slice()
             .sort((a, b) => {
@@ -243,18 +266,12 @@ export default function DemandaItens({ embaixadores }: { embaixadores: Emb[] }) 
               normalizeAnel(p.numeroAnel) || "",
             ]),
           theme: "grid",
-          headStyles: { fillColor: orange, fontSize: 10, halign: "left" },
           styles: { fontSize: 9, cellPadding: 2.5 },
           columnStyles: {
             0: { cellWidth: 25 },
             1: { cellWidth: 28 },
             2: { cellWidth: "auto" as any, fontStyle: "bold" },
             3: { cellWidth: 28, halign: "right" },
-          },
-          didParseCell: (data) => {
-            if (data.section === "head" && data.column.index > 0) {
-              data.cell.text = [""];
-            }
           },
           margin: { left: marginX, right: marginX },
         });
