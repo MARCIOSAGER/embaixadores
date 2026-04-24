@@ -11,6 +11,7 @@ import { exportToXlsx } from "@/lib/exportXlsx";
 import { buildGenericPdfDoc } from "@/lib/exportGenericPdf";
 import { sendReportByEmail } from "@/lib/sendReportByEmail";
 import SendReportDialog from "@/components/SendReportDialog";
+import DemandaItens from "@/components/DemandaItens";
 import { supabase } from "@/lib/supabase";
 
 type KitItemKey = "patchEntregue" | "pinBoneEntregue" | "anelEntregue" | "espadaEntregue" | "mochilaBalacEntregue";
@@ -39,6 +40,7 @@ export default function WelcomeKit() {
   const [selectedType, setSelectedType] = useState<KitType>("welcome");
   const [typeFilter, setTypeFilter] = useState<KitType | "all">("all");
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"entregas" | "demanda">("entregas");
 
   const { userName, user: authUser } = useAuth();
   const currentUserName = userName || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Sistema";
@@ -173,47 +175,76 @@ export default function WelcomeKit() {
             <h1 className="text-[1.5rem] font-bold tracking-[-0.03em] text-white">{t("kit.title")}</h1>
             <p className="text-[0.8125rem] text-[#86868b] mt-0.5">{t("kit.subtitle")}</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setSendEmailOpen(true)}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title={t("report.enviarEmail")}
-            >
-              <Mail className="w-4 h-4" strokeWidth={1.5} />
-              <span className="hidden sm:inline">Email</span>
-            </button>
-            <button
-              onClick={async () => {
-                if (filtered && filtered.length > 0) {
-                  await exportKitsPdf(filtered, getEmbName);
-                } else {
-                  toast.error(t("kit.nenhumExportar"));
-                }
-              }}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title="Exportar PDF"
-            >
-              <FileDown className="w-4 h-4" />
-              <span className="hidden sm:inline">PDF</span>
-            </button>
-            <button
-              onClick={handleExportXlsx}
-              className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
-              title="Exportar XLSX"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Exportar</span>
-            </button>
-            <button
-              onClick={() => setShowCreate(!showCreate)}
-              className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Novo Kit</span>
-            </button>
-          </div>
+          {activeTab === "entregas" && (
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setSendEmailOpen(true)}
+                className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                title={t("report.enviarEmail")}
+              >
+                <Mail className="w-4 h-4" strokeWidth={1.5} />
+                <span className="hidden sm:inline">Email</span>
+              </button>
+              <button
+                onClick={async () => {
+                  if (filtered && filtered.length > 0) {
+                    await exportKitsPdf(filtered, getEmbName);
+                  } else {
+                    toast.error(t("kit.nenhumExportar"));
+                  }
+                }}
+                className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                title="Exportar PDF"
+              >
+                <FileDown className="w-4 h-4" />
+                <span className="hidden sm:inline">PDF</span>
+              </button>
+              <button
+                onClick={handleExportXlsx}
+                className="apple-btn apple-btn-gray px-3 py-2 text-sm rounded-xl flex items-center gap-2 shrink-0"
+                title="Exportar XLSX"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Exportar</span>
+              </button>
+              <button
+                onClick={() => setShowCreate(!showCreate)}
+                className="apple-btn apple-btn-filled px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Novo Kit</span>
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-1 bg-white/[0.04] p-1 rounded-xl w-fit">
+          <button
+            onClick={() => setActiveTab("entregas")}
+            className={`px-4 py-1.5 rounded-lg text-[0.8125rem] font-medium transition-all ${
+              activeTab === "entregas" ? "bg-[#FF6B00] text-white" : "text-[#86868b] hover:text-white"
+            }`}
+          >
+            <PackageCheck className="w-3.5 h-3.5 inline mr-1.5" strokeWidth={2} />
+            Entregas
+          </button>
+          <button
+            onClick={() => setActiveTab("demanda")}
+            className={`px-4 py-1.5 rounded-lg text-[0.8125rem] font-medium transition-all ${
+              activeTab === "demanda" ? "bg-[#FF6B00] text-white" : "text-[#86868b] hover:text-white"
+            }`}
+          >
+            <Package className="w-3.5 h-3.5 inline mr-1.5" strokeWidth={2} />
+            Demanda de Itens
+          </button>
+        </div>
+
+        {activeTab === "demanda" && (
+          <DemandaItens embaixadores={(embaixadores || []) as any} />
+        )}
+
+        {activeTab === "entregas" && <>
         {/* Create Kit Form */}
         {showCreate && (
           <div className="apple-card p-5 space-y-4 animate-fade-up">
@@ -456,6 +487,8 @@ export default function WelcomeKit() {
             </div>
           </div>
         )}
+
+        </>}
 
         {/* Send Email Dialog */}
         <SendReportDialog
