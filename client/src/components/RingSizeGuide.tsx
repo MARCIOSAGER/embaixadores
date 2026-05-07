@@ -100,96 +100,98 @@ function RingCirclesChart() {
   );
 }
 
-function buildPrintableHtml(title: string): string {
+function buildPrintableBody(title: string): string {
   const COLS = 5;
   const cells = RING_SIZES.map(row => {
     const diameterCm = row.circunferencia / Math.PI;
     return `
-      <div class="cell">
-        <div class="ring" style="width:${diameterCm.toFixed(3)}cm;height:${diameterCm.toFixed(3)}cm;">
+      <div class="rgp-cell">
+        <div class="rgp-ring" style="width:${diameterCm.toFixed(3)}cm;height:${diameterCm.toFixed(3)}cm;">
           <span>${row.tamanho}</span>
         </div>
-        <div class="lbl">${fmt(row.circunferencia)} cm</div>
+        <div class="rgp-lbl">${fmt(row.circunferencia)} cm</div>
       </div>`;
   }).join("");
 
-  return `<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8" />
-<title>${title}</title>
-<style>
-  @page { size: A4; margin: 12mm; }
-  * { box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: #111; margin: 0; padding: 16px; }
-  h1 { font-size: 18px; margin: 0 0 6px; }
-  p.intro { font-size: 12px; color: #444; margin: 0 0 14px; line-height: 1.4; }
-  .grid { display: grid; grid-template-columns: repeat(${COLS}, 1fr); gap: 14px 10px; }
-  .cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-  .ring { border: 1.2pt solid #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .ring span { font-weight: 700; font-size: 10pt; }
-  .lbl { font-size: 8pt; color: #444; margin-top: 4px; }
-  table { border-collapse: collapse; margin-top: 18px; width: 100%; font-size: 10pt; }
-  th, td { border: 0.6pt solid #999; padding: 4px 8px; }
-  th { background: #f1f1f1; text-align: left; }
-  .note { font-size: 9pt; color: #555; margin-top: 8px; font-style: italic; }
-</style>
-</head>
-<body>
-  <h1>${title}</h1>
-  <p class="intro">
-    1. Enrole uma linha ou tira de papel fino ao redor do dedo (sem apertar).<br/>
-    2. Marque o ponto onde a linha se encontra.<br/>
-    3. Meça o comprimento com uma régua — esse é o valor em cm.
-  </p>
-  <div class="grid">${cells}</div>
-  <p class="note">Os círculos estão impressos em tamanho real. Coloque um anel sobre o círculo para conferir o tamanho.</p>
-  <table>
-    <thead><tr><th>Tamanho BR</th><th>Circunferência</th><th>Equivalente US</th></tr></thead>
-    <tbody>
-      ${RING_SIZES.map(r => `<tr><td>${r.tamanho}</td><td>${fmt(r.circunferencia)} cm</td><td>${r.usa}</td></tr>`).join("")}
-    </tbody>
-  </table>
-</body>
-</html>`;
+  return `
+    <h1 class="rgp-h1">${title}</h1>
+    <p class="rgp-intro">
+      1. Enrole uma linha ou tira de papel fino ao redor do dedo (sem apertar).<br/>
+      2. Marque o ponto onde a linha se encontra.<br/>
+      3. Meça o comprimento com uma régua — esse é o valor em cm.
+    </p>
+    <div class="rgp-grid" style="grid-template-columns: repeat(${COLS}, 1fr);">${cells}</div>
+    <p class="rgp-note">Os círculos estão impressos em tamanho real. Coloque um anel sobre o círculo para conferir o tamanho.</p>
+    <table class="rgp-table">
+      <thead><tr><th>Tamanho BR</th><th>Circunferência</th><th>Equivalente US</th></tr></thead>
+      <tbody>
+        ${RING_SIZES.map(r => `<tr><td>${r.tamanho}</td><td>${fmt(r.circunferencia)} cm</td><td>${r.usa}</td></tr>`).join("")}
+      </tbody>
+    </table>
+  `;
 }
 
+const PRINT_HOST_ID = "ring-guide-print-host";
+const PRINT_STYLE_ID = "ring-guide-print-style";
+
 function openPrintWindow(title: string) {
-  const html = buildPrintableHtml(title);
-  // Hidden iframe avoids popup blockers and never affects the host page.
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  iframe.setAttribute("aria-hidden", "true");
-  document.body.appendChild(iframe);
+  // Avoid duplicates if user clicks repeatedly
+  document.getElementById(PRINT_HOST_ID)?.remove();
+  document.getElementById(PRINT_STYLE_ID)?.remove();
 
-  const cleanup = () => {
-    setTimeout(() => {
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-    }, 1000);
-  };
-
-  iframe.onload = () => {
-    try {
-      const cw = iframe.contentWindow;
-      if (!cw) { cleanup(); return; }
-      cw.focus();
-      cw.print();
-      // Some browsers fire afterprint on the iframe window
-      cw.addEventListener("afterprint", cleanup);
-      // Fallback cleanup after a delay
-      setTimeout(cleanup, 60_000);
-    } catch {
-      cleanup();
+  const style = document.createElement("style");
+  style.id = PRINT_STYLE_ID;
+  style.textContent = `
+    #${PRINT_HOST_ID} { display: none; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      html, body { background: #fff !important; }
+      body > *:not(#${PRINT_HOST_ID}) { display: none !important; }
+      #${PRINT_HOST_ID} {
+        display: block !important;
+        position: static !important;
+        background: #fff !important;
+        color: #111 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+      #${PRINT_HOST_ID} * { color: #111 !important; }
+      #${PRINT_HOST_ID} .rgp-h1 { font-size: 18px; margin: 0 0 6px; }
+      #${PRINT_HOST_ID} .rgp-intro { font-size: 12px; color: #444 !important; margin: 0 0 14px; line-height: 1.4; }
+      #${PRINT_HOST_ID} .rgp-grid { display: grid; gap: 14px 10px; }
+      #${PRINT_HOST_ID} .rgp-cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+      #${PRINT_HOST_ID} .rgp-ring { border: 1.2pt solid #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+      #${PRINT_HOST_ID} .rgp-ring span { font-weight: 700; font-size: 10pt; }
+      #${PRINT_HOST_ID} .rgp-lbl { font-size: 8pt; color: #444 !important; margin-top: 4px; }
+      #${PRINT_HOST_ID} .rgp-note { font-size: 9pt; color: #555 !important; margin-top: 8px; font-style: italic; }
+      #${PRINT_HOST_ID} .rgp-table { border-collapse: collapse; margin-top: 18px; width: 100%; font-size: 10pt; }
+      #${PRINT_HOST_ID} .rgp-table th,
+      #${PRINT_HOST_ID} .rgp-table td { border: 0.6pt solid #999; padding: 4px 8px; }
+      #${PRINT_HOST_ID} .rgp-table th { background: #f1f1f1 !important; text-align: left; }
     }
+  `;
+  document.head.appendChild(style);
+
+  const host = document.createElement("div");
+  host.id = PRINT_HOST_ID;
+  host.innerHTML = buildPrintableBody(title);
+  document.body.appendChild(host);
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    host.remove();
+    style.remove();
+    window.removeEventListener("afterprint", cleanup);
   };
 
-  iframe.srcdoc = html;
-  void title;
+  window.addEventListener("afterprint", cleanup);
+  // Give the browser a tick to apply styles, then print
+  setTimeout(() => {
+    try { window.print(); } catch { cleanup(); return; }
+    // Fallback cleanup if afterprint never fires
+    setTimeout(cleanup, 60_000);
+  }, 50);
 }
 
 export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" | "dark" }) {
