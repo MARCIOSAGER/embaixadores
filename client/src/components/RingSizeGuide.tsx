@@ -113,21 +113,36 @@ function buildPrintableBody(title: string): string {
       </div>`;
   }).join("");
 
-  return `
-    <h1 class="rgp-h1">${title}</h1>
-    <p class="rgp-intro">
-      1. Enrole uma linha ou tira de papel fino ao redor do dedo (sem apertar).<br/>
-      2. Marque o ponto onde a linha se encontra.<br/>
-      3. Meça o comprimento com uma régua — esse é o valor em cm.
-    </p>
-    <div class="rgp-grid" style="grid-template-columns: repeat(${COLS}, 1fr);">${cells}</div>
-    <p class="rgp-note">Os círculos estão impressos em tamanho real. Coloque um anel sobre o círculo para conferir o tamanho.</p>
+  // Split table in two halves for side-by-side compact layout
+  const half = Math.ceil(RING_SIZES.length / 2);
+  const tableHalf = (rows: SizeRow[]) => `
     <table class="rgp-table">
-      <thead><tr><th>Tamanho BR</th><th>Circunferência</th><th>Equivalente US</th></tr></thead>
+      <thead><tr><th>BR</th><th>Circ.</th><th>US</th></tr></thead>
       <tbody>
-        ${RING_SIZES.map(r => `<tr><td>${r.tamanho}</td><td>${fmt(r.circunferencia)} cm</td><td>${r.usa}</td></tr>`).join("")}
+        ${rows.map(r => `<tr><td>${r.tamanho}</td><td>${fmt(r.circunferencia)} cm</td><td>${r.usa}</td></tr>`).join("")}
       </tbody>
     </table>
+  `;
+
+  return `
+    <div class="rgp-header">
+      <h1 class="rgp-h1">${title}</h1>
+      <div class="rgp-calib">
+        <span class="rgp-calib-label">Régua de calibração:</span>
+        <span class="rgp-calib-bar"></span>
+        <span class="rgp-calib-text">deve medir <b>1 cm</b> com uma régua. Se não medir, imprima em escala <b>100%</b> (sem "ajustar à página").</span>
+      </div>
+    </div>
+    <p class="rgp-intro">
+      <b>Como medir:</b> 1) Enrole uma linha fina ao redor do dedo (sem apertar).
+      2) Marque onde se encontra. 3) Meça o comprimento com régua — esse é o valor em cm.
+      Você também pode colocar um anel sobre o círculo correspondente abaixo.
+    </p>
+    <div class="rgp-grid" style="grid-template-columns: repeat(${COLS}, 1fr);">${cells}</div>
+    <div class="rgp-tables">
+      ${tableHalf(RING_SIZES.slice(0, half))}
+      ${tableHalf(RING_SIZES.slice(half))}
+    </div>
   `;
 }
 
@@ -144,7 +159,7 @@ function openPrintWindow(title: string) {
   style.textContent = `
     #${PRINT_HOST_ID} { display: none; }
     @media print {
-      @page { size: A4; margin: 12mm; }
+      @page { size: A4; margin: 10mm; }
       html, body { background: #fff !important; }
       body > *:not(#${PRINT_HOST_ID}) { display: none !important; }
       #${PRINT_HOST_ID} {
@@ -153,20 +168,27 @@ function openPrintWindow(title: string) {
         background: #fff !important;
         color: #111 !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 9pt;
+        line-height: 1.25;
       }
       #${PRINT_HOST_ID} * { color: #111 !important; }
-      #${PRINT_HOST_ID} .rgp-h1 { font-size: 18px; margin: 0 0 6px; }
-      #${PRINT_HOST_ID} .rgp-intro { font-size: 12px; color: #444 !important; margin: 0 0 14px; line-height: 1.4; }
-      #${PRINT_HOST_ID} .rgp-grid { display: grid; gap: 14px 10px; }
+      #${PRINT_HOST_ID} .rgp-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 4px; }
+      #${PRINT_HOST_ID} .rgp-h1 { font-size: 14pt; margin: 0; }
+      #${PRINT_HOST_ID} .rgp-calib { display: inline-flex; align-items: center; gap: 4px; font-size: 7.5pt; color: #555 !important; }
+      #${PRINT_HOST_ID} .rgp-calib-bar { display: inline-block; width: 1cm; height: 8pt; border: 0.6pt solid #111; border-top: 0; border-bottom: 0; position: relative; }
+      #${PRINT_HOST_ID} .rgp-calib-bar::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 0; border-top: 0.6pt solid #111; }
+      #${PRINT_HOST_ID} .rgp-calib-text { color: #555 !important; }
+      #${PRINT_HOST_ID} .rgp-intro { font-size: 8.5pt; color: #444 !important; margin: 0 0 8px; line-height: 1.35; }
+      #${PRINT_HOST_ID} .rgp-grid { display: grid; gap: 6px 8px; margin: 0 0 8px; }
       #${PRINT_HOST_ID} .rgp-cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-      #${PRINT_HOST_ID} .rgp-ring { border: 1.2pt solid #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-      #${PRINT_HOST_ID} .rgp-ring span { font-weight: 700; font-size: 10pt; }
-      #${PRINT_HOST_ID} .rgp-lbl { font-size: 8pt; color: #444 !important; margin-top: 4px; }
-      #${PRINT_HOST_ID} .rgp-note { font-size: 9pt; color: #555 !important; margin-top: 8px; font-style: italic; }
-      #${PRINT_HOST_ID} .rgp-table { border-collapse: collapse; margin-top: 18px; width: 100%; font-size: 10pt; }
+      #${PRINT_HOST_ID} .rgp-ring { border: 1pt solid #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+      #${PRINT_HOST_ID} .rgp-ring span { font-weight: 700; font-size: 8.5pt; }
+      #${PRINT_HOST_ID} .rgp-lbl { font-size: 7pt; color: #444 !important; margin-top: 2px; }
+      #${PRINT_HOST_ID} .rgp-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      #${PRINT_HOST_ID} .rgp-table { border-collapse: collapse; width: 100%; font-size: 8pt; }
       #${PRINT_HOST_ID} .rgp-table th,
-      #${PRINT_HOST_ID} .rgp-table td { border: 0.6pt solid #999; padding: 4px 8px; }
-      #${PRINT_HOST_ID} .rgp-table th { background: #f1f1f1 !important; text-align: left; }
+      #${PRINT_HOST_ID} .rgp-table td { border: 0.4pt solid #999; padding: 1.5pt 4pt; }
+      #${PRINT_HOST_ID} .rgp-table th { background: #f1f1f1 !important; text-align: left; font-weight: 600; }
     }
   `;
   document.head.appendChild(style);
