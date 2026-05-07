@@ -48,7 +48,7 @@ export default function Embaixadores() {
     endereco: "", bairro: "", cep: "", pais: "",
     programasParticipou: "", aberturasPaises: "",
     dataEmbaixador: "", sedeLegendario: "", cargoLideranca: "", doacaoPoco: "", numeroAnel: "",
-    temJaqueta: "", temPin: "", temPatch: "", temEspada: "",
+    temJaqueta: "", temPin: "", temPatch: "", temEspada: "", temAnel: "",
   });
 
   const searchTerm = useMemo(() => search || undefined, [search]);
@@ -67,7 +67,7 @@ export default function Embaixadores() {
       endereco: "", bairro: "", cep: "", pais: "",
       programasParticipou: "", aberturasPaises: "",
       dataEmbaixador: "", sedeLegendario: "", cargoLideranca: "", doacaoPoco: "", numeroAnel: "",
-      temJaqueta: "", temPin: "", temPatch: "", temEspada: "",
+      temJaqueta: "", temPin: "", temPatch: "", temEspada: "", temAnel: "",
     });
     setEditingId(null);
   }
@@ -115,6 +115,7 @@ export default function Embaixadores() {
         temPin: update.temPin || null,
         temPatch: update.temPatch || null,
         temEspada: update.temEspada || null,
+        temAnel: update.temAnel || null,
       };
       if (update.fotoUrl) updateData.fotoUrl = update.fotoUrl;
       if (update.dataNascimento) updateData.dataNascimento = new Date(update.dataNascimento + "T12:00:00").getTime();
@@ -195,7 +196,7 @@ export default function Embaixadores() {
       programasParticipou: emb.programasParticipou || "", aberturasPaises: emb.aberturasPaises || "",
       dataEmbaixador: emb.dataEmbaixador || "", sedeLegendario: emb.sedeLegendario || "", cargoLideranca: emb.cargoLideranca || "",
       doacaoPoco: emb.doacaoPoco || "", numeroAnel: emb.numeroAnel || "",
-      temJaqueta: emb.temJaqueta || "", temPin: emb.temPin || "", temPatch: emb.temPatch || "", temEspada: emb.temEspada || "",
+      temJaqueta: emb.temJaqueta || "", temPin: emb.temPin || "", temPatch: emb.temPatch || "", temEspada: emb.temEspada || "", temAnel: (emb as any).temAnel || "",
     });
     setDialogOpen(true);
   }
@@ -215,7 +216,7 @@ export default function Embaixadores() {
       programasParticipou: form.programasParticipou || null, aberturasPaises: form.aberturasPaises || null,
       dataEmbaixador: form.dataEmbaixador || null, sedeLegendario: form.sedeLegendario || null, cargoLideranca: form.cargoLideranca || null,
       doacaoPoco: form.doacaoPoco || null, numeroAnel: form.numeroAnel || null,
-      temJaqueta: form.temJaqueta || null, temPin: form.temPin || null, temPatch: form.temPatch || null, temEspada: form.temEspada || null,
+      temJaqueta: form.temJaqueta || null, temPin: form.temPin || null, temPatch: form.temPatch || null, temEspada: form.temEspada || null, temAnel: form.temAnel || null,
       ...(!editingId ? { codigoIndicacao: Math.random().toString(36).substring(2, 8) } : {}),
     };
     const onSuccess = () => { toast.success(t("common.sucesso")); setDialogOpen(false); resetForm(); };
@@ -979,12 +980,13 @@ export default function Embaixadores() {
                       { key: "temPin", label: t("emb.temPin") },
                       { key: "temPatch", label: t("emb.temPatch") },
                       { key: "temEspada", label: t("emb.temEspada") },
+                      { key: "temAnel", label: "Anel" },
                     ].map(item => (
                       <div key={item.key}>
                         <label className="apple-input-label">{item.label}</label>
                         <select
                           value={(form as any)[item.key]}
-                          onChange={e => setForm({ ...form, [item.key]: e.target.value } as any)}
+                          onChange={e => setForm({ ...form, [item.key]: e.target.value, ...(item.key === "temAnel" && e.target.value !== "sim" ? { numeroAnel: "" } : {}) } as any)}
                           className="apple-input"
                         >
                           <option value="">{t("common.selecione")}</option>
@@ -993,11 +995,19 @@ export default function Embaixadores() {
                         </select>
                       </div>
                     ))}
-                    <div className="col-span-2">
-                      <label className="apple-input-label">{t("emb.numeroAnel")}</label>
-                      <input value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input" />
-                      <div className="mt-1.5"><RingSizeGuideButton /></div>
-                    </div>
+                    {form.temAnel === "sim" && (
+                      <div className="col-span-2">
+                        <label className="apple-input-label">Medida do Anel</label>
+                        <select value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input">
+                          <option value="">Selecione o tamanho</option>
+                          {Array.from({ length: 20 }, (_, i) => i + 10).map(n => {
+                            const cm = (5.0 + (n - 10) * 0.1).toFixed(2).replace(".", ",");
+                            return <option key={n} value={String(n)}>Tam {n} — {cm} cm</option>;
+                          })}
+                        </select>
+                        <div className="mt-1.5"><RingSizeGuideButton /></div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

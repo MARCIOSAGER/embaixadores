@@ -135,7 +135,7 @@ function buildPrintableHtml(title: string): string {
   .note { font-size: 9pt; color: #555; margin-top: 8px; font-style: italic; }
 </style>
 </head>
-<body onload="window.focus(); window.print();">
+<body>
   <h1>${title}</h1>
   <p class="intro">
     1. Enrole uma linha ou tira de papel fino ao redor do dedo (sem apertar).<br/>
@@ -156,14 +156,40 @@ function buildPrintableHtml(title: string): string {
 
 function openPrintWindow(title: string) {
   const html = buildPrintableHtml(title);
-  const win = window.open("", "_blank", "width=820,height=900");
-  if (!win) {
-    alert("Permita pop-ups para imprimir o guia.");
-    return;
-  }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  // Hidden iframe avoids popup blockers and never affects the host page.
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.setAttribute("aria-hidden", "true");
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    setTimeout(() => {
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }, 1000);
+  };
+
+  iframe.onload = () => {
+    try {
+      const cw = iframe.contentWindow;
+      if (!cw) { cleanup(); return; }
+      cw.focus();
+      cw.print();
+      // Some browsers fire afterprint on the iframe window
+      cw.addEventListener("afterprint", cleanup);
+      // Fallback cleanup after a delay
+      setTimeout(cleanup, 60_000);
+    } catch {
+      cleanup();
+    }
+  };
+
+  iframe.srcdoc = html;
+  void title;
 }
 
 export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" | "dark" }) {
