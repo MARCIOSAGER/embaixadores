@@ -211,14 +211,17 @@ export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" |
 
       {open && createPortal(
         <div
-          className="ring-guide-modal fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
+          className="ring-guide-modal fixed inset-0 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
+          style={{ zIndex: 2147483000, pointerEvents: "auto" }}
           onClick={() => setOpen(false)}
+          onPointerDownCapture={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-label={t("ringGuide.titulo")}
         >
           <div
             className="w-full sm:max-w-lg bg-[#1c1c1e] border border-white/[0.08] rounded-t-[20px] sm:rounded-[20px] max-h-[90vh] overflow-y-auto"
+            style={{ pointerEvents: "auto" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-[#1c1c1e] border-b border-white/[0.06] px-5 py-4 flex items-center justify-between z-10">
