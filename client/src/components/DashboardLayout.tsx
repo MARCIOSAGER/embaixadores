@@ -2,7 +2,7 @@ import { useI18n, type Locale } from "@/lib/i18n";
 import { useLocation, Link } from "wouter";
 import {
   LayoutDashboard, Users, Church, Gift, Calendar, UserPlus, DollarSign,
-  LogOut, Globe, Loader2, Shield, MessageCircle, ClipboardList, ShoppingBag, ShoppingCart, UserCircle, UsersRound
+  LogOut, Globe, Loader2, Shield, MessageCircle, ClipboardList, ShoppingBag, ShoppingCart, UserCircle, UsersRound, Settings
 } from "lucide-react";
 import { ReactNode, useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +42,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { path: "/produtos", icon: ShoppingBag, label: t("nav.produtos") },
     { path: "/pedidos", icon: ShoppingCart, label: t("nav.pedidos"), adminOnly: true },
     { path: "/admin", icon: Shield, label: t("admin.title"), adminOnly: true },
+    { path: "/configuracoes", icon: Settings, label: "Configurações", adminOnly: true },
     { path: "/whatsapp", icon: MessageCircle, label: "WhatsApp", adminOnly: true },
   ], [t]);
 

@@ -302,6 +302,21 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["evento_participantes"]["Insert"]>;
         Relationships: [];
       };
+      listas_config: {
+        Row: {
+          id: number;
+          categoria: string;
+          valor: string;
+          rotulo: string;
+          ordem: number;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Omit<Database["public"]["Tables"]["listas_config"]["Row"], "id" | "created_at" | "updated_at">> & Pick<Database["public"]["Tables"]["listas_config"]["Row"], "categoria" | "valor" | "rotulo">;
+        Update: Partial<Database["public"]["Tables"]["listas_config"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

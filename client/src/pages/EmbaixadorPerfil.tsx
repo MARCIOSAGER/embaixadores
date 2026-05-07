@@ -4,6 +4,7 @@ import { Check, Loader2, ArrowRight, ArrowLeft, Send, Camera, Upload, Globe, Shi
 import { RingSizeGuideButton } from "@/components/RingSizeGuide";
 import PhoneInput from "@/components/PhoneInput";
 import { useI18n, type Locale } from "@/lib/i18n";
+import { useListasConfig } from "@/hooks/useSupabase";
 
 const LOGO = "/logo-legendarios.png";
 
@@ -85,7 +86,13 @@ type Question = {
   sectionIndex: number;
 };
 
-function buildQuestions(t: (k: string) => string): Question[] {
+type OptionListItem = { valor: string; rotulo: string };
+
+function buildQuestions(
+  t: (k: string) => string,
+  programasOpts: OptionListItem[],
+  aberturasOpts: OptionListItem[],
+): Question[] {
   return [
     { key: "fotoFile", question: t("perfil.foto.titulo"), subtitle: t("perfil.foto.desc"), type: "photo", section: t("perfil.sec.foto"), sectionIndex: 1 },
     { key: "nomeCompleto", question: t("perfil.q.nome"), type: "text", required: true, placeholder: "...", section: t("perfil.sec.pessoal"), sectionIndex: 1 },
@@ -106,35 +113,15 @@ function buildQuestions(t: (k: string) => string): Question[] {
     { key: "numeroLegendario", question: t("perfil.q.numLeg"), type: "text", placeholder: "Ex: L#91105", section: t("perfil.sec.legendarios"), sectionIndex: 2 },
     { key: "numeroEmbaixador", question: t("perfil.q.numEmb"), type: "text", placeholder: "Ex: E#001", section: t("perfil.sec.legendarios"), sectionIndex: 2 },
 
-    // Programas participados (multi-seleção)
+    // Programas participados (multi-seleção) - lido de listas_config
     {
       key: "programasParticipou", question: t("perfil.q.programas"), subtitle: t("perfil.q.programas.sub"), type: "checkbox", section: t("perfil.sec.programas"), sectionIndex: 5,
-      options: [
-        { label: "Legendários", value: "Legendarios" },
-        { label: "REM", value: "REM" },
-        { label: "LEGADO", value: "LEGADO" },
-        { label: "MAMUTE", value: "MAMUTE" },
-        { label: "Embaixadores Master Experience (MEX)", value: "MEX" },
-        { label: "Tour Guatemala", value: "Tour Guatemala" },
-        { label: "NEST EUA", value: "NEST EUA" },
-        { label: "NEST Brasil", value: "NEST Brasil" },
-        { label: "Encontro Augusto Cury", value: "Augusto Cury" },
-        { label: "LGND SQUAD", value: "LGND SQUAD" },
-        { label: "Aberturas de Países", value: "Aberturas" },
-      ],
+      options: programasOpts.map(o => ({ label: o.rotulo, value: o.valor })),
     },
     {
       key: "aberturasPaises", question: t("perfil.q.aberturas"), subtitle: t("perfil.q.aberturas.sub"), type: "checkbox", section: t("perfil.sec.programas"), sectionIndex: 5,
       showIf: (d) => d.programasParticipou.includes("Aberturas"),
-      options: [
-        { label: "Portugal", value: "Portugal" },
-        { label: "Reino Unido", value: "Reino Unido" },
-        { label: "Japão", value: "Japão" },
-        { label: "Dubai", value: "Dubai" },
-        { label: "Itália", value: "Itália" },
-        { label: "Espanha", value: "Espanha" },
-        { label: "África", value: "África" },
-      ],
+      options: aberturasOpts.map(o => ({ label: o.rotulo, value: o.valor })),
     },
 
     // Jornada Embaixador
@@ -420,7 +407,9 @@ export default function EmbaixadorPerfil() {
       });
   }, []);
 
-  const questions = buildQuestions(t);
+  const { data: programasOpts = [] } = useListasConfig("programa", { onlyAtivo: true });
+  const { data: aberturasOpts = [] } = useListasConfig("abertura_pais", { onlyAtivo: true });
+  const questions = buildQuestions(t, programasOpts, aberturasOpts);
   const visibleQuestions = questions.filter((q) => !q.showIf || q.showIf(form));
   const current = qIdx >= 0 ? visibleQuestions[qIdx] : null;
   const totalVisible = visibleQuestions.length;

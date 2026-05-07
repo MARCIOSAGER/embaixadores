@@ -902,3 +902,86 @@ export function useConvertInscricaoToEmbaixador() {
     },
   });
 }
+
+// ========== LISTAS CONFIG (programas, aberturas paises) ==========
+
+export type ListaConfigCategoria = "programa" | "abertura_pais";
+
+export interface ListaConfigItem {
+  id: number;
+  categoria: ListaConfigCategoria;
+  valor: string;
+  rotulo: string;
+  ordem: number;
+  ativo: boolean;
+}
+
+export function useListasConfig(categoria: ListaConfigCategoria, opts?: { onlyAtivo?: boolean }) {
+  const onlyAtivo = opts?.onlyAtivo ?? false;
+  return useQuery({
+    queryKey: ["listas_config", categoria, onlyAtivo],
+    queryFn: async () => {
+      let query = supabase.from("listas_config").select("*").eq("categoria", categoria).order("ordem", { ascending: true });
+      if (onlyAtivo) query = query.eq("ativo", true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as ListaConfigItem[];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useUpsertListaItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id?: number; categoria: ListaConfigCategoria; valor: string; rotulo: string; ordem?: number; ativo?: boolean }) => {
+      if (input.id) {
+        const { error } = await supabase.from("listas_config").update({
+          valor: input.valor.trim(),
+          rotulo: input.rotulo.trim(),
+          ordem: input.ordem ?? 0,
+          ativo: input.ativo ?? true,
+        }).eq("id", input.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("listas_config").insert({
+          categoria: input.categoria,
+          valor: input.valor.trim(),
+          rotulo: input.rotulo.trim(),
+          ordem: input.ordem ?? 0,
+          ativo: input.ativo ?? true,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["listas_config", vars.categoria] });
+    },
+  });
+}
+
+export function useDeleteListaItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: number; categoria: ListaConfigCategoria }) => {
+      const { error } = await supabase.from("listas_config").delete().eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["listas_config", vars.categoria] });
+    },
+  });
+}
+
+export function useToggleListaItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: number; categoria: ListaConfigCategoria; ativo: boolean }) => {
+      const { error } = await supabase.from("listas_config").update({ ativo: input.ativo }).eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["listas_config", vars.categoria] });
+    },
+  });
+}

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useEmbaixadores, useEmbaixadoresStats, useCreateEmbaixador, useUpdateEmbaixador, useDeleteEmbaixador } from "@/hooks/useSupabase";
+import { useEmbaixadores, useEmbaixadoresStats, useCreateEmbaixador, useUpdateEmbaixador, useDeleteEmbaixador, useListasConfig } from "@/hooks/useSupabase";
 import { useI18n } from "@/lib/i18n";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -58,6 +58,8 @@ export default function Embaixadores() {
   const createMut = useCreateEmbaixador();
   const updateMut = useUpdateEmbaixador();
   const deleteMut = useDeleteEmbaixador();
+  const { data: programasOpts = [] } = useListasConfig("programa", { onlyAtivo: true });
+  const { data: aberturasOpts = [] } = useListasConfig("abertura_pais", { onlyAtivo: true });
 
   function resetForm() {
     setForm({
@@ -901,21 +903,21 @@ export default function Embaixadores() {
                   <div>
                     <label className="apple-input-label">{t("emb.programas")}</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {["Legendarios","REM","LEGADO","MAMUTE","MEX","Tour Guatemala","NEST EUA","NEST Brasil","Augusto Cury","LGND SQUAD","Aberturas"].map(p => {
+                      {programasOpts.map(opt => {
                         const items = form.programasParticipou ? form.programasParticipou.split(",").map(s => s.trim()).filter(Boolean) : [];
-                        const checked = items.includes(p);
+                        const checked = items.includes(opt.valor);
                         return (
-                          <label key={p} className="flex items-center gap-2 text-[0.8125rem] text-[#d2d2d7] cursor-pointer">
+                          <label key={opt.id} className="flex items-center gap-2 text-[0.8125rem] text-[#d2d2d7] cursor-pointer">
                             <input
                               type="checkbox"
                               checked={checked}
                               onChange={() => {
-                                const next = checked ? items.filter(x => x !== p) : [...items, p];
-                                setForm({ ...form, programasParticipou: next.join(","), ...(p === "Aberturas" && checked ? { aberturasPaises: "" } : {}) });
+                                const next = checked ? items.filter(x => x !== opt.valor) : [...items, opt.valor];
+                                setForm({ ...form, programasParticipou: next.join(","), ...(opt.valor === "Aberturas" && checked ? { aberturasPaises: "" } : {}) });
                               }}
                               className="w-4 h-4 accent-[#FF6B00]"
                             />
-                            {p}
+                            {opt.rotulo}
                           </label>
                         );
                       })}
@@ -925,21 +927,21 @@ export default function Embaixadores() {
                     <div className="mt-3">
                       <label className="apple-input-label">{t("emb.aberturas")}</label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                        {["Portugal","UK","Japão","Dubai","Itália","Espanha","África"].map(p => {
+                        {aberturasOpts.map(opt => {
                           const items = form.aberturasPaises ? form.aberturasPaises.split(",").map(s => s.trim()).filter(Boolean) : [];
-                          const checked = items.includes(p);
+                          const checked = items.includes(opt.valor);
                           return (
-                            <label key={p} className="flex items-center gap-2 text-[0.8125rem] text-[#d2d2d7] cursor-pointer">
+                            <label key={opt.id} className="flex items-center gap-2 text-[0.8125rem] text-[#d2d2d7] cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={checked}
                                 onChange={() => {
-                                  const next = checked ? items.filter(x => x !== p) : [...items, p];
+                                  const next = checked ? items.filter(x => x !== opt.valor) : [...items, opt.valor];
                                   setForm({ ...form, aberturasPaises: next.join(",") });
                                 }}
                                 className="w-4 h-4 accent-[#FF6B00]"
                               />
-                              {p}
+                              {opt.rotulo}
                             </label>
                           );
                         })}
@@ -957,20 +959,13 @@ export default function Embaixadores() {
                       <div><label className="apple-input-label">{t("emb.sedeLegendario")}</label><input value={form.sedeLegendario} onChange={e => setForm({ ...form, sedeLegendario: e.target.value })} className="apple-input" /></div>
                     </div>
                     <div><label className="apple-input-label">{t("emb.cargoLideranca")}</label><input value={form.cargoLideranca} onChange={e => setForm({ ...form, cargoLideranca: e.target.value })} className="apple-input" placeholder="Ex: Top, Coordenador, não exerço" /></div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="apple-input-label">{t("emb.doacaoPoco")}</label>
-                        <select value={form.doacaoPoco} onChange={e => setForm({ ...form, doacaoPoco: e.target.value })} className="apple-input">
-                          <option value="">{t("common.selecione")}</option>
-                          <option value="sim">{t("emb.sim")}</option>
-                          <option value="nao">{t("emb.nao")}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="apple-input-label">{t("emb.numeroAnel")}</label>
-                        <input value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input" />
-                        <div className="mt-1.5"><RingSizeGuideButton /></div>
-                      </div>
+                    <div>
+                      <label className="apple-input-label">{t("emb.doacaoPoco")}</label>
+                      <select value={form.doacaoPoco} onChange={e => setForm({ ...form, doacaoPoco: e.target.value })} className="apple-input">
+                        <option value="">{t("common.selecione")}</option>
+                        <option value="sim">{t("emb.sim")}</option>
+                        <option value="nao">{t("emb.nao")}</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -998,6 +993,11 @@ export default function Embaixadores() {
                         </select>
                       </div>
                     ))}
+                    <div className="col-span-2">
+                      <label className="apple-input-label">{t("emb.numeroAnel")}</label>
+                      <input value={form.numeroAnel} onChange={e => setForm({ ...form, numeroAnel: e.target.value })} className="apple-input" />
+                      <div className="mt-1.5"><RingSizeGuideButton /></div>
+                    </div>
                   </div>
                 </div>
 
@@ -1021,7 +1021,14 @@ export default function Embaixadores() {
         <ConfirmDialog
           open={confirmDelete !== null}
           onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
-          onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); setConfirmDelete(null); }, onError: (e: any) => toast.error(e.message) }); }}
+          onConfirm={() => { if (confirmDelete) deleteMut.mutate(confirmDelete, { onSuccess: () => { toast.success(t("common.sucesso")); setSelected(null); setConfirmDelete(null); }, onError: (e: any) => {
+            const msg: string = e?.message ?? "";
+            if (e?.code === "23503" || /foreign key|violates foreign/i.test(msg)) {
+              toast.error("Não é possível excluir: este embaixador possui registros vinculados (entrevistas, pagamentos ou eventos). Remova os vínculos primeiro.");
+            } else {
+              toast.error(msg || "Erro ao excluir embaixador");
+            }
+          } }); }}
         />
 
         {/* Send Email Dialog */}

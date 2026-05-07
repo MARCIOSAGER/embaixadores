@@ -100,6 +100,72 @@ function RingCirclesChart() {
   );
 }
 
+function buildPrintableHtml(title: string): string {
+  const COLS = 5;
+  const cells = RING_SIZES.map(row => {
+    const diameterCm = row.circunferencia / Math.PI;
+    return `
+      <div class="cell">
+        <div class="ring" style="width:${diameterCm.toFixed(3)}cm;height:${diameterCm.toFixed(3)}cm;">
+          <span>${row.tamanho}</span>
+        </div>
+        <div class="lbl">${fmt(row.circunferencia)} cm</div>
+      </div>`;
+  }).join("");
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>${title}</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: #111; margin: 0; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 6px; }
+  p.intro { font-size: 12px; color: #444; margin: 0 0 14px; line-height: 1.4; }
+  .grid { display: grid; grid-template-columns: repeat(${COLS}, 1fr); gap: 14px 10px; }
+  .cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .ring { border: 1.2pt solid #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .ring span { font-weight: 700; font-size: 10pt; }
+  .lbl { font-size: 8pt; color: #444; margin-top: 4px; }
+  table { border-collapse: collapse; margin-top: 18px; width: 100%; font-size: 10pt; }
+  th, td { border: 0.6pt solid #999; padding: 4px 8px; }
+  th { background: #f1f1f1; text-align: left; }
+  .note { font-size: 9pt; color: #555; margin-top: 8px; font-style: italic; }
+</style>
+</head>
+<body onload="window.focus(); window.print();">
+  <h1>${title}</h1>
+  <p class="intro">
+    1. Enrole uma linha ou tira de papel fino ao redor do dedo (sem apertar).<br/>
+    2. Marque o ponto onde a linha se encontra.<br/>
+    3. Meça o comprimento com uma régua — esse é o valor em cm.
+  </p>
+  <div class="grid">${cells}</div>
+  <p class="note">Os círculos estão impressos em tamanho real. Coloque um anel sobre o círculo para conferir o tamanho.</p>
+  <table>
+    <thead><tr><th>Tamanho BR</th><th>Circunferência</th><th>Equivalente US</th></tr></thead>
+    <tbody>
+      ${RING_SIZES.map(r => `<tr><td>${r.tamanho}</td><td>${fmt(r.circunferencia)} cm</td><td>${r.usa}</td></tr>`).join("")}
+    </tbody>
+  </table>
+</body>
+</html>`;
+}
+
+function openPrintWindow(title: string) {
+  const html = buildPrintableHtml(title);
+  const win = window.open("", "_blank", "width=820,height=900");
+  if (!win) {
+    alert("Permita pop-ups para imprimir o guia.");
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
 export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" | "dark" }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -131,7 +197,8 @@ export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" |
               <h3 className="text-[0.9375rem] font-semibold text-white">{t("ringGuide.titulo")}</h3>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); openPrintWindow(t("ringGuide.titulo")); }}
                   className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b] hover:text-white transition-colors"
                   aria-label={t("ringGuide.imprimir")}
                   title={t("ringGuide.imprimir")}
@@ -139,7 +206,8 @@ export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" |
                   <Printer className="w-4 h-4" strokeWidth={2} />
                 </button>
                 <button
-                  onClick={() => setOpen(false)}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setOpen(false); }}
                   className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[#86868b] hover:text-white transition-colors"
                   aria-label="Fechar"
                 >
@@ -206,36 +274,6 @@ export function RingSizeGuideButton({ variant = "light" }: { variant?: "light" |
         document.body
       )}
 
-      {/* Print styles: show only the guide, render circles at actual physical size */}
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          .ring-guide-modal, .ring-guide-modal * { visibility: visible !important; }
-          .ring-guide-modal {
-            position: absolute !important;
-            inset: 0 !important;
-            background: white !important;
-            backdrop-filter: none !important;
-            color: #000 !important;
-          }
-          .ring-guide-modal > div {
-            background: white !important;
-            border: none !important;
-            box-shadow: none !important;
-            max-height: none !important;
-            overflow: visible !important;
-          }
-          .ring-guide-modal h3,
-          .ring-guide-modal p,
-          .ring-guide-modal span,
-          .ring-guide-modal td,
-          .ring-guide-modal th { color: #000 !important; }
-          .ring-guide-modal button { display: none !important; }
-          .ring-guide-chart { border: 1px solid #000 !important; background: white !important; }
-          .ring-guide-chart svg circle { fill: white !important; stroke: #000 !important; }
-          .ring-guide-chart svg text { fill: #000 !important; }
-        }
-      `}</style>
     </>
   );
 }

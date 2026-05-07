@@ -22,6 +22,7 @@ const Entrevistas = lazy(() => import("./pages/Entrevistas"));
 const Inscricoes = lazy(() => import("./pages/Inscricoes"));
 const Pagamentos = lazy(() => import("./pages/Pagamentos"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Configuracoes = lazy(() => import("./pages/Configuracoes"));
 const Produtos = lazy(() => import("./pages/Produtos"));
 const Pedidos = lazy(() => import("./pages/Pedidos"));
 const ZApiAdmin = lazy(() => import("./pages/ZApiAdmin"));
@@ -60,6 +61,7 @@ function Router() {
         <Route path="/produtos" component={Produtos} />
         <Route path="/pedidos">{() => <ProtectedRoute requireAdmin><Pedidos /></ProtectedRoute>}</Route>
         <Route path="/admin">{() => <ProtectedRoute requireAdmin><Admin /></ProtectedRoute>}</Route>
+        <Route path="/configuracoes">{() => <ProtectedRoute requireAdmin><Configuracoes /></ProtectedRoute>}</Route>
         <Route path="/whatsapp">{() => <ProtectedRoute requireAdmin><ZApiAdmin /></ProtectedRoute>}</Route>
         <Route path="/perfil" component={Profile} />
         <Route path="/404" component={NotFound} />
