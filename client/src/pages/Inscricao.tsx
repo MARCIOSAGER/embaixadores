@@ -42,6 +42,10 @@ type FormData = {
   estadoCivil: string;
   nomeEsposa: string;
   dataNascimentoEsposa: string;
+  telefoneEsposa: string;
+  emailEsposa: string;
+  esposaRecebeuColar: string;
+  esposaVoltou: string;
   qtdFilhos: number;
   idadesFilhos: string;
   profissao: string;
@@ -66,7 +70,9 @@ const initial: FormData = {
   numeroLegendario: "", topSede: "", qtdTopsServidos: "", areaServico: "",
   conhecimentoPrevio: "", indicadoPorEmb: false, nomeIndicador: "",
   sedeInternacional: false, nomeSedeInternacional: "", cargoLideranca: "",
-  estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "", qtdFilhos: 0, idadesFilhos: "",
+  estadoCivil: "", nomeEsposa: "", dataNascimentoEsposa: "",
+  telefoneEsposa: "", emailEsposa: "", esposaRecebeuColar: "", esposaVoltou: "",
+  qtdFilhos: 0, idadesFilhos: "",
   profissao: "", areaAtuacao: "", possuiEmpresa: "", instagramEmpresa: "",
   segmentoMercado: "", tempoEmpreendedorismo: "", estruturaEquipe: "",
   investeClubePrivado: "", participaMentoria: "", valorInvestimento: "",
@@ -119,6 +125,24 @@ function buildQuestions(t: (k: string) => string): Question[] {
     },
     { key: "nomeEsposa", question: t("insc.q.nomeEsposa"), type: "text", showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4 },
     { key: "dataNascimentoEsposa", question: t("insc.q.nascEsposa"), type: "date", showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4 },
+    { key: "telefoneEsposa", question: t("insc.q.telefoneEsposa"), type: "tel", placeholder: "(11) 99999-9999", showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4 },
+    { key: "emailEsposa", question: t("insc.q.emailEsposa"), type: "email", placeholder: "esposa@email.com", showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4 },
+    {
+      key: "esposaRecebeuColar", question: t("insc.q.esposaRecebeuColar"), type: "radio",
+      showIf: (d) => d.estadoCivil === "casado", section: t("insc.sec.familia"), sectionIndex: 4,
+      options: [
+        { label: t("insc.sim"), value: "sim", icon: "A" },
+        { label: t("insc.nao"), value: "nao", icon: "B" },
+      ],
+    },
+    {
+      key: "esposaVoltou", question: t("insc.q.esposaVoltou"), subtitle: t("insc.q.esposaVoltou.sub"), type: "radio",
+      showIf: (d) => d.estadoCivil === "casado" && d.esposaRecebeuColar === "sim", section: t("insc.sec.familia"), sectionIndex: 4,
+      options: [
+        { label: t("insc.sim"), value: "sim", icon: "A" },
+        { label: t("insc.nao"), value: "nao", icon: "B" },
+      ],
+    },
     { key: "qtdFilhos", question: t("insc.q.filhos"), type: "number", required: true, section: t("insc.sec.familia"), sectionIndex: 4 },
     { key: "idadesFilhos", question: t("insc.q.idadesFilhos"), type: "text", showIf: (d) => d.qtdFilhos > 0, section: t("insc.sec.familia"), sectionIndex: 4 },
     { key: "profissao", question: t("insc.q.profissao"), type: "text", required: true, section: t("insc.sec.profissional"), sectionIndex: 5 },
@@ -568,6 +592,10 @@ export default function Inscricao() {
         fotoUrl,
         nomeEsposa: form.nomeEsposa || null,
         dataNascimentoEsposa: form.dataNascimentoEsposa || null,
+        telefoneEsposa: form.telefoneEsposa || null,
+        emailEsposa: form.emailEsposa || null,
+        esposaRecebeuColar: form.esposaRecebeuColar || null,
+        esposaVoltou: form.esposaVoltou || null,
         numeroLegendario: form.numeroLegendario || null,
         topSede: form.topSede || null,
         qtdTopsServidos: form.qtdTopsServidos || null,

@@ -212,6 +212,10 @@ export type Database = {
           fotoUrl: string | null;
           nomeEsposa: string | null;
           dataNascimentoEsposa: string | null;
+          telefoneEsposa: string | null;
+          emailEsposa: string | null;
+          esposaRecebeuColar: string | null;
+          esposaVoltou: string | null;
           dataNascimento: string | null;
           cidade: string | null;
           estado: string | null;
